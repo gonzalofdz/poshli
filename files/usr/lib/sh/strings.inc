@@ -22,11 +22,10 @@
 #	Functions must follow the order they have
 #
 
-is_pattern_match() {
+str_change() {
 	#
-	#	Is the sentence ($1) into the pattern ($2)? [ no: 1  yes: 0 ]
+	#	Change @1 for @2 in @3
 	#
-	#	Example: if ( is_pattern_match "$number" "0-9" ); then ...
-	#
-	( printf '%s' "$1" | grep -xEq "$2" ) && return 0 || return 1
+	printf '%s' "$3-" | tr "$1" "$2"
 }
+
