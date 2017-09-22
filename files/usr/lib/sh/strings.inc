@@ -16,11 +16,11 @@
 #    You should have received a copy of the GNU General Public License
 #    along with lispo.  If not, see <http://www.gnu.org/licenses/>.
 
-##
-
+#
+#	Strings in lispo
+#
 #	Functions must follow the order they have
-
-##
+#
 
 is_pattern_match() {
 	#
