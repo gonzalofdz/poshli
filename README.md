@@ -10,4 +10,4 @@ INSTALATION:
 Just download or clone it and link .inc files from your shell script like this:
 . /path/file.inc
 
-Recommended path is /usr/lib/sh/
+Recommended path for .inc files is /usr/lib/sh/
