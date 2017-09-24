@@ -29,3 +29,20 @@ str_change() {
 	printf '%s' "$3-" | tr "$1" "$2"
 }
 
+str_to_lower() {
+	#
+	#	Print a string in lower case.
+	#
+	#	Example:	str_lower "UPPERCASE STRING"
+	# 
+	printf '%s' "$*" | awk '{printf tolower($0)}'
+}
+
+str_to_upper() {
+	#
+	#	Print a string in upper case.
+	#
+	#	Example:	str_upper "lowercase string"
+	# 
+	printf '%s' "$*" | awk '{printf toupper($0)}'
+}
