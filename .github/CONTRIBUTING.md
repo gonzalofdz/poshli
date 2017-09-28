@@ -3,7 +3,7 @@
 
 # lispo
 
-### Thanks for taking the time to contribute! :tada:
+### Thanks for taking the time to contribute!
 
 ## How Can I Contribute?
 
