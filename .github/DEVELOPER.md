@@ -54,7 +54,7 @@ need to be a programmer to speak up.
  
 * #### External documentation about coding:
 
- * [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh)
- * [About IEEE Std 1003.1 Issue 6](http://pubs.opengroup.org/onlinepubs/009695399/utilities/contents.html)
- * [About IEEE Std 1003.1 Issue 7](http://pubs.opengroup.org/onlinepubs/9699919799/)
+ >* [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh)
+ >* [About IEEE Std 1003.1 Issue 6](http://pubs.opengroup.org/onlinepubs/009695399/utilities/contents.html)
+ >* [About IEEE Std 1003.1 Issue 7](http://pubs.opengroup.org/onlinepubs/9699919799/)
 
