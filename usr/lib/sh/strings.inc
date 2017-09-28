@@ -37,7 +37,7 @@ str_lower() {
 	#	Print a string in lower case.
 	#
 	#	Example:	str_lower "UPPERCASE STRING"
-	# 
+	#
 	printf '%s' "$*" | awk '{printf tolower($0)}'
 }
 
@@ -46,7 +46,7 @@ str_upper() {
 	#	Print a string in upper case.
 	#
 	#	Example:	str_upper "lowercase string"
-	# 
+	#
 	printf '%s' "$*" | awk '{printf toupper($0)}'
 }
 
@@ -54,7 +54,7 @@ str_len() {
 	#
 	#	Print the length of the string
 	#
-	#	wc is used because characters are counted instead 
+	#	wc is used because characters are counted instead
 	#	of bytes even in utf8.
 	#
 	#	Example:	str_len "this string"
