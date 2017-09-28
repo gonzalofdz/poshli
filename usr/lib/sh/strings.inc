@@ -25,15 +25,15 @@
 #	Functions must follow the order they have.
 #	Some functions uses awk to cover utf8 characters with less consumption.
 
-str_change() {
-	#
+str_change()
+{
 	#	Change @1 for @2 in @3
 	#
 	printf '%s' "$3-" | tr "$1" "$2"
 }
 
-str_lower() {
-	#
+str_lower()
+{
 	#	Print a string in lower case.
 	#
 	#	Example:	str_lower "UPPERCASE STRING"
@@ -41,8 +41,8 @@ str_lower() {
 	printf '%s' "$*" | awk '{printf tolower($0)}'
 }
 
-str_upper() {
-	#
+str_upper()
+{
 	#	Print a string in upper case.
 	#
 	#	Example:	str_upper "lowercase string"
@@ -50,8 +50,8 @@ str_upper() {
 	printf '%s' "$*" | awk '{printf toupper($0)}'
 }
 
-str_len() {
-	#
+str_len()
+{
 	#	Print the length of the string
 	#
 	#	wc is used because characters are counted instead
