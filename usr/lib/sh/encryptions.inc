@@ -25,7 +25,7 @@
 #	Functions must follow the order they have.
 #
 
-base64_code()
+base64_enc()
 {
 	#	Print a string base64 encrypted.
 	#
