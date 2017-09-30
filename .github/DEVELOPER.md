@@ -34,7 +34,7 @@ need to be a programmer to speak up.
  Example of a proper function:
  ```sh
  base64_code()
-  { #
+  {
     #	Print a string encoded in base64
     #
     #	Example:	base64_code "String"
@@ -48,6 +48,9 @@ need to be a programmer to speak up.
  but is shorter base64_code "String", and after all will be the decision of the final developer to use the chosen way 
  for each occasion.
  
+ Why not 'echo'? it's shortener.
+ Because the usefulness of these functions is to be able to use them to handle variables, and a carriage return is not friendly with variables, echo -n would solve the issue, but then it wouldn't be posix.
+
 * **Please read [SECURITY.md](https://github.com/gonzalofdz/lispo/blob/master/.github/SECURITY.md)**. Security is fundamental in the code of this project, otherwise this project would not make sense.
  
  <a name="documentation"></a>
