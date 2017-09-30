@@ -10,8 +10,8 @@
 
 # Welcome!
 
-If you are reading this document then you are interested in contributing to the Storm 
-project -- many thanks for that!
+If you are reading this document then you are interested in contributing to the lispo 
+project, many thanks for that!
 All contributions are welcome: ideas, documentation, code, patches, bug reports, 
 feature requests, etc.  And you do notneed to be a programmer to speak up.
 
@@ -19,10 +19,10 @@ feature requests, etc.  And you do notneed to be a programmer to speak up.
 
 # Coding Rules
 
-**Uses all available POSIX resources**. A list of available POSIX programs: 
+**Uses all available POSIX resources**. A list of available POSIX-compliant programs: 
 http://shellhaters.org/
  
- Example of an inappropriate function:
+ Example of an __inappropriate__ function:
  ```sh
  base64_code()
  {
@@ -31,10 +31,10 @@ http://shellhaters.org/
  	etc...
  }
  ```
- It's inappropriate because POSIX already has a base64 program that solves it better 
+ It's inappropriate because already exists a base64 POSIX-compliant program that solves it better 
  and faster.
  
- Example of a proper function:
+ Example of a __proper__ function:
  ```sh
  base64_code()
   {
@@ -45,7 +45,7 @@ http://shellhaters.org/
  	printf '%s' "String" | base64
  }
  ```
- It value lies in that the function gives to developer a posix-compliant way of solving 
+ It value lies in that the function gives to developer a POSIX-compliant way of solving 
  a task, although it could also be done as follows:
  printf '%s' "String" | base64
  but is shorter base64_code "String", and after all will be the decision of the final 
