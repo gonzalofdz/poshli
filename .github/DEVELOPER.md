@@ -44,7 +44,7 @@ http://shellhaters.org/
     # 
  	printf '%s' "String" | base64
  }
- ```
+ ```https://stallman.org/articles/posix.html
  It value lies in that the function gives to developer a POSIX-compliant way of solving 
  a task, although it could also be done as follows:
  printf '%s' "String" | base64
@@ -68,3 +68,4 @@ http://shellhaters.org/
  >* [About IEEE Std 1003.1 Issue 6](http://pubs.opengroup.org/onlinepubs/009695399/utilities/contents.html)
  >* [About IEEE Std 1003.1 Issue 7](http://pubs.opengroup.org/onlinepubs/9699919799/)
  >* [The Shell Hater's Handbook](http://shellhaters.org/)
+ >* [Richard Stallman's personal site](https://stallman.org/articles/posix.html)
