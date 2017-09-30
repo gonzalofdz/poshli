@@ -36,15 +36,15 @@ http://shellhaters.org/
  
  Example of a __proper__ function:
  ```sh
- base64_code()
-  {
-    #	Print a string encoded in base64
-    #
-    #	Example:	base64_code "String"
-    # 
- 	printf '%s' "String" | base64
- }
- ```https://stallman.org/articles/posix.html
+base64_enc()
+{
+	#	Print a string base64 encrypted.
+	#
+	#	Example:	base64_code "String"
+	# 
+	printf '%s' "$*" | base64
+}
+ ```
  It value lies in that the function gives to developer a POSIX-compliant way of solving 
  a task, although it could also be done as follows:
  printf '%s' "String" | base64
