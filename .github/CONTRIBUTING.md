@@ -20,7 +20,7 @@
 > - logo, emblem, figure, symbol.
 > - Youtube Videos.
 
-**Redactors***:
+**Editors***:
 > - for write manual pages and wiki.
 
 ## Code of conduct
