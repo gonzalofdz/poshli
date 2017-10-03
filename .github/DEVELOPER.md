@@ -13,7 +13,7 @@
 If you are reading this document then you are interested in contributing to the lispo 
 project, many thanks for that!
 All contributions are welcome: ideas, documentation, code, patches, bug reports, 
-feature requests, etc.  And you do notneed to be a programmer to speak up.
+feature requests, etc.  And you don't need to be a programmer to speak up.
 
 <a name="coding-rules"></a>
 
