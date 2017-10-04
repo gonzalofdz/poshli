@@ -85,7 +85,7 @@ base64_enc()
 There are no better nor worse ways to format, the important thing is that a whole team use the same 
 rules, and this team use the following:
 
-* Tab to indent, if you prefer you can coding with spaces and [convert](https://www.browserling.com/tools/spaces-to-tabs)
+* Tab to indent, if you prefer you can coding with spaces and [convert](https://www.browserling.com/tools/spaces-to-tabs).
 
 * Each tab as 4 spaces.
 
@@ -95,6 +95,10 @@ next line to main name.
 * Type the words of Variable name's in lowercase separated by underscore or camelCase at your preferred way.
 
 * Names of Constants in uppercase separated by underscore.
+
+* Wrap all code at 100 characters.
+
+* The new line characters with LF (Unix), you can to use a [converter](http://newline.nadav.org/) if you need it.
 
  <a name="documentation"></a>
  
