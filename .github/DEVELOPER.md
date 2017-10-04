@@ -3,6 +3,7 @@
 # Developer documentation
 
 * <a href="#welcome">Welcome!</a>
+* <a href="#shell">The Shell</a>
 * <a href="#coding-rules">Coding rules</a>
 * <a href="#documentation">Documentation</a>
 
@@ -15,9 +16,19 @@ project, many thanks for that!
 All contributions are welcome: ideas, documentation, code, patches, bug reports, 
 feature requests, etc.  And you don't need to be a programmer to speak up.
 
+<a name="shell"></a>
+
+# What shell can I use to testing the code?
+
+**/bin/sh**
+
+Almost always [DASH](http://gondor.apana.org.au/~herbert/dash/) (*D*ebian *A*lmquist *SH*ell).
+
 <a name="coding-rules"></a>
 
 # Coding Rules
+
+ To ensure consistency throughout the source code, keep these rules in mind as you are working.
 
 **Uses all available POSIX resources**. A list of available POSIX-compliant programs: 
 http://shellhaters.org/
@@ -32,7 +43,7 @@ http://shellhaters.org/
  }
  ```
  It's inappropriate because already exists a base64 POSIX-compliant program that solves it better 
- and faster.
+ and faster.incorrect
  
  Example of a __proper__ function:
  ```sh
@@ -60,6 +71,31 @@ base64_enc()
  Security is fundamental in the code of this project, otherwise this project would not make 
  sense.
  
+#### Variables and function declaration names:
+
+ * Descriptive names but short as possible, do use well-known acronyms when necessary. For example, 
+ use UI for User Interface and Html for Hyper-Text Markup Language.
+
+ * For abbreviations, at least 3 letters each word, except if the word itself has less letters. For 
+ example, bin as binary is proper because it's intuitive, but b as byte is inappropriate because it 
+ would be confused with bit, byte, bypass, etc..
+
+#### Formating the code:
+
+There are no better nor worse ways to format, the important thing is that a whole team use the same 
+rules, and this team use the following:
+
+* Tab to indent, if you prefer you can coding with spaces and [convert](https://www.browserling.com/tools/spaces-to-tabs)
+
+* Each tab as 4 spaces.
+
+* Type the words of Functions name's in lowercase, separated by underscore and curly bracket in the 
+next line to main name.
+
+* Type the words of Variable name's in lowercase separated by underscore or camelCase at your preferred way.
+
+* Names of Constants in uppercase separated by underscore.
+
  <a name="documentation"></a>
  
 #### External documentation about coding:
@@ -69,3 +105,4 @@ base64_enc()
  >* [About IEEE Std 1003.1 Issue 7](http://pubs.opengroup.org/onlinepubs/9699919799/)
  >* [The Shell Hater's Handbook](http://shellhaters.org/)
  >* [Richard Stallman's personal site](https://stallman.org/articles/posix.html)
+ 
