@@ -21,7 +21,7 @@
 > - Youtube Videos.
 
 **Editors**:
-> - for write manual pages and wiki.
+> - for write manual pages and wiki and/or correct lexical errors of the comments.
 
 ## Code of conduct
 
