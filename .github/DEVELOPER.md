@@ -35,7 +35,7 @@ http://shellhaters.org/
  
  Example of an __inappropriate__ function:
  ```sh
- base64_code()
+ base64_enc()
  {
  	base_64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
  	var="`echo $base_64_chars | cut -c1-$x`";
