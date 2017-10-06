@@ -9,10 +9,10 @@
 
 <a name="welcome"></a>
 
-# Welcome! :octocat:
+# :star: Welcome!
 
 If you are reading this document then you are interested in contributing to the lispo 
-project, many thanks for that!
+project, many thanks for that! :clap:
 All contributions are welcome: ideas, documentation, code, patches, bug reports, 
 feature requests, etc.  And you don't need to be a programmer to speak up.
 
@@ -69,7 +69,7 @@ base64_enc()
  It value lies in that the function gives to developer a POSIX-compliant way of 
  solving a task.
  
- *Why not 'echo'? it's shortener.*
+ *Why not 'echo'? it's shortener.* :thought_balloon:
  Because the usefulness of these functions is to be able to use them to handle 
  variables, and a carriage return is not friendly with variables, "echo -n" would 
  solve the issue, but then it wouldn't be POSIX-compliant.
@@ -85,8 +85,8 @@ Please **Read
    for example, use UI for User Interface and Html for Hyper-Text Markup Language.
 
  * For abbreviations, at least 3 letters each word, except if the word itself has less 
- letters. For example, bin as binary is proper because it's intuitive, but b as byte is 
- inappropriate because it would be confused with bit, byte, bypass, etc..
+   letters. For example, bin as binary is proper because it's intuitive, but b as byte is 
+   inappropriate because it would be confused with bit, byte, bypass, etc..
 
 #### Formating the code:
 
