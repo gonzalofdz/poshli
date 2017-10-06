@@ -29,7 +29,7 @@ Almost always [DASH](http://gondor.apana.org.au/~herbert/dash/) (*D*ebian *A*lmq
 
 # Coding Rules
 
-_ To ensure consistency throughout the source code, keep these rules in mind as you 
+_To ensure consistency throughout the source code, keep these rules in mind as you 
 are working._
 
 **A function only must to do**  (one of these)**:**
