@@ -7,20 +7,20 @@
 
 ## How Can I Contribute?
 
-**Developers**:
+:keyboard: **Developers**:
 > - making new functions.
 > - finding errors in current code.
 > - coding Improvements.
 
-**Translators**:
+:us: **Translators**:
 > - all languages for the time being.
 
-**Media cretors**:
+:clapper: **Media cretors**:
 > - media for Twitter.
 > - logo, emblem, figure, symbol.
 > - Youtube Videos.
 
-**Editors**:
+:page_with_curl: **Editors**:
 > - for write manual pages and wiki and/or correct lexical errors of the comments.
 
 ## Code of conduct
