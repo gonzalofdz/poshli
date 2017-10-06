@@ -27,10 +27,23 @@
 
 base64_enc()
 {
-	#	Print a string base64 encrypted.
+	#	Creates a variable called $base64_enc with the input string base64 
+	#	encoded.
 	#
-	#	Example:	base64_code "String"
-	# 
-	printf '%s' "$*" | base64
+	#	Example:	base64_enc "String"
+	#
+	base64_enc=`printf '%s' "${*}" | base64`
+	return 0
+}
+
+base64_dec()
+{
+	#	Creates a variable called $base64_enc with the input string base64 
+	#	decoded.
+	#
+	#	Example:	base64_dec "String"
+	#
+	base64_dec=`printf '%s' "${*}" | base64 -d`
+	return 0
 }
 
