@@ -1,5 +1,5 @@
 ###### © 2017 L. Gonzalo Fernández-Díez Martínez <humanogonzalo@gmail.com>
-
+ :octocat:
 # Developer documentation
 
 * <a href="#welcome">Welcome!</a>
@@ -22,18 +22,26 @@ feature requests, etc.  And you don't need to be a programmer to speak up.
 
 **/bin/sh**
 
-Almost always [DASH](http://gondor.apana.org.au/~herbert/dash/) (*D*ebian *A*lmquist *SH*ell).
+Almost always [DASH](http://gondor.apana.org.au/~herbert/dash/) (*D*ebian *A*lmquist 
+*SH*ell).
 
 <a name="coding-rules"></a>
 
 # Coding Rules
 
- To ensure consistency throughout the source code, keep these rules in mind as you are working.
+_ To ensure consistency throughout the source code, keep these rules in mind as you 
+are working._
 
-**Uses all available POSIX resources**. A list of available POSIX-compliant programs: 
+**A function only must to do**  (one of these)**:**
+ - Creates a variable with the same name as the function and return.
+ - Only returns  0 (true) or 1 (false)
+
+**Uses all available POSIX resources**.
+
+A list of available POSIX-compliant programs: 
 http://shellhaters.org/
  
- Example of an __inappropriate__ function:
+ Example of an <del>__inappropriate__</del> function:
  ```sh
  base64_enc()
  {
@@ -42,70 +50,75 @@ http://shellhaters.org/
  	etc...
  }
  ```
- It's inappropriate because already exists a base64 POSIX-compliant program that solves it
- better and faster.
+ _It's inappropriate because already exists a base64 POSIX-compliant program that 
+ solves it better and faster._
  
- Example of a __proper__ function:
+ Example of a **proper** function:
  ```sh
 base64_enc()
 {
-	#	Print a string base64 encrypted.
+	#	Creates a variable called $base64_enc with the input string base64 
+	#	encoded.
 	#
-	#	Example:	base64_code "String"
-	# 
-	printf '%s' "$*" | base64
+	#	Example:	base64_enc "String"
+	#
+	base64_enc=`printf '%s' "${*}" | base64`
+	return 0
 }
  ```
- It value lies in that the function gives to developer a POSIX-compliant way of solving 
- a task, although it could also be done as follows:
- printf '%s' "String" | base64
- but is shorter base64_code "String", and after all will be the decision of the final 
- developer to use the chosen way for each occasion.
+ It value lies in that the function gives to developer a POSIX-compliant way of 
+ solving a task.
  
- Why not 'echo'? it's shortener.
- Because the usefulness of these functions is to be able to use them to handle variables, 
- and a carriage return is not friendly with variables, "echo -n" would solve the issue, but 
- then it wouldn't be POSIX-compliant.
+ *Why not 'echo'? it's shortener.*
+ Because the usefulness of these functions is to be able to use them to handle 
+ variables, and a carriage return is not friendly with variables, "echo -n" would 
+ solve the issue, but then it wouldn't be POSIX-compliant.
 
-**Read [SECURITY.md](https://github.com/gonzalofdz/lispo/blob/master/.github/SECURITY.md)**. 
- Security is fundamental in the code of this project, otherwise this project would not make 
- sense.
+Please **Read 
+ [SECURITY.md](https://github.com/gonzalofdz/lispo/blob/master/.github/SECURITY.md)**. 
+ Security is fundamental in the code of this project, otherwise this project would 
+ not make sense.
  
 #### Variables and function declaration names:
 
- * Descriptive names but short as possible, do use well-known acronyms when necessary. For example, 
- use UI for User Interface and Html for Hyper-Text Markup Language.
+ * Descriptive names but short as possible, do use well-known acronyms when necessary.
+   for example, use UI for User Interface and Html for Hyper-Text Markup Language.
 
- * For abbreviations, at least 3 letters each word, except if the word itself has less letters. For 
- example, bin as binary is proper because it's intuitive, but b as byte is inappropriate because it 
- would be confused with bit, byte, bypass, etc..
+ * For abbreviations, at least 3 letters each word, except if the word itself has less 
+ letters. For example, bin as binary is proper because it's intuitive, but b as byte is 
+ inappropriate because it would be confused with bit, byte, bypass, etc..
 
 #### Formating the code:
 
-There are no better nor worse ways to format, the important thing is that a whole team use the same 
-rules, and this team use the following:
+There are no better nor worse ways to format, the important thing is that a whole team 
+use the same rules, and this team use the following:
 
-* Tab to indent, if you prefer you can coding with spaces and [convert](https://www.browserling.com/tools/spaces-to-tabs).
+* Tab to indent, if you prefer you can coding with spaces and 
+  [convert](https://www.browserling.com/tools/spaces-to-tabs).
 
-* Each tab as 4 spaces.
+* Each tab as 4 spaces. If your code editor doesn't have the tabs set up for 4-space 
+  equivalence, then note that comments will be skewed for editors like vi, if possible, 
+  set your editor to tabs equivalent to 4 spaces.
 
-* Type the words of Functions name's in lowercase, separated by underscore and curly bracket in the 
-next line to main name.
+* Type the words of Functions name's in lowercase, separated by underscore and curly 
+  bracket in the next line to main name.
 
-* Type the words of Variable name's in lowercase separated by underscore or camelCase at your preferred way.
+* Type the words of Variable name's in lowercase separated by underscore or camelCase at 
+  your preferred way.
 
 * Names of Constants in uppercase separated by underscore.
 
 * Wrap all code at 100 characters.
 
-* The new line characters with LF (Unix), you can to use a [converter](http://newline.nadav.org/) if you need it.
+* The new line characters with LF (Unix), you can to use a
+  [converter](http://newline.nadav.org/) if you need it.
 
  <a name="documentation"></a>
  
 #### External documentation about coding:
 
  >* [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh)
- >* [About IEEE Std 1003.1 Issue 6](http://pubs.opengroup.org/onlinepubs/009695399/utilities/contents.html)
+ >* [About IEEE Std 1003.1 Issue 6](http://bit.ly/2jkXDdD)
  >* [About IEEE Std 1003.1 Issue 7](http://pubs.opengroup.org/onlinepubs/9699919799/)
  >* [The Shell Hater's Handbook](http://shellhaters.org/)
  >* [Richard Stallman's personal site](https://stallman.org/articles/posix.html)
