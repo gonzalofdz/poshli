@@ -9,7 +9,7 @@
 
 <a name="welcome"></a>
 
-# Welcome! :fish_cake:
+# Welcome! :zap:
 
 If you are reading this document then you are interested in contributing to the lispo 
 project, many thanks for that! :clap:
@@ -118,8 +118,12 @@ use the same rules, and this team use the following:
 #### External documentation about coding:
 
  > :link: [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh)
+ >
  > :link: [About IEEE Std 1003.1 Issue 6](http://bit.ly/2jkXDdD)
+ >
  > :link: [About IEEE Std 1003.1 Issue 7](http://pubs.opengroup.org/onlinepubs/9699919799/)
+ >
  > :link: [The Shell Hater's Handbook](http://shellhaters.org/)
+ >
  > :link: [Richard Stallman's personal site](https://stallman.org/articles/posix.html)
  
