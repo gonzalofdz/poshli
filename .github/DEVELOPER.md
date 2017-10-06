@@ -9,7 +9,7 @@
 
 <a name="welcome"></a>
 
-# :star: Welcome!
+# Welcome! :star:
 
 If you are reading this document then you are interested in contributing to the lispo 
 project, many thanks for that! :clap:
@@ -69,7 +69,7 @@ base64_enc()
  It value lies in that the function gives to developer a POSIX-compliant way of 
  solving a task.
  
- *Why not 'echo'? it's shortener.* :thought_balloon:
+ *Why not 'echo'? it's shortener.*:thought_balloon: 
  Because the usefulness of these functions is to be able to use them to handle 
  variables, and a carriage return is not friendly with variables, "echo -n" would 
  solve the issue, but then it wouldn't be POSIX-compliant.
