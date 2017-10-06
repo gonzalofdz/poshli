@@ -1,5 +1,5 @@
 ###### © 2017 L. Gonzalo Fernández-Díez Martínez <humanogonzalo@gmail.com>
- :octocat:
+
 # Developer documentation
 
 * <a href="#welcome">Welcome!</a>
@@ -9,7 +9,7 @@
 
 <a name="welcome"></a>
 
-# Welcome!
+# Welcome! :octocat:
 
 If you are reading this document then you are interested in contributing to the lispo 
 project, many thanks for that!
