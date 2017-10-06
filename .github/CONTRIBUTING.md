@@ -15,12 +15,12 @@
 :globe_with_meridians: **Translators**:
 > - all languages for the time being.
 
-:camera: **Media cretors**:
+:cd: **Media cretors**:
 > - media for Twitter.
 > - logo, emblem, figure, symbol.
 > - Youtube Videos.
 
-:newspaper: **Editors**:
+:page_with_curl: **Editors**:
 > - for to write manual pages and wiki and/or correct lexical errors of the comments.
 
 ## Code of conduct
