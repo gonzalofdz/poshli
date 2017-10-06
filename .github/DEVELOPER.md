@@ -33,7 +33,7 @@ _To ensure consistency throughout the source code, keep these rules in mind as y
 are working._
 
 **A function only must to do**  (one of these)**:**
- - Creates a variable with the same name as the function and return.
+ - Creates a variable with the same name as the function and return 0 sucess or 1 error.
  - Only returns  0 (true) or 1 (false)
 
 **Uses all available POSIX resources**.
