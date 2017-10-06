@@ -42,8 +42,8 @@ http://shellhaters.org/
  	etc...
  }
  ```
- It's inappropriate because already exists a base64 POSIX-compliant program that solves it better 
- and faster.incorrect
+ It's inappropriate because already exists a base64 POSIX-compliant program that solves it
+ better and faster.
  
  Example of a __proper__ function:
  ```sh
