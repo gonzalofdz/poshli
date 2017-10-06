@@ -12,7 +12,7 @@
 > - finding errors in current code.
 > - coding Improvements.
 
-:us: **Translators**:
+:globe_with_meridians: **Translators**:
 > - all languages for the time being.
 
 :camera: **Media cretors**:
