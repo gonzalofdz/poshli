@@ -20,7 +20,7 @@
 
 
 #
-#	Strings in lispo
+#	Encryptions in lispo
 #
 #	Third party: https://www.gnu.org/software/
 #
