@@ -34,8 +34,8 @@ str_replace()
 	#	Example:
 	#				str_change "y" "ad" "my dog"
 	#
-	str_replace=$(printf '%s' "$3" | tr "$1" "$2")
-	printf '%s' "$str_replace"
+	str_replace=$(printf '%s' "$3" | tr "$1" "$2") || return 1 &&
+	printf '%s' "$str_replace" || return 1 &&
 	return 0
 }
 
@@ -46,7 +46,7 @@ str_lower()
 	#	Example of use:	lowercase=$(str_lower "${str}")
 	# 
 	str_lower=$(printf '%s' "${*}" | awk '{printf tolower($0)}') || return 1 &&
-	printf '%s' "$str_lower"
+	printf '%s' "$str_lower" || return 1 &&
 	return 0
 }
 
@@ -57,7 +57,7 @@ str_upper()
 	#	Example of use:	uppercase=$(str_upper "${str}")
 	# 
 	str_upper=$(printf '%s' "${*}" | awk '{printf toupper($0)}') || return 1 &&
-	printf '%s' "$str_upper"
+	printf '%s' "$str_upper" || return 1 &&
 	return 0
 }
 
