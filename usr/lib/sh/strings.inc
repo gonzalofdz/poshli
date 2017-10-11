@@ -26,7 +26,7 @@
 
 str_replace()
 {
-	#	Prints $str_replace whit the result of replacing @1 for @2 in @3.
+	#	Prints $str_replace whit the result of replacing all @1 for @2 in @3.
 	#	Regular expressions are not allowed. It's case sensitive.
 	#
 	#	Syntax:
@@ -35,8 +35,7 @@ str_replace()
 	#	Example:
 	#				str_replace=$(str_replace "y" "ad" "my dog")
 	#
-	str_replace=$(printf '%s' "$3" | tr "$1" "$2") || return 1 &&
-	printf '%s' "$str_replace" || return 1 &&
+	printf '%s' "$3" | tr "$1" "$2" || return 1 &&
 	return 0
 }
 
@@ -46,8 +45,7 @@ str_lower()
 	#
 	#	Example of use:	lowercase=$(str_lower "${str}")
 	# 
-	str_lower=$(printf '%s' "${*}" | awk '{printf tolower($0)}') || return 1 &&
-	printf '%s' "$str_lower" || return 1 &&
+	printf '%s' "${*}" | awk '{printf tolower($0)}' || return 1 &&
 	return 0
 }
 
@@ -57,8 +55,7 @@ str_upper()
 	#
 	#	Example of use:	uppercase=$(str_upper "${str}")
 	# 
-	str_upper=$(printf '%s' "${*}" | awk '{printf toupper($0)}') || return 1 &&
-	printf '%s' "$str_upper" || return 1 &&
+	printf '%s' "${*}" | awk '{printf toupper($0)}' || return 1 &&
 	return 0
 }
 
@@ -70,9 +67,15 @@ str_len()
 	#
 	#	Result:		6
 	#
-	str_len=$(printf %s "${*}" | wc -m) || return 1 &&
-	str_len=$(expr ${str_len}) || return 1 &&
-	printf '%u' ${str_len} || return 1 &&
+
+	#	This is the main byte counter:
+	str_len_temp=$(printf %s "${*}" | wc -m) || return 1 &&
+
+	#	This is for what the string to be a numeric digit.
+	str_len_temp=$(expr ${str_len_temp}) || return 1 &&
+
+	printf '%u' ${str_len_temp} || return 1 &&
+	unset -v str_len_temp
 	return 0
 }
 
@@ -84,9 +87,15 @@ str_len_bytes()
 	#
 	#	Result:		7
 	#
-	str_len_bytes=$(printf %s "${*}") || return 1 &&
-	str_len_bytes=$(expr length "${str_len_bytes}") || return 1 &&
-	printf '%u' ${str_len_bytes} || return 1 &&
+
+	#	This is the main byte counter:
+	str_len_bytes_temp=$(printf %s "${*}") || return 1 &&
+	
+	#	This is for what the string to be a numeric digit.
+	str_len_bytes_temp=$(expr length "${str_len_bytes_temp}") || return 1 &&
+
+	printf '%u' ${str_len_bytes_temp} || return 1 &&
+	unset -v str_len_bytes_temp
 	return 0
 }
 
