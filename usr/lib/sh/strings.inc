@@ -18,10 +18,11 @@
 #
 #__
 
-
+#
 #	Strings in lispo
 #
 #	Third party: https://www.gnu.org/software/
+#
 
 str_replace()
 {
