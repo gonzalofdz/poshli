@@ -29,10 +29,10 @@ str_replace()
 	#	Regular expressions are not allowed. It's case sensitive.
 	#
 	#	Syntax:
-	#				str_change "chage this" "by this" "main string"
+	#				str_replace "chage this" "by this" "main string"
 	#
 	#	Example:
-	#				str_change "y" "ad" "my dog"
+	#				str_replace=$(str_replace "y" "ad" "my dog")
 	#
 	str_replace=$(printf '%s' "$3" | tr "$1" "$2") || return 1 &&
 	printf '%s' "$str_replace" || return 1 &&
