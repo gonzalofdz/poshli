@@ -27,23 +27,25 @@
 
 base64_enc()
 {
-	#	Creates a variable called $base64_enc with the input string base64 
-	#	encoded.
+	#	Prints the input string base64 encoded.
 	#
-	#	Example:	base64_enc "String"
+	#	Example:	encoded=$(base64_enc "String")
 	#
-	base64_enc=`printf '%s' "${*}" | base64`
+	printf '%s' "${*}" | base64 || return 1 &&
 	return 0
 }
 
 base64_dec()
 {
-	#	Creates a variable called $base64_enc with the input string base64 
-	#	decoded.
+	#	Prints the input string base64 encoded.
 	#
-	#	Example:	base64_dec "String"
+	#	Example:	decoded=$(base64_enc "$(encoded)")
 	#
-	base64_dec=`printf '%s' "${*}" | base64 -d`
+	printf '%s' "${*}" | base64 -d || return 1 &&
 	return 0
 }
 
+#	lispo developers comments:
+#
+#	> Functions must follow the order they have.
+#
