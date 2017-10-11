@@ -68,7 +68,7 @@ str_len()
 	#	Result:		6
 	#
 
-	#	This is the main byte counter:
+	#	This is the main string length counter:
 	str_len_temp=$(printf %s "${*}" | wc -m) || return 1 &&
 
 	#	This is for what the string to be a numeric digit.
