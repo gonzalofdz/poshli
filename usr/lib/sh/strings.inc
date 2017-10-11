@@ -19,69 +19,88 @@
 #__
 
 
-#
 #	Strings in lispo
 #
-#	Functions must follow the order they have.
-#
+#	Third party: https://www.gnu.org/software/
 
-str_change()
+str_replace()
 {
-	#	Change @1 for @2 in @3
-	#		( Quotation marks needed. )
+	#	Prints $str_replace whit the result of replacing @1 for @2 in @3.
+	#	Regular expressions are not allowed. It's case sensitive.
 	#
-	#	Sintaxis:
-	#		str_change "chage this" "for this" "main string"
+	#	Syntax:
+	#				str_change "chage this" "by this" "main string"
 	#
 	#	Example:
-	#		str_change "y" "ad" "my dog"
+	#				str_change "y" "ad" "my dog"
 	#
-	string="${3-}"
-	changeThis="${1}"
-	forThisOne="${3}"
-	str_change=`printf '%s' "${string}" | sed s/"${changeThis}"/"${forThisOne}"/g`
+	str_replace=$(printf '%s' "$3" | tr "$1" "$2")
+	printf '%s' "$str_replace"
 	return 0
 }
 
 str_lower()
 {
-	#	Creates a variable called $str_lower with lower case conversion 
-	#	to input parameter.
+	#	Prints a lower case conversion of input parameter.
 	#
-	#	Example:	str_lower "$str"; printf '%s' "$str_lower"
+	#	Example of use:	lowercase=$(str_lower "${str}")
 	# 
-	str_lower=`printf '%s' "${*}" | awk '{printf tolower($0)}'`
+	str_lower=$(printf '%s' "${*}" | awk '{printf tolower($0)}') || return 1 &&
+	printf '%s' "$str_lower"
 	return 0
 }
 
 str_upper()
 {
-	#	Upper case.
+	#	Prints an upper case conversion of input parameter.
 	#
-	#	Example:	str_upper "lowercase string"
-	#
-	str_upper=`printf '%s' "${*}" | awk '{printf toupper($0)}'`
+	#	Example of use:	uppercase=$(str_upper "${str}")
+	# 
+	str_upper=$(printf '%s' "${*}" | awk '{printf toupper($0)}') || return 1 &&
+	printf '%s' "$str_upper"
 	return 0
 }
 
 str_len()
 {
-	#	Creates a variable called $str_len with the length of the string
+	#	Prints the length of the string.
 	#
-	#	Example:	str_len "this string"
+	#	Example:	string=$(str_len "España")
 	#
-	str_len=`printf %s "${*}" | wc -m` &&
-	str_len=`expr ${str_len}` &&
-	str_len=`printf %u ${str_len}`
+	#	Result:		6
+	#
+	str_len=$(printf %s "${*}" | wc -m) || return 1 &&
+	str_len=$(expr ${str_len}) || return 1 &&
+	printf '%u' ${str_len} || return 1 &&
 	return 0
 }
 
-#
+str_len_bytes()
+{
+	#	Prints the length in bytes of the string.
+	#
+	#	Example:	string=$(str_len_bytes "España")
+	#
+	#	Result:		7
+	#
+	str_len_bytes=$(printf %s "${*}") || return 1 &&
+	str_len_bytes=$(expr length "${str_len_bytes}") || return 1 &&
+	printf '%u' ${str_len_bytes} || return 1 &&
+	return 0
+}
+
+
 #	lispo developers comments:
 #
-#	> Some functions uses awk to cover utf8 characters with less consumption.
+#	> Functions must follow the order they have.
+#
+#	> Some functions uses awk to cover utf8 characters with less consumption, but other 
+#	  ways will be consider.
+#
 #	> expr is used some times for the returned string to be a numeric digit.
 #	  https://www.gnu.org/software/libc/manual/html_node/Table-of-Output-Conversions.html
+#
 #	> wc is used because characters are counted instead of bytes even in utf8.
 #
-
+#	> str_replace="${3//$1/$2}" That's not POSIX compliant.
+#
