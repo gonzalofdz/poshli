@@ -45,7 +45,7 @@ http://shellhaters.org/
  ```sh
  base64_enc()
  {
- 	base_64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+ 	chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
  	var="`echo $base_64_chars | cut -c1-$x`";
  	etc...
  }
@@ -57,12 +57,11 @@ http://shellhaters.org/
  ```sh
 base64_enc()
 {
-	#	Creates a variable called $base64_enc with the input string base64 
-	#	encoded.
+	#	Prints the input string base64 encoded.
 	#
-	#	Example:	base64_enc "String"
+	#	Example:	encoded=$(base64_enc "String")
 	#
-	base64_enc=`printf '%s' "${*}" | base64`
+	printf '%s' "${*}" | base64 || return 1 &&
 	return 0
 }
  ```
