@@ -20,9 +20,9 @@
 
 
 #
-#	Encryptions in lispo
+#	Strings in lispo
 #
-#	Functions must follow the order they have.
+#	Third party: https://www.gnu.org/software/
 #
 
 base64_enc()
