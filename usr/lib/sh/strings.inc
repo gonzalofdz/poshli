@@ -27,8 +27,9 @@
 
 str_replace()
 {
-	#	Prints $str_replace whit the result of replacing all @1 for @2 in @3.
-	#	Regular expressions are not allowed. It's case sensitive.
+	#	Prints a given string with the result of replacing all @1 for @2 in @3.
+	#	Regular expressions are allowed and POSIX character class too.
+	#	It's case sensitive.
 	#
 	#	Syntax:
 	#				str_replace "chage this" "by this" "main string"
@@ -36,7 +37,7 @@ str_replace()
 	#	Example:
 	#				str_replace=$(str_replace "y" "ad" "my dog")
 	#
-	printf '%s' "$3" | tr "$1" "$2" || return 1 &&
+	printf '%s' "$3" | sed -e "s@${1}@${2}@g" || return 1 &&
 	return 0
 }
 
@@ -66,7 +67,7 @@ str_len()
 	#
 	#	Example:	string=$(str_len "España")
 	#
-	#	Result:		6
+	#	Result:		str_len is 6
 	#
 
 	#	This is the main string length counter:
@@ -76,7 +77,7 @@ str_len()
 	str_len_temp=$(expr ${str_len_temp}) || return 1 &&
 
 	printf '%u' ${str_len_temp} || return 1 &&
-	unset -v str_len_temp
+	unset -v str_len_temp || return 1 &&
 	return 0
 }
 
@@ -86,7 +87,7 @@ str_len_bytes()
 	#
 	#	Example:	string=$(str_len_bytes "España")
 	#
-	#	Result:		7
+	#	Result:		str_len is 7
 	#
 
 	#	This is the main byte counter:
@@ -96,7 +97,7 @@ str_len_bytes()
 	str_len_bytes_temp=$(expr length "${str_len_bytes_temp}") || return 1 &&
 
 	printf '%u' ${str_len_bytes_temp} || return 1 &&
-	unset -v str_len_bytes_temp
+	unset -v str_len_bytes_temp || return 1 &&
 	return 0
 }
 
@@ -110,6 +111,7 @@ str_len_bytes()
 #
 #	> expr is used some times for the returned string to be a numeric digit.
 #	  https://www.gnu.org/software/libc/manual/html_node/Table-of-Output-Conversions.html
+#	  I am not sure if it's necessary.
 #
 #	> wc is used because characters are counted instead of bytes even in utf8.
 #
