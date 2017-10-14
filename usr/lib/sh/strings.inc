@@ -28,16 +28,37 @@
 str_replace()
 {
 	#	Prints a given string with the result of replacing all @1 for @2 in @3.
-	#	Regular expressions are allowed and POSIX character class too.
-	#	It's case sensitive.
+	#	This command is as [tr] but strings oriented
+	#	Regular expressions or POSIX char class are NOT allowed.
+	#	It's case sensitive. 
 	#
-	#	Syntax:
-	#				str_replace "chage this" "by this" "main string"
+	#	Syntax:		str_replace "search" "replace" "main string"
 	#
-	#	Example:
-	#				str_replace=$(str_replace "y" "ad" "my dog")
+	#					"search":		Regular expressions aren't accepted.
+	#					"replace":		The replacement string.
+	#					"main string":	The main string where to replace.
 	#
-	printf '%s' "$3" | sed -e "s@${1}@${2}@g" || return 1 &&
+	#	Example:	str_replace=$(str_replace "y" "ad" "my dog")
+	#
+	str_replace_pattern=$(str_scape_pattern ${1})
+	str_replace_replace=$(str_scape_replacement ${2} )
+	printf '%s' "${3}" | sed --posix "s/${str_replace_pattern}/${str_replace_replace}/g" || return 1 &&
+	return 0
+}
+
+str_scape_pattern()
+{
+	#	prints a string by escaping characters corresponding to regular expression patterns.
+	#
+	printf '%s' "${1}" | sed --posix 's:[][\/.^$*]:\\&:g' || return 1 &&
+	return 0
+}
+
+str_scape_replacement()
+{
+	#	prints a string by escaping characters corresponding to regular expression replacements.
+	#
+	printf '%s' "${1}" | sed --posix 's:[\/&]:\\&:g;$!s/$/\\/' || return 1 &&
 	return 0
 }
 
