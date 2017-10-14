@@ -116,6 +116,8 @@ use the same rules, and this team use the following:
  
 #### External documentation about coding:
 
+ > :link: [Intro to POSIX](http://people.fas.harvard.edu/~lib113/reference/unix/portable_scripting.html)
+ >
  > :link: [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh)
  >
  > :link: [About IEEE Std 1003.1 Issue 6](http://bit.ly/2jkXDdD)
@@ -125,4 +127,4 @@ use the same rules, and this team use the following:
  > :link: [The Shell Hater's Handbook](http://shellhaters.org/)
  >
  > :link: [Richard Stallman's personal site](https://stallman.org/articles/posix.html)
- 
+
