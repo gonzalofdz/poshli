@@ -5,8 +5,11 @@
 * <a href="#welcome">Welcome!</a>
 * <a href="#shell">The Shell</a>
 * <a href="#coding-rules">Coding rules</a>
+ * <a href="#posixres">POSIX resources</a>
+ * <a href="#afunction">What a function must do</a>
+ * <a href="#varsandfunc">Variables and Functions</a>
+ * <a href="#formating">Formating the code</a>
 * <a href="#documentation">Documentation</a>
-
 <a name="welcome"></a>
 
 # Welcome! :zap:
@@ -31,10 +34,12 @@ Almost always [DASH](http://gondor.apana.org.au/~herbert/dash/) (*D*ebian *A*lmq
 
 _To ensure consistency throughout the source code, keep these rules in mind as you 
 are working._
+<a name="afunction"></a>
 
 **A function only must to do**  (one of these)**:**
- - Creates a variable with the same name as the function and return 0 sucess or 1 error.
+ - Print the result and return 0 sucess or 1 error.
  - Only returns  0 (true) or 1 (false)
+<a name="posixres"></a>
 
 **Uses all available POSIX resources**.
 
@@ -77,15 +82,19 @@ Please **Read
  [SECURITY.md](https://github.com/gonzalofdz/lispo/blob/master/.github/SECURITY.md)**. 
  Security is fundamental in the code of this project, otherwise this project would 
  not make sense.
- 
-#### Variables and function declaration names:
+ <a name="varsandfunc"></a>
+
+#### Variables and function:
 
  * Descriptive names but short as possible, do use well-known acronyms when necessary.
    for example, use UI for User Interface and Html for Hyper-Text Markup Language.
 
- * For abbreviations, at least 3 letters each word, except if the word itself has less 
+  * For abbreviations, at least 3 letters each word, except if the word itself has less 
    letters. For example, bin as binary is proper because it's intuitive, but b as byte is 
    inappropriate because it would be confused with bit, byte, bypass, etc..
+   
+ * Every variable must be unseted at the end of the function.
+ <a name="formating"></a>
 
 #### Formating the code:
 
