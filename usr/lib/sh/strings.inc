@@ -25,24 +25,50 @@
 #	Third party: https://www.gnu.org/software/
 #
 
+
 str_replace()
 {
 	#	Prints a given string with the result of replacing all @1 for @2 in @3.
-	#	This command is as [tr] but strings oriented
-	#	Regular expressions or POSIX char class are NOT allowed.
-	#	It's case sensitive. 
 	#
-	#	Syntax:		str_replace "search" "replace" "main string"
+	#	Syntax:	str_replace [-r] "search" "replace" "main string"
 	#
-	#					"search":		Regular expressions aren't accepted.
-	#					"replace":		The replacement string.
-	#					"main string":	The main string where to replace.
+	#				-r				Enable support for regular expressions.
+	#				"search":		keyword or pattern for search.
+	#				"replace":		Replacement string, if -r is activated "&" will 
+	#								expanded as the searched string.
+	#				"main string":	The main string where to replace.
 	#
-	#	Example:	str_replace=$(str_replace "y" "ad" "my dog")
+	#	Example 1:	str_replace=$(str_replace "y" "ad" "my dog")
 	#
-	str_replace_pattern=$(str_scape_pattern ${1})
-	str_replace_replace=$(str_scape_replacement ${2} )
-	printf '%s' "${3}" | sed --posix "s/${str_replace_pattern}/${str_replace_replace}/g" || return 1 &&
+	#	Example 2:	str_replace=$(str_replace -r "[g]$" "&s" "my dog")
+	rflag=
+	fflag=
+	while getopts rf: name
+	do
+		case $name in
+			r)	rflag=1;;
+			f)	fflag=1	# for future development.
+				bval="$OPTARG";;
+			?)	exit 22;;
+		esac
+	done
+	if [ ! -z "$rflag" ]; then
+		#
+		#	With RegEx support, -r flag activated:
+		#
+		shift $(($OPTIND - 1))
+		printf '%s\n' "${3}" | pat=${1} rep=${2} awk --posix '{gsub(ENVIRON["pat"], ENVIRON["rep"]); print}' || return 1 &&
+		return 0
+	fi
+	if [ ! -z "$fflag" ]; then
+		# for future development.
+		shift $(($OPTIND - 1))
+		return 0
+	fi
+	#
+	#	Without RegEx support:
+	#
+	printf '%s' "${3}" | sed --posix "s/$(str_scape_pattern ${1})/$(str_scape_replacement ${2})/g" || return 1 &&
 	return 0
 }
 
