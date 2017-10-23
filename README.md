@@ -24,6 +24,4 @@ If you want to contribute with the lispo project, please read [CONTRIBUTING.md](
 
 #### License:
 
- GNU Lesser General Public License
- 
- 
+ [GNU Lesser General Public License](https://github.com/gonzalofdz/lispo/blob/master/LICENSE)
