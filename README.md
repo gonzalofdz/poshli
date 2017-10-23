@@ -11,9 +11,9 @@ This software is not an application, this is only a library for shell developers
 
 #### INSTALATION:
 
-Just download or clone it and link .inc files from your shell script like this:
+Just download or clone it and link all.inc file from your shell script as this:
 
-. /path/file.inc
+. /usr/lib/sh/all.inc
 `Keep an eye on the [space] character after dot`
 
 Recommended path for .inc files is /usr/lib/sh/
