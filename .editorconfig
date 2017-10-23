@@ -1,4 +1,5 @@
 # EditorConfig is awesome: http://EditorConfig.org
 
 [*]
+indent_style = tab
 tab_width = 4
