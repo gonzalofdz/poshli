@@ -20,11 +20,13 @@
 
 
 #
-#	Strings in lispo
+#	All includes from lispo (A ring to govern them all).
 #
-#	A ring to govern them all.
+#	Settings:
 #
-lispo_path='/usr/lib/sh'
+#	lispo_path ending by /
+#
+lispo_path='/home/gon/dev/sh/lispo/usr/lib/sh/'
 
-. ${lispo_path}/strings
-. ${lispo_path}/encryptions.inc
+. ${lispo_path}strings.inc
+. ${lispo_path}encryptions.inc
