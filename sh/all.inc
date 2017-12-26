@@ -23,18 +23,21 @@
 #
 #	Settings:
 #
-#	lispo_path ending by /
+#	lispo_path
 #
-lispo_path='/usr/lib/sh/'
+lispo_path='/usr/lib/sh'
 
 	# Strings
-. ${lispo_path}strings.inc
+. ${lispo_path}/strings.inc
+
+	# Numbers
+. ${lispo_path}/numbers.inc
 
 	# File system
-. ${lispo_path}filesystem.inc
+. ${lispo_path}/filesystem.inc
 
 	# Encryptions
-. ${lispo_path}encryptions.inc
+. ${lispo_path}/encryptions.inc
 
 
 #	lispo developers comments:
