@@ -1,0 +1,13 @@
+HOW TO INSTALL
+
+link all.inc file from your shell script as this
+( Keep an eye on the [space] character after dot ) :
+
+. /usr/lib/sh/all.inc
+
+Alternatively you can link only a file as this:
+
+. /usr/lib/sh/common.inc	( This is mandatory for this way. )
+. /usr/lib/sh/strings.inc	( This is the include file you prefer. )
+
+Recommended path for .inc files is /usr/lib/sh/
