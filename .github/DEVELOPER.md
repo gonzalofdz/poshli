@@ -106,7 +106,9 @@ use the same rules, and this team use the following:
 
 * Each tab as 4 spaces. If your code editor doesn't have the tabs set up for 4-space 
   equivalence, then note that comments will be skewed for editors like vi, if possible, 
-  set your editor to tabs equivalent to 4 spaces.
+  set your editor to tabs equivalent to 4 spaces. If you want a plugin for your IDE that 
+  does the configuration for you, you have it available in:
+  [EditorConfig](http://editorconfig.org/#download)
 
 * Type the words of Functions name's in lowercase, separated by underscore and curly 
   bracket in the next line to main name.
