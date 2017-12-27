@@ -23,9 +23,7 @@
 #
 #	Settings:
 #
-#	poshli_path
-#
-poshli_path='/home/gon/dev/sh/poshli/sh'
+poshli_path='/usr/lib/sh'
 
 	# Strings
 . ${poshli_path}/strings.inc
@@ -40,7 +38,7 @@ poshli_path='/home/gon/dev/sh/poshli/sh'
 . ${poshli_path}/encryptions.inc
 
 
-#	poshli developers comments:
+#	poshli's developers comments:
 #
 #	> Legitimacy of the inclusion's dot can be verified in:
 #	  http://bit.ly/2yWpXaR
