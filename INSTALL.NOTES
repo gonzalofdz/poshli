@@ -6,3 +6,5 @@ link all.inc file from your shell script as this
 . /usr/lib/sh/all.inc
 
 Recommended path for .inc files is /usr/lib/sh/
+
+or you can run INSTALL.sh
