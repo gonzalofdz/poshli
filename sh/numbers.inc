@@ -31,7 +31,7 @@
 
 is_pat() 
 {
-	#	Is the sentence ($1) into the pattern ($2)? [ no: 1  yes: 0 ]
+	#	Is the sentence ($1) into the pattern ($2)? [ no: false  yes: true ]
 	#
 	#	if ( is_pattern_match "$number" "0-9" ); then ...
 	#
@@ -104,7 +104,7 @@ randomize()
 	#
 	#	Example: RANDNUM=`randomize 5`
 	#
-	( is_natural "$1" ) && awk "BEGIN { srand(); printf(\"%u\",rand()*$1) }" || false
+	( is_natural "$1" ) && awk "BEGIN { srand(); printf(\"%u\",rand()*$1) }" || return 1
 }
 
 
