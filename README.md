@@ -2,10 +2,10 @@
 © 2017 L. Gonzalo Fernández-Díez Martínez
 <humanogonzalo@gmail.com>
 
-# lispo
+# poshli
 Standard Bourne-like, POSIX-compliant shell functions library for developers.
 
-#### What lispo is not:
+#### What poshli is not:
 
 This software is not an application, this is a library for shell developers.
 
@@ -20,8 +20,8 @@ Recommended path for .inc files is /usr/lib/sh/
 
 #### Contributions:
 
-If you want to contribute with the lispo project, please read 
-[CONTRIBUTING.md](https://github.com/gonzalofdz/lispo/blob/master/.github/CONTRIBUTING.md)
+If you want to contribute with the poshli project, please read 
+[CONTRIBUTING.md](https://github.com/gonzalofdz/poshli/blob/master/.github/CONTRIBUTING.md)
 
 #### License:
 
