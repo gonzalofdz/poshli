@@ -1,7 +1,7 @@
 © 2017 L. Gonzalo Fernández-Díez Martínez
 <humanogonzalo@gmail.com>
 
-# lispo
+# poshli
 
 ### Thanks for taking the time to contribute!
 
@@ -25,9 +25,9 @@
 
 ## Code of conduct
 
-Help us to keep lispo open and inclusive by following our [Code of Conduct (CoC)](https://github.com/gonzalofdz/lispo/blob/master/.github/CODE_OF_CONDUCT.md).
+Help us to keep poshli open and inclusive by following our [Code of Conduct (CoC)](https://github.com/gonzalofdz/poshli/blob/master/.github/CODE_OF_CONDUCT.md).
 
 ## Developer documentation
 
-[DEVELOPER.md](https://github.com/gonzalofdz/lispo/blob/master/.github/DEVELOPER.md)
+[DEVELOPER.md](https://github.com/gonzalofdz/poshli/blob/master/.github/DEVELOPER.md)
 
