@@ -1,46 +1,46 @@
 #
 #    Copyright 2017 L. Gonzalo Fernández-Díez Martínez
 #
-#    This file is part of lispo.
+#    This file is part of poshli.
 #
-#    lispo is free software: you can redistribute it and/or modify
+#    poshli is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Lesser General Public License as 
 #    published by the Free Software Foundation, either version 3 of the 
 #    License, or (at your option) any later version.
 #
-#    lispo is distributed in the hope that it will be useful,
+#    poshli is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU Lesser General Public License for more details.
 #
 #    You should have received a copy of the GNU Lesser General Public 
-#    License along with lispo. If not, see <http://www.gnu.org/licenses/>.
+#    License along with poshli. If not, see <http://www.gnu.org/licenses/>.
 #
 #__
 
 #
-#	All includes from lispo (A ring to govern them all).
+#	All includes from poshli (A ring to govern them all).
 #
 #	Settings:
 #
-#	lispo_path
+#	poshli_path
 #
-lispo_path='/usr/lib/sh'
+poshli_path='/home/gon/dev/sh/poshli/sh'
 
 	# Strings
-. ${lispo_path}/strings.inc
+. ${poshli_path}/strings.inc
 
 	# Numbers
-. ${lispo_path}/numbers.inc
+. ${poshli_path}/numbers.inc
 
 	# File system
-. ${lispo_path}/filesystem.inc
+. ${poshli_path}/filesystem.inc
 
 	# Encryptions
-. ${lispo_path}/encryptions.inc
+. ${poshli_path}/encryptions.inc
 
 
-#	lispo developers comments:
+#	poshli developers comments:
 #
 #	> Legitimacy of the inclusion's dot can be verified in:
 #	  http://bit.ly/2yWpXaR
