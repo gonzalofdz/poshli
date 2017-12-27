@@ -14,7 +14,7 @@
 
 # Welcome! :zap:
 
-If you are reading this document then you are interested in contributing to the lispo 
+If you are reading this document then you are interested in contributing to the poshli 
 project, many thanks for that! :clap:
 All contributions are welcome: ideas, documentation, code, patches, bug reports, 
 feature requests, etc.  And you don't need to be a programmer to speak up.
@@ -79,7 +79,7 @@ base64_enc()
  solve the issue, but then it wouldn't be POSIX-compliant.
 
 Please **Read 
- [SECURITY.md](https://github.com/gonzalofdz/lispo/blob/master/.github/SECURITY.md)**. 
+ [SECURITY.md](https://github.com/gonzalofdz/poshli/blob/master/.github/SECURITY.md)**. 
  Security is fundamental in the code of this project, otherwise this project would 
  not make sense.
  <a name="varsandfunc"></a>
