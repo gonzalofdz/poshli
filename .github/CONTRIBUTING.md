@@ -21,7 +21,7 @@
 > - Youtube Videos.
 
 :page_with_curl: **Editors**:
-> - for to write manual pages and wiki and/or correct lexical errors of the comments.
+> - to write manual pages and wiki and/or correct lexical errors of the comments.
 
 ## Code of conduct
 
