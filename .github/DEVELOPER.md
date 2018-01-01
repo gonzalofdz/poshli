@@ -78,8 +78,7 @@ base64_enc()
  variables, and a carriage return is not friendly with variables, "echo -n" would 
  solve the issue, but then it wouldn't be POSIX-compliant.
 
-Please read 
- [SECURITY.md](https://github.com/gonzalofdz/poshli/blob/master/.github/SECURITY.md). 
+Please read  [SECURITY.md](https://github.com/gonzalofdz/poshli/blob/master/.github/SECURITY.md). 
  Security is fundamental in the code of this project, otherwise this project would 
  not make sense.
  <a name="varsandfunc"></a>
