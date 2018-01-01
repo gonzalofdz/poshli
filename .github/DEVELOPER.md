@@ -46,7 +46,7 @@ are working._
 A list of available POSIX-compliant programs: 
 http://shellhaters.org/
  
- Example of an <del>__inappropriate__</del> function:
+ Example of an __inappropriate__ function:
  ```sh
  base64_enc()
  {
