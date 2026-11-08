@@ -1,33 +1,45 @@
-© 2017 L. Gonzalo Fernández-Díez Martínez
-<humanogonzalo@gmail.com>
+# Contributing to POSHLI
 
-# poshli
+Thank you for your interest in contributing to **POSHLI**! We welcome bug reports, test improvements, documentation updates, and new functions that adhere to our design principles.
 
-### Thanks for taking the time to contribute!
+---
 
-## How Can I Contribute?
+## Contribution Workflow
 
-:gear: **Developers**:
-> - making new functions.
-> - finding errors in current code.
-> - coding Improvements.
+1. **Fork and Clone**: Fork the repository and create your feature branch:
+   ```sh
+   git checkout -b feature/my-new-function
+   ```
 
-:globe_with_meridians: **Translators**:
-> - all languages for the time being.
+2. **Follow Design Rules**:
+   - Read and adhere to the guidelines in [DEVELOPER.md](DEVELOPER.md).
+   - Use short, intuitive function names (`is_*`, `trim`, etc.).
+   - Ensure strict POSIX compatibility and avoid non-standard GNU/BSD options.
+   - Use standard `unset variable` (no `-v`) for any temporary variables.
 
-:cd: **Media cretors**:
-> - media for Twitter.
-> - logo, emblem, figure, symbol.
-> - Youtube Videos.
+3. **Add Tests**:
+   - Add unit tests for your function in the appropriate file under `tests/` (`test_num.sh`, `test_fs.sh`, or `test_str.sh`).
+   - Cover normal cases, edge cases (empty strings, leading hyphens, whitespace), and missing argument checks (status `2`).
 
-:page_with_curl: **Editors**:
-> - to write manual pages and wiki and/or correct lexical errors of the comments.
+4. **Verify All Tests**:
+   ```sh
+   make test
+   make test-bundle
+   ```
+   All test suites must pass 100%.
 
-## Code of conduct
+5. **Generate the Bundle**:
+   If you modified files in `src/`, rebuild `poshli.sh`:
+   ```sh
+   make bundle
+   ```
 
-Help us to keep poshli open and inclusive by following our [Code of Conduct (CoC)](https://github.com/gonzalofdz/poshli/blob/master/.github/CODE_OF_CONDUCT.md).
+6. **Submit a Pull Request**:
+   - Provide a clear description of the problem solved or the function added.
+   - Reference any relevant issues.
 
-## Developer documentation
+---
 
-[DEVELOPER.md](https://github.com/gonzalofdz/poshli/blob/master/.github/DEVELOPER.md)
+## Code of Conduct
 
+All contributors are expected to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).

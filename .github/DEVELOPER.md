@@ -1,138 +1,80 @@
-###### © 2017 L. Gonzalo Fernández-Díez Martínez <humanogonzalo@gmail.com>
+# POSHLI Developer Documentation
 
-# Developer documentation
+## 1. Welcome
 
-* <a href="#welcome">Welcome!</a>
-* <a href="#shell">The Shell</a>
-* <a href="#coding-rules">Coding rules</a>
- * <a href="#posixres">POSIX resources</a>
- * <a href="#afunction">What a function must do</a>
- * <a href="#varsandfunc">Variables and Functions</a>
- * <a href="#formating">Formating the code</a>
-* <a href="#documentation">Documentation</a>
-<a name="welcome"></a>
+Thank you for contributing to the **POSHLI** project. All contributions that align with our core principles—clarity, portability, simplicity, and ergonomics—are warmly welcomed.
 
-# Welcome! :zap:
+---
 
-If you are reading this document then you are interested in contributing to the poshli 
-project, many thanks for that! :clap:
-All contributions are welcome: ideas, documentation, code, patches, bug reports, 
-feature requests, etc.  And you don't need to be a programmer to speak up.
+## 2. Target Shell and Platform
 
-<a name="shell"></a>
+- **Primary Target**: Linux with `/bin/sh` (typically DASH or BusyBox `sh`).
+- **Standard**: Strict conformance to the POSIX Shell Command Language (IEEE Std 1003.1).
+- **Secondary Goal**: Compatibility across other POSIX-compliant systems (FreeBSD, OpenBSD, NetBSD, macOS) whenever it does not add unnecessary complexity.
 
-# What shell can I use to testing the code?
+---
 
-**/bin/sh**
+## 3. Function Design Principles
 
-Almost always [DASH](http://gondor.apana.org.au/~herbert/dash/) (*D*ebian *A*lmquist 
-*SH*ell).
+Every POSHLI function must strictly follow one of two predictable behaviors:
 
-<a name="coding-rules"></a>
+1. **Predicate Functions** (`is_*`, `starts_with`, `ends_with`, `contains`):
+   - Silent: do not print anything to `stdout` or `stderr`.
+   - Return `0` for true / condition met.
+   - Return `1` for false / condition not met.
+   - Return `2` if required arguments are missing.
 
-# Coding Rules
+2. **Transformer / Producer Functions** (`trim`, `lower`, `upper`, `str_len`, `str_replace`):
+   - Print the processed result to `stdout` using `printf '%s\n'`.
+   - Return `0` on success.
+   - Return `2` if required arguments are missing.
 
-_To ensure consistency throughout the source code, keep these rules in mind as you 
-are working._
-<a name="afunction"></a>
+---
 
-**A function only must to do**  (one of these)**:**
- - Print the result and return 0 sucess or 1 error.
- - Only returns  0 (true) or 1 (false)
-<a name="posixres"></a>
+## 4. Use of Standard Tools & Built-ins
 
-**Uses all available POSIX resources**.
+- **Pragmatic POSIX**: Leverage standard POSIX utilities (`tr`, `sed`, `od`, `test`) when they provide a clean, tested, and reliable solution.
+- **Pure Shell When Practical**: Use standard shell built-in expansions (`case`, `${#var}`, `${var#pattern}`, `${var%pattern}`) for operations that are faster, simpler, and zero-fork.
+- **No Non-Standard GNU Extensions**: Do not use non-POSIX options such as `sed --posix`, `awk --posix`, or `expr length`.
+- **Never Use `echo`**: `echo` behavior with flags (like `-n`) or backslashes is non-portable across shells. Always use `printf '%s\n' "$var"` or `printf '%s' "$var"`.
 
-A list of available POSIX-compliant programs: 
-http://shellhaters.org/
- 
- Example of an __inappropriate__ function:
- ```sh
- base64_enc()
- {
- 	chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
- 	var="`echo $base_64_chars | cut -c1-$x`";
- 	etc...
- }
- ```
- _It's inappropriate because already exists a base64 POSIX-compliant program that 
- solves it better and faster._
- 
- Example of a **proper** function:
- ```sh
-base64_enc()
-{
-	#	Prints the input string base64 encoded.
-	#
-	#	Example:	encoded=$(base64_enc "String")
-	#
-	printf '%s' "${*}" | base64 || return 1 &&
-	return 0
-}
- ```
- It value lies in that the function gives to developer a POSIX-compliant way of 
- solving a task.
- 
- *Why not 'echo'? it's shortener.*:thought_balloon: 
- Because the usefulness of these functions is to be able to use them to handle 
- variables, and a carriage return is not friendly with variables, "echo -n" would 
- solve the issue, but then it wouldn't be POSIX-compliant.
+---
 
-Please read [SECURITY.md](https://github.com/gonzalofdz/poshli/blob/master/.github/SECURITY.md).  Security is fundamental in the code of this project, otherwise this project would not make sense.
- <a name="varsandfunc"></a>
+## 5. Naming and Variables
 
-#### Variables and function:
+- **Function Names**:
+  - Lowercase with underscores (`snake_case`).
+  - Short, intuitive, and descriptive: `is_integer`, `is_file`, `trim`, `lower`.
+  - Avoid overly verbose or hierarchical names (e.g. use `is_dir`, not `poshli_fs_is_directory`).
+- **Temporary Variables**:
+  - The `local` keyword is **not** defined in POSIX IEEE 1003.1. Do not use `local`.
+  - Temporary variables must use a distinct private prefix (e.g., `_trim_str`, `_in_val`).
+  - Every temporary variable **must** be explicitly unset before the function returns using standard `unset variable` (do not use `unset -v`).
+  - Prefer zero-variable pattern matching when possible.
+- **Strict Quoting**:
+  - Always quote variable expansions: `"$1"`, `"$@"` to prevent unintended word splitting and pathname expansion.
 
- * Descriptive names but short as possible, do use well-known acronyms when necessary.
-   for example, use UI for User Interface and Html for Hyper-Text Markup Language.
+---
 
-  * For abbreviations, at least 3 letters each word, except if the word itself has less 
-   letters. For example, bin as binary is proper because it's intuitive, but b as byte is 
-   inappropriate because it would be confused with bit, byte, bypass, etc..
-   
- * Every variable must be unseted at the end of the function.
- <a name="formating"></a>
+## 6. Code Formatting
 
-#### Formating the code:
+- **Indentation**: Tab characters (configured to 4 spaces equivalence).
+- **Line Endings**: LF (Unix-style).
+- **Line Length**: Wrap code and comments at approximately 100 characters.
+- **Function Declaration Syntax**:
+  ```sh
+  function_name() {
+	[ $# -ge 1 ] || return 2
+	# ...
+  }
+  ```
 
-There are no better nor worse ways to format, the important thing is that a whole team 
-use the same rules, and this team use the following:
+---
 
-* Tab to indent, if you prefer you can coding with spaces and 
-  [convert](https://www.browserling.com/tools/spaces-to-tabs).
+## 7. Testing Requirements
 
-* Each tab as 4 spaces. If your code editor doesn't have the tabs set up for 4-space 
-  equivalence, then note that comments will be skewed for editors like vi, if possible, 
-  set your editor to tabs equivalent to 4 spaces. If you want a plugin for your IDE that 
-  does the configuration for you, you have it available in:
-  [EditorConfig](http://editorconfig.org/#download)
-
-* Type the words of Functions name's in lowercase, separated by underscore and curly 
-  bracket in the next line to main name.
-
-* Type the words of Variable name's in lowercase separated by underscore or camelCase at 
-  your preferred way.
-
-* Names of Constants in uppercase separated by underscore.
-
-* Wrap all code at 100 characters.
-
-* The new line characters with LF (Unix), you can to use a
-  [converter](http://newline.nadav.org/) if you need it.
-
- <a name="documentation"></a>
- 
-#### External documentation about coding:
-
- > :link: [Intro to POSIX](http://people.fas.harvard.edu/~lib113/reference/unix/portable_scripting.html)
- >
- > :link: [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh)
- >
- > :link: [About IEEE Std 1003.1 Issue 6](http://bit.ly/2jkXDdD)
- >
- > :link: [About IEEE Std 1003.1 Issue 7](http://pubs.opengroup.org/onlinepubs/9699919799/)
- >
- > :link: [The Shell Hater's Handbook](http://shellhaters.org/)
- >
- > :link: [Richard Stallman's personal site](https://stallman.org/articles/posix.html)
-
+Every function added or modified must include unit tests in `tests/`:
+1. Normal valid cases.
+2. Edge cases (empty strings `""`, spaces, special characters, leading hyphens `-n`).
+3. Argument validation checks (verifying status `2` on missing arguments).
+4. Both `make test` (modular sources) and `make test-bundle` (bundled `poshli.sh`) must pass with 100% success.
