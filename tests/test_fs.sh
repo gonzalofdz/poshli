@@ -24,7 +24,7 @@ is_empty_file; assert_status 2 $? "is_empty_file requires argument (status 2)"
 
 # Setup temporary test fixtures
 TMP_FIXTURE_DIR="/tmp/poshli_test_fs_$$"
-trap 'rm -rf "$TMP_FIXTURE_DIR"' EXIT INT TERM HUP
+trap 'rm -rf "$TMP_FIXTURE_DIR"' 0 INT TERM HUP
 mkdir -p "$TMP_FIXTURE_DIR"
 
 REG_FILE="$TMP_FIXTURE_DIR/regular.txt"

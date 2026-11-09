@@ -80,10 +80,13 @@ str_len() {
 	'
 }
 
-# str_len_bytes counts bytes exactly, independent of the locale.
+# str_len_bytes counts bytes exactly, independent of the locale. Some wc
+# implementations (for example BSD and macOS wc) pad the count with leading
+# blanks, so the first whitespace-separated field is printed to guarantee a
+# clean numeric result.
 str_len_bytes() {
 	[ $# -ge 1 ] || return 2
-	printf '%s' "$1" | wc -c
+	printf '%s' "$1" | wc -c | awk '{print $1}'
 }
 
 str_replace() {

@@ -1,18 +1,18 @@
 # POSHLI
 
-**POSHLI** (*POSIX Shell Library*) is a lightweight, standard, and ergonomic library of reusable shell functions for `/bin/sh` (POSIX). Its primary purpose is to make writing shell scripts in Linux and other POSIX-compliant environments easier, faster, and more intuitive without constantly reinventing common utilities.
+**POSHLI** (*POSIX Shell Library*) is a lightweight, general-purpose shell library built around portable POSIX shell syntax and widely available standard utilities. It provides reusable, ergonomic functions for automation, text processing, validation, and everyday scripting on Linux, macOS, BSD, WSL, Cygwin, and other POSIX-compatible Unix-like environments.
 
 ---
 
 ## Features
 
-- **Standard POSIX sh**: Designed, verified, and tested against standard `/bin/sh` interpreters, including `dash` (Debian/Ubuntu default `/bin/sh`), `busybox sh`, and `bash --posix`.
-- **Linux as primary platform**: Optimized for Linux development workflows while maintaining strict POSIX portability.
+- **Portable POSIX shell**: Designed and tested against standard `/bin/sh` interpreters, including `dash` (Debian/Ubuntu default `/bin/sh`), `busybox sh`, and `bash --posix`, without relying on shell-specific extensions.
+- **General purpose and portable**: Linux is the primary continuous-integration platform. macOS, BSD, WSL, and Cygwin are supported targets where the required standard utilities behave portably; they are not all continuously tested, so platform-specific behavior may vary.
 - **Short and ergonomic API**: Clean, direct function names without unnecessary prefixes (`is_integer`, `is_file`, `trim`, `lower`, etc.).
 - **Self-contained bundle**: Distributed as a single file (`poshli.sh`) ready for direct inclusion or project vendoring.
 - **Predictable return codes**: Predicates return `0` (true) or `1` (false); missing mandatory arguments return `2`.
-- **Unicode-aware helpers**: `str_len` counts UTF-8 code points independently of the locale; `lower`/`upper` always map ASCII and use `gawk` for Unicode case mapping when it is available and the active locale is UTF-8, falling back to the system `awk` otherwise (typically ASCII-only).
-- **Zero heavy dependencies**: Relies strictly on native shell syntax and standard POSIX utilities. `gawk` is optional and only enables Unicode case mapping; when it is absent, `lower`/`upper` use the system `awk` (typically ASCII-only). No extra tool is required.
+- **Unicode-aware helpers**: `str_len` counts UTF-8 code points independently of the locale; `lower`/`upper` map ASCII letters and use `gawk` for Unicode simple case mapping when it is available and the active locale is UTF-8, falling back to the system `awk` otherwise (typically ASCII-only).
+- **Minimal dependencies**: Built around the POSIX shell and standard POSIX utilities (`sed`, `od`, `awk`, `wc`). `gawk` is an optional enhancement that enables Unicode case mapping; when it is absent, `lower`/`upper` use the system `awk` (typically ASCII-only). No extra tool is required for normal use.
 
 ---
 
@@ -76,6 +76,8 @@ In any standard POSIX shell script, source the library using the dot (`.`) comma
 ```
 
 > **Note on Namespaces**: POSHLI exports short, ergonomic functions directly into the shell's global function table for maximum ease of use. Ensure your scripts do not define conflicting function names.
+
+> **Modular sources**: The `src/` directory contains the individual modules (`core.sh`, `num.sh`, `fs.sh`, `str.sh`). Each module is self-contained and can be sourced on its own during development, but the supported distribution format is the generated `poshli.sh` bundle.
 
 ---
 
@@ -160,15 +162,15 @@ POSHLI distinguishes three concepts that are often all called "length":
 ### Length semantics
 
 - `str_len` counts **Unicode code points** in valid UTF-8. It uses `od` and `awk` to count UTF-8 leading bytes, so the result is consistent across `dash`, BusyBox `sh`, and `bash --posix`, and independent of the active locale.
-- `str_len_bytes` counts **bytes** exactly and is always locale-independent.
+- `str_len_bytes` counts **bytes** exactly and is always locale-independent. The `wc -c` output is normalized, because some BSD and macOS `wc` implementations pad the count with leading blanks.
 - Neither function counts **grapheme clusters** (visual characters). A combining mark or the components of a ZWJ emoji are counted separately. POSHLI does not normalize text, so `é` (U+00E9) and `e` + U+0301 are different code-point sequences even when they render identically.
 - For invalid UTF-8, `str_len` returns an approximate count based on UTF-8 leading-byte heuristics. Use `str_len_bytes` when the data is not known to be valid UTF-8.
 
 ### Case mapping (`lower` / `upper`)
 
-ASCII letters are always mapped, though the mapping is locale-dependent when `gawk` is used; set `LC_ALL=C` for deterministic ASCII behavior. For case mapping, POSHLI uses `gawk` when it is available and otherwise the system `awk`, a mandatory POSIX utility:
+ASCII letters are mapped by both backends, but the exact mapping is locale-dependent when `gawk` is used; set `LC_ALL=C` for deterministic ASCII behavior. For case mapping, POSHLI uses `gawk` when it is available and otherwise the system `awk`, a mandatory POSIX utility:
 
-- If `gawk` is available in `PATH`, it is preferred and applies Unicode case mapping when the active locale is UTF-8. `gawk` is free software and available in every major Linux distribution, Cygwin, WSL, macOS (Homebrew) and the BSDs.
+- If `gawk` is available in `PATH`, it is preferred and applies Unicode case mapping when the active locale is UTF-8. `gawk` is free software and can be installed through the package manager of most Linux distributions, Cygwin, WSL, macOS (Homebrew or MacPorts), and the BSDs.
 - Otherwise the system `awk` is used. Most implementations (for example `mawk` and BusyBox `awk`) leave non-ASCII bytes unchanged in the C and UTF-8 locales, so the result is typically ASCII-only. POSHLI does not guarantee Unicode case mapping without `gawk`, and the result still depends on the `awk` implementation and the active locale.
 
 The backend is selected once when the library is loaded; there is no runtime probing and no cache. Results depend on the selected backend (`gawk` or the system `awk`) and on the active locale: when `gawk` is used, it delegates to the casing rules of that locale. In a single-byte non-UTF-8 locale (for example ISO-8859-1), a system `awk` may map high bytes and alter UTF-8 input.
@@ -231,7 +233,7 @@ fi
 
 ## Testing
 
-POSHLI includes a zero-dependency automated test suite compatible with standard POSIX shells. The number of tests adapts to the environment: locale-dependent tests run only when a UTF-8 locale is available, and the Unicode case-mapping assertions run only when a UTF-8 locale and `gawk` are available (254 tests with a UTF-8 locale and no `gawk`; 257 with `gawk` and a UTF-8 locale):
+POSHLI includes a self-contained automated test suite that runs under standard POSIX shells and uses only standard utilities. The number of tests adapts to the environment: locale-dependent tests run only when a UTF-8 locale is available, and the Unicode case-mapping assertions run only when a UTF-8 locale and `gawk` are available (254 tests with a UTF-8 locale and no `gawk`; 257 with `gawk` and a UTF-8 locale):
 
 ```sh
 # Run test suite against modular sources (src/):

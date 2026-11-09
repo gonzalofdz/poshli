@@ -8,9 +8,10 @@ Thank you for contributing to the **POSHLI** project. All contributions that ali
 
 ## 2. Target Shell and Platform
 
-- **Primary Target**: Linux with `/bin/sh` (typically DASH or BusyBox `sh`).
+- **Primary Target**: POSIX-compatible `/bin/sh` (DASH, BusyBox `sh`, `bash --posix`).
 - **Standard**: Strict conformance to the POSIX Shell Command Language (IEEE Std 1003.1).
-- **Secondary Goal**: Compatibility across other POSIX-compliant systems (FreeBSD, OpenBSD, NetBSD, macOS) whenever it does not add unnecessary complexity.
+- **Test Platform**: Linux is the primary continuous-integration platform. macOS and the BSDs are supported targets where the required standard utilities behave portably, but they are not all continuously tested.
+- **Portability Principle**: Prefer POSIX syntax and widely available standard utilities. Avoid shell-specific extensions and undocumented tool behavior.
 
 ---
 
@@ -24,7 +25,7 @@ Every POSHLI function must strictly follow one of two predictable behaviors:
    - Return `1` for false / condition not met.
    - Return `2` if required arguments are missing.
 
-2. **Transformer / Producer Functions** (`trim`, `lower`, `upper`, `str_len`, `str_replace`):
+2. **Transformer / Producer Functions** (`trim`, `lower`, `upper`, `str_len`, `str_len_bytes`, `str_replace`):
    - Print the processed result to `stdout` using `printf '%s\n'`.
    - Return `0` on success.
    - Return `2` if required arguments are missing.
@@ -33,9 +34,10 @@ Every POSHLI function must strictly follow one of two predictable behaviors:
 
 ## 4. Use of Standard Tools & Built-ins
 
-- **Pragmatic POSIX**: Leverage standard POSIX utilities (`tr`, `sed`, `od`, `test`) when they provide a clean, tested, and reliable solution.
+- **Pragmatic POSIX**: Leverage standard POSIX utilities (`awk`, `sed`, `od`, `wc`, `tr`, `test`) when they provide a clean, tested, and reliable solution.
 - **Pure Shell When Practical**: Use standard shell built-in expansions (`case`, `${#var}`, `${var#pattern}`, `${var%pattern}`) for operations that are faster, simpler, and zero-fork.
 - **No Non-Standard GNU Extensions**: Do not use non-POSIX options such as `sed --posix`, `awk --posix`, or `expr length`.
+- **Normalize External Output**: Standard utilities may have implementation-specific formatting. For example, BSD and macOS `wc` pad counts with leading blanks. When parsing external output, normalize it explicitly instead of assuming a clean format.
 - **Never Use `echo`**: `echo` behavior with flags (like `-n`) or backslashes is non-portable across shells. Always use `printf '%s\n' "$var"` or `printf '%s' "$var"`.
 
 ---
@@ -78,3 +80,15 @@ Every function added or modified must include unit tests in `tests/`:
 2. Edge cases (empty strings `""`, spaces, special characters, leading hyphens `-n`).
 3. Argument validation checks (verifying status `2` on missing arguments).
 4. Both `make test` (modular sources) and `make test-bundle` (bundled `poshli.sh`) must pass with 100% success.
+
+---
+
+## 8. Architecture and Module Layout
+
+- `src/` contains the modular source files (`core.sh`, `num.sh`, `fs.sh`, `str.sh`). Each module is self-contained and uses a load guard so it can be sourced independently and repeatedly.
+- `poshli.sh` is the generated Core bundle. It is produced by the Makefile from the module list in `BUNDLE_SOURCES`; never edit it by hand.
+- Bundles are concatenations, not loaders. Do not introduce relative-path sourcing (`. ./src/num.sh`): it depends on the current working directory and breaks installation and vendoring. POSIX shell also lacks a portable way to resolve the directory of a sourced file.
+- New general-purpose modules belong in `src/` and are added to `BUNDLE_SOURCES`.
+- Specialized modules with extra dependencies (for example cryptography or networking) should be distributed as separate optional bundles, not added to the Core bundle.
+- Each generated bundle must use a unique top-level load guard so that loading more than one bundle is safe.
+- Keep the public API stable. Adding functions is fine; changing or removing existing functions requires a compatibility review.
