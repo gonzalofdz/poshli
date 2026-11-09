@@ -1,0 +1,27 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shell:
+          - /bin/sh
+          - busybox sh
+          - bash --posix
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install busybox
+        run: sudo apt-get update && sudo apt-get install -y busybox
+
+      - name: Run test suite
+        run: make test POSHLI_TEST_SHELL="${{ matrix.shell }}"
+
+      - name: Run test suite against bundle
+        run: make test-bundle POSHLI_TEST_SHELL="${{ matrix.shell }}"

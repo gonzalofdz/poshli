@@ -43,4 +43,4 @@ uninstall:
 	@printf 'Successfully uninstalled poshli.\n'
 
 clean:
-	@rm -f poshli.sh poshli.sh.tmp
+	@rm -f poshli.sh.tmp
