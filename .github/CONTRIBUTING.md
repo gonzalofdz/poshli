@@ -29,9 +29,10 @@ Thank you for your interest in contributing to **POSHLI**! We welcome bug report
    All test suites must pass 100%.
 
 5. **Generate the Bundle**:
-   If you modified files in `src/`, rebuild `poshli.sh`:
+   If you modified files in `src/`, rebuild and verify `poshli.sh`:
    ```sh
    make bundle
+   make check-bundle
    ```
 
 6. **Submit a Pull Request**:

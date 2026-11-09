@@ -10,20 +10,9 @@ _POSHLI_NUM_LOADED=1
 
 is_integer() {
 	[ $# -ge 1 ] || return 2
-	case "$1" in
-		"" | [+-]) return 1 ;;
-		[+-]*)
-			case "${1#[+-]}" in
-				"" | *[!0-9]*) return 1 ;;
-				*) return 0 ;;
-			esac
-			;;
-		*)
-			case "$1" in
-				*[!0-9]*) return 1 ;;
-				*) return 0 ;;
-			esac
-			;;
+	case "${1#[+-]}" in
+		"" | *[!0-9]*) return 1 ;;
+		*) return 0 ;;
 	esac
 }
 
@@ -39,56 +28,16 @@ is_number() {
 	[ $# -ge 1 ] || return 2
 	case "$1" in
 		"" | [+-]) return 1 ;;
-		[+-]*) _in_val="${1#[+-]}" ;;
-		*) _in_val="$1" ;;
+		[+-]*) _n_val="${1#[+-]}" ;;
+		*) _n_val="$1" ;;
 	esac
-	case "$_in_val" in
-		"" | *.*.* | . | *[!0-9.]*)
-			unset _in_val
-			return 1
-			;;
-		*.)
-			unset _in_val
-			return 1
-			;;
-		.*)
-			case "${_in_val#.}" in
-				"" | *[!0-9]*)
-					unset _in_val
-					return 1
-					;;
-				*)
-					unset _in_val
-					return 0
-					;;
-			esac
-			;;
-		*.*)
-			_in_int="${_in_val%.*}"
-			_in_dec="${_in_val#*.}"
-			case "$_in_int" in
-				"" | *[!0-9]*)
-					unset _in_val _in_int _in_dec
-					return 1
-					;;
-			esac
-			case "$_in_dec" in
-				"" | *[!0-9]*)
-					unset _in_val _in_int _in_dec
-					return 1
-					;;
-				*)
-					unset _in_val _in_int _in_dec
-					return 0
-					;;
-			esac
-			;;
-		*[!0-9]*)
-			unset _in_val
+	case "$_n_val" in
+		"" | . | *.*.* | *[!0-9.]* | *.)
+			unset _n_val
 			return 1
 			;;
 		*)
-			unset _in_val
+			unset _n_val
 			return 0
 			;;
 	esac
