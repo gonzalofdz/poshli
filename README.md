@@ -10,7 +10,7 @@
 - **General purpose and portable**: Linux is the primary continuous-integration platform. macOS, BSD, WSL, and Cygwin are supported targets where the required standard utilities behave portably; they are not all continuously tested, so platform-specific behavior may vary.
 - **Short and ergonomic API**: Clean, direct function names without unnecessary prefixes (`is_integer`, `is_file`, `trim`, `lower`, etc.).
 - **Self-contained bundle**: Distributed as a single file (`poshli.sh`) ready for direct inclusion or project vendoring.
-- **Predictable return codes**: Predicates return `0` (true) or `1` (false); missing mandatory arguments return `2`.
+- **Predictable return codes**: Predicates return `0` (true) or `1` (false); missing mandatory arguments return `2` (except `is_number`, which treats a missing argument as invalid and returns `1`).
 - **Unicode-aware helpers**: `str_len` counts UTF-8 code points independently of the locale; `lower`/`upper` map ASCII letters and use `gawk` for Unicode simple case mapping when it is available and the active locale is UTF-8, falling back to the system `awk` otherwise (typically ASCII-only).
 - **Minimal dependencies**: Built around the POSIX shell and standard POSIX utilities (`sed`, `od`, `awk`, `wc`). `gawk` is an optional enhancement that enables Unicode case mapping; when it is absent, `lower`/`upper` use the system `awk` (typically ASCII-only). No extra tool is required for normal use.
 
@@ -103,14 +103,14 @@ In any standard POSIX shell script, source the library using the dot (`.`) comma
 | Function | Description |
 | :--- | :--- |
 | `is_integer <val>` | Returns 0 if `<val>` is an integer with optional sign (`42`, `-42`, `+42`, `0012`, `0`). Rejects `+`, `-`, `12-3`, `12+`, `++1`. |
-| `is_number <val>` | Returns 0 if `<val>` is an integer or decimal number with optional sign (`42`, `3.14`, `-0.05`, `.5`). Rejects trailing dots `3.`, multiple dots `1.2.3`, isolated dots `.`. |
+| `is_number <val>` | Returns 0 if `<val>` is a decimal number with an optional sign and at most one decimal point (`42`, `3.14`, `-0.05`, `.5`, `3.`). Rejects scientific notation (`1e10`), multiple dots (`1.2.3`) and isolated dots (`.`). |
 | `is_natural <val>` | Returns 0 if `<val>` is a non-negative integer without sign (`0`, `1`, `42`). Rejects negative or explicit signs (`-1`, `+1`). |
 | `is_hex <val>` | Returns 0 if `<val>` is hexadecimal (`0xFF`, `1a`, `DEADBEEF`), with optional `0x`/`0X` prefix. |
 | `is_bin <val>` | Returns 0 if `<val>` is binary (`10110`, `0b1010`), with optional `0b`/`0B` prefix. |
 | `is_bool <val>` | Returns 0 if `<val>` is strictly `0`, `1`, `true`, `false`, `TRUE`, or `FALSE`. |
 | `randomize <limit>` | Prints a random integer from `0` to one less than `<limit>` (`randomize 5` prints `0`–`4`). Returns 1 if `<limit>` is not a natural number greater than `0`, or 2 if no argument is passed. |
 
-*All numeric functions return 2 if no argument is passed.*
+*All numeric functions return 2 if no argument is passed, except `is_number`, which returns 1.*
 
 ---
 

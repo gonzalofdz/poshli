@@ -20,7 +20,6 @@ is_integer() {
 	[ $# -ge 1 ] || return 2
 	case "${1#[+-]}" in
 		"" | *[!0-9]*) return 1 ;;
-		*) return 0 ;;
 	esac
 }
 
@@ -33,68 +32,21 @@ is_natural() {
 	[ $# -ge 1 ] || return 2
 	case "$1" in
 		"" | *[!0-9]*) return 1 ;;
-		*) return 0 ;;
 	esac
 }
 
 is_number() {
-#	Returns 0 if the argument is a valid decimal number with optional sign and scientific notation.
+#	Returns 0 if the argument is a decimal number with an optional sign and at most one decimal point.
+#	Both a leading point (".5") and a trailing point ("3.") are accepted; an isolated point (".") is rejected.
+#	Scientific notation is not supported.
 #
 #	Example of use:
 #	is_number "3.14" && echo "Valid number" || echo "Invalid number"
 #
-	[ $# -ge 1 ] || return 2
-
-	case "$1" in
-		"" | [+-]) return 1 ;;
-		[+-]*) _n_val="${1#[+-]}" ;;
-		*) _n_val="$1" ;;
+	[ $# -ge 1 ] || return 1
+	case "${1#[+-]}" in
+		"" | . | *[!0-9.]* | *.*.*) return 1 ;;
 	esac
-
-	case "$_n_val" in
-		*[eE]*)
-			case "$_n_val" in
-				*[eE]*[eE]*)
-					unset _n_val
-					return 1
-					;;
-			esac
-
-			_n_mantissa="${_n_val%%[eE]*}"
-			_n_exponent="${_n_val#*[eE]}"
-
-			case "$_n_exponent" in
-				[+-]*) _n_exponent="${_n_exponent#[+-]}" ;;
-			esac
-
-			case "$_n_mantissa" in
-				"" | . | *.*.* | *[!0-9.]*)
-					unset _n_val _n_mantissa _n_exponent
-					return 1
-					;;
-			esac
-
-			case "$_n_exponent" in
-				"" | *[!0-9]*)
-					unset _n_val _n_mantissa _n_exponent
-					return 1
-					;;
-			esac
-
-			unset _n_val _n_mantissa _n_exponent
-			return 0
-			;;
-	esac
-
-	case "$_n_val" in
-		"" | . | *.*.* | *[!0-9.]*)
-			unset _n_val
-			return 1
-			;;
-	esac
-
-	unset _n_val
-	return 0
 }
 
 is_hex() {
@@ -105,20 +57,8 @@ is_hex() {
 #
 	[ $# -ge 1 ] || return 2
 
-	case "$1" in
-		0[xX]*) _hex_val="${1#0[xX]}" ;;
-		*) _hex_val="$1" ;;
-	esac
-
-	case "$_hex_val" in
-		"" | *[!0-9a-fA-F]*)
-			unset _hex_val
-			return 1
-			;;
-		*)
-			unset _hex_val
-			return 0
-			;;
+	case "${1#0[xX]}" in
+		"" | *[!0-9a-fA-F]*) return 1 ;;
 	esac
 }
 
@@ -130,20 +70,8 @@ is_bin() {
 #
 	[ $# -ge 1 ] || return 2
 
-	case "$1" in
-		0[bB]*) _bin_val="${1#0[bB]}" ;;
-		*) _bin_val="$1" ;;
-	esac
-
-	case "$_bin_val" in
-		"" | *[!01]*)
-			unset _bin_val
-			return 1
-			;;
-		*)
-			unset _bin_val
-			return 0
-			;;
+	case "${1#0[bB]}" in
+		"" | *[!01]*) return 1 ;;
 	esac
 }
 
@@ -155,20 +83,8 @@ is_octal() {
 #
 	[ $# -ge 1 ] || return 2
 
-	case "$1" in
-		0[oO]*) _octal_val="${1#0[oO]}" ;;
-		*) _octal_val="$1" ;;
-	esac
-
-	case "$_octal_val" in
-		"" | *[!0-7]*)
-			unset _octal_val
-			return 1
-			;;
-		*)
-			unset _octal_val
-			return 0
-			;;
+	case "${1#0[oO]}" in
+		"" | *[!0-7]*) return 1 ;;
 	esac
 }
 
@@ -184,10 +100,8 @@ is_bool() {
 		0 | 1 | [Tt][Rr][Uu][Ee] | [Ff][Aa][Ll][Ss][Ee])
 			return 0
 			;;
-		*)
-			return 1
-			;;
 	esac
+	return 1
 }
 
 randomize() {

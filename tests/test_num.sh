@@ -15,13 +15,13 @@ fi
 
 printf '\n--- Running num.sh tests ---\n'
 
-# Argument count validation (returns 2 if no argument)
+# Argument count validation (returns 2 if no argument, except is_number which returns 1)
 is_integer
 assert_status 2 $? "is_integer requires argument (status 2)"
 is_natural
 assert_status 2 $? "is_natural requires argument (status 2)"
 is_number
-assert_status 2 $? "is_number requires argument (status 2)"
+assert_status 1 $? "is_number without argument is invalid (status 1)"
 is_hex
 assert_status 2 $? "is_hex requires argument (status 2)"
 is_bin
@@ -70,29 +70,39 @@ is_natural "abc"; assert_false $? "is_natural rejects: abc"
 
 # is_number tests
 is_number "42"; assert_true $? "is_number: 42"
-is_number "-42"; assert_true $? "is_number: -42"
 is_number "+42"; assert_true $? "is_number: +42"
-is_number "0012"; assert_true $? "is_number: 0012"
+is_number "-42"; assert_true $? "is_number: -42"
 is_number "0"; assert_true $? "is_number: 0"
-
-is_number ".5"; assert_true $? "is_number: .5"
-is_number "-.5"; assert_true $? "is_number: -.5"
-is_number "+.5"; assert_true $? "is_number: +.5"
-is_number "3."; assert_true $? "is_number: 3."
+is_number "0012"; assert_true $? "is_number: 0012"
 is_number "3.14"; assert_true $? "is_number: 3.14"
 is_number "-3.14"; assert_true $? "is_number: -3.14"
 is_number "+0.05"; assert_true $? "is_number: +0.05"
 is_number "100.25"; assert_true $? "is_number: 100.25"
 
-# Scientific notation
-is_number "1e10"; assert_true $? "is_number: 1e10"
-is_number "1E10"; assert_true $? "is_number: 1E10"
-is_number "1.5e2"; assert_true $? "is_number: 1.5e2"
-is_number "1.e10"; assert_true $? "is_number: 1.e10"
-is_number ".5E-2"; assert_true $? "is_number: .5E-2"
-is_number "+1e+10"; assert_true $? "is_number: +1e+10"
-is_number "-3E-5"; assert_true $? "is_number: -3E-5"
+# A leading or trailing decimal point is accepted as a valid decimal number
+is_number ".5"; assert_true $? "is_number: .5"
+is_number "-.5"; assert_true $? "is_number: -.5"
+is_number "+.5"; assert_true $? "is_number: +.5"
+is_number "3."; assert_true $? "is_number: 3."
+is_number "-3."; assert_true $? "is_number: -3."
 
+# Scientific notation is not supported
+is_number "1e10"; assert_false $? "is_number rejects: 1e10"
+is_number "1E10"; assert_false $? "is_number rejects: 1E10"
+is_number "1.5e2"; assert_false $? "is_number rejects: 1.5e2"
+is_number "1.e10"; assert_false $? "is_number rejects: 1.e10"
+is_number ".5E-2"; assert_false $? "is_number rejects: .5E-2"
+is_number "+1e+10"; assert_false $? "is_number rejects: +1e+10"
+is_number "-3E-5"; assert_false $? "is_number rejects: -3E-5"
+is_number "1.2e3"; assert_false $? "is_number rejects: 1.2e3"
+is_number "e10"; assert_false $? "is_number rejects: e10"
+is_number "1e"; assert_false $? "is_number rejects: 1e"
+is_number "1e+"; assert_false $? "is_number rejects: 1e+"
+is_number "1e-"; assert_false $? "is_number rejects: 1e-"
+is_number "1e2e3"; assert_false $? "is_number rejects: multiple exponents"
+is_number "1.2.3e4"; assert_false $? "is_number rejects: invalid mantissa"
+
+# Invalid formats
 is_number "+"; assert_false $? "is_number rejects: +"
 is_number "-"; assert_false $? "is_number rejects: -"
 is_number "12-3"; assert_false $? "is_number rejects: 12-3"
@@ -107,15 +117,10 @@ is_number "-."; assert_false $? "is_number rejects: -."
 is_number "+."; assert_false $? "is_number rejects: +."
 is_number "3.."; assert_false $? "is_number rejects: 3.."
 is_number "1.2.3"; assert_false $? "is_number rejects: 1.2.3"
-is_number "e10"; assert_false $? "is_number rejects: e10"
-is_number "1e"; assert_false $? "is_number rejects: 1e"
-is_number "1e+"; assert_false $? "is_number rejects: 1e+"
-is_number "1e-"; assert_false $? "is_number rejects: 1e-"
-is_number "1e2e3"; assert_false $? "is_number rejects: multiple exponents"
-is_number "1.2.3e4"; assert_false $? "is_number rejects: invalid mantissa"
 is_number "NaN"; assert_false $? "is_number rejects: NaN"
 is_number "Infinity"; assert_false $? "is_number rejects: Infinity"
 is_number " "; assert_false $? "is_number rejects: space"
+is_number "espacio"; assert_false $? "is_number rejects: espacio"
 is_number "abc"; assert_false $? "is_number rejects: abc"
 
 # is_hex tests
@@ -133,6 +138,7 @@ is_hex "0x"; assert_false $? "is_hex rejects: 0x"
 is_hex "0X"; assert_false $? "is_hex rejects: 0X"
 is_hex "12G"; assert_false $? "is_hex rejects: 12G"
 is_hex "xyz"; assert_false $? "is_hex rejects: xyz"
+is_hex "0x0x1"; assert_false $? "is_hex rejects: 0x0x1"
 
 # is_bin tests
 is_bin "0"; assert_true $? "is_bin: 0"
@@ -146,6 +152,7 @@ is_bin "0b"; assert_false $? "is_bin rejects: 0b"
 is_bin "0B"; assert_false $? "is_bin rejects: 0B"
 is_bin "102"; assert_false $? "is_bin rejects: 102"
 is_bin "abc"; assert_false $? "is_bin rejects: abc"
+is_bin "0b0b1"; assert_false $? "is_bin rejects: 0b0b1"
 
 # is_octal tests
 is_octal "0"; assert_true $? "is_octal: 0"
@@ -161,6 +168,7 @@ is_octal "0O"; assert_false $? "is_octal rejects: 0O"
 is_octal "8"; assert_false $? "is_octal rejects: 8"
 is_octal "09"; assert_false $? "is_octal rejects: 09"
 is_octal "0o8"; assert_false $? "is_octal rejects: 0o8"
+is_octal "0o0o1"; assert_false $? "is_octal rejects: 0o0o1"
 
 # is_bool tests
 is_bool "0"; assert_true $? "is_bool: 0"
