@@ -17,14 +17,14 @@ if [ -z "${_POSHLI_NUM_LOADED+x}" ]; then
 _POSHLI_NUM_LOADED=1
 
 is_integer() {
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	case "${1#[+-]}" in
 		"" | *[!0-9]*) return 1 ;;
 	esac
 }
 
 is_natural() {
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	case "$1" in
 		"" | *[!0-9]*) return 1 ;;
 	esac
@@ -38,32 +38,28 @@ is_number() {
 }
 
 is_hex() {
-	[ $# -ge 1 ] || return 2
-
+	[ $# -ge 1 ] || return 1
 	case "${1#0[xX]}" in
 		"" | *[!0-9a-fA-F]*) return 1 ;;
 	esac
 }
 
 is_bin() {
-	[ $# -ge 1 ] || return 2
-
+	[ $# -ge 1 ] || return 1
 	case "${1#0[bB]}" in
 		"" | *[!01]*) return 1 ;;
 	esac
 }
 
 is_octal() {
-	[ $# -ge 1 ] || return 2
-
+	[ $# -ge 1 ] || return 1
 	case "${1#0[oO]}" in
 		"" | *[!0-7]*) return 1 ;;
 	esac
 }
 
 is_bool() {
-	[ $# -ge 1 ] || return 2
-
+	[ $# -ge 1 ] || return 1
 	case "$1" in
 		0 | 1 | [Tt][Rr][Uu][Ee] | [Ff][Aa][Ll][Ss][Ee])
 			return 0
@@ -155,7 +151,7 @@ upper() {
 }
 
 starts_with() {
-	[ $# -ge 2 ] || return 2
+	[ $# -ge 2 ] || return 1
 	case "$1" in
 		"$2"*) return 0 ;;
 		*) return 1 ;;
@@ -163,7 +159,7 @@ starts_with() {
 }
 
 ends_with() {
-	[ $# -ge 2 ] || return 2
+	[ $# -ge 2 ] || return 1
 	case "$1" in
 		*"$2") return 0 ;;
 		*) return 1 ;;
@@ -171,7 +167,7 @@ ends_with() {
 }
 
 contains() {
-	[ $# -ge 2 ] || return 2
+	[ $# -ge 2 ] || return 1
 	case "$1" in
 		*"$2"*) return 0 ;;
 		*) return 1 ;;

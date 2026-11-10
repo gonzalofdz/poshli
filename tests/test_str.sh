@@ -46,13 +46,17 @@ _str_locale() {
 	)
 }
 
-# Argument count validation
+# Argument count validation: the operational functions report a missing mandatory
+# argument as invalid usage (status 2); the predicates treat it as false (status 1).
 trim; assert_status 2 $? "trim requires argument (status 2)"
 lower; assert_status 2 $? "lower requires argument (status 2)"
 upper; assert_status 2 $? "upper requires argument (status 2)"
-starts_with "foo"; assert_status 2 $? "starts_with requires 2 arguments (status 2)"
-ends_with "foo"; assert_status 2 $? "ends_with requires 2 arguments (status 2)"
-contains "foo"; assert_status 2 $? "contains requires 2 arguments (status 2)"
+starts_with; assert_status 1 $? "starts_with without arguments is false (status 1)"
+starts_with "foo"; assert_status 1 $? "starts_with without prefix is false (status 1)"
+ends_with; assert_status 1 $? "ends_with without arguments is false (status 1)"
+ends_with "foo"; assert_status 1 $? "ends_with without suffix is false (status 1)"
+contains; assert_status 1 $? "contains without arguments is false (status 1)"
+contains "foo"; assert_status 1 $? "contains without substring is false (status 1)"
 str_len; assert_status 2 $? "str_len requires argument (status 2)"
 str_len_bytes; assert_status 2 $? "str_len_bytes requires argument (status 2)"
 str_replace "a" "b"; assert_status 2 $? "str_replace requires 3 arguments (status 2)"
@@ -60,9 +64,9 @@ str_replace "a" "b"; assert_status 2 $? "str_replace requires 3 arguments (statu
 # is_empty
 is_empty ""; assert_true $? "is_empty: empty string"
 is_empty; assert_true $? "is_empty: no arguments is empty"
-is_empty "hello"; assert_false $? "is_empty: non-empty string"
-is_empty " "; assert_false $? "is_empty: space is not empty"
-is_empty "0"; assert_false $? "is_empty: 0 is not empty"
+is_empty "hello"; assert_status 1 $? "is_empty: non-empty string"
+is_empty " "; assert_status 1 $? "is_empty: space is not empty"
+is_empty "0"; assert_status 1 $? "is_empty: 0 is not empty"
 
 # trim
 res=$(trim "hola"); assert_eq "hola" "$res" "trim: no spaces"
@@ -134,24 +138,24 @@ starts_with "http://example.com" "http://"; assert_true $? "starts_with: URL pro
 starts_with "foobar" "foo"; assert_true $? "starts_with: prefix"
 starts_with "foobar" "foobar"; assert_true $? "starts_with: exact match"
 starts_with "foobar" ""; assert_true $? "starts_with: empty prefix"
-starts_with "foobar" "bar"; assert_false $? "starts_with rejects: wrong prefix"
-starts_with "" "foo"; assert_false $? "starts_with rejects: empty target"
+starts_with "foobar" "bar"; assert_status 1 $? "starts_with rejects: wrong prefix"
+starts_with "" "foo"; assert_status 1 $? "starts_with rejects: empty target"
 
 # ends_with
 ends_with "archive.tar.gz" ".tar.gz"; assert_true $? "ends_with: compound extension"
 ends_with "script.sh" ".sh"; assert_true $? "ends_with: extension"
 ends_with "foobar" "foobar"; assert_true $? "ends_with: exact match"
 ends_with "foobar" ""; assert_true $? "ends_with: empty suffix"
-ends_with "foobar" "foo"; assert_false $? "ends_with rejects: wrong suffix"
-ends_with "" "bar"; assert_false $? "ends_with rejects: empty target"
+ends_with "foobar" "foo"; assert_status 1 $? "ends_with rejects: wrong suffix"
+ends_with "" "bar"; assert_status 1 $? "ends_with rejects: empty target"
 
 # contains
 contains "the quick brown fox" "brown"; assert_true $? "contains: middle substring"
 contains "the quick brown fox" "the"; assert_true $? "contains: start substring"
 contains "the quick brown fox" "fox"; assert_true $? "contains: end substring"
 contains "foobar" ""; assert_true $? "contains: empty substring"
-contains "the quick brown fox" "cat"; assert_false $? "contains rejects: absent substring"
-contains "" "foo"; assert_false $? "contains rejects: empty target"
+contains "the quick brown fox" "cat"; assert_status 1 $? "contains rejects: absent substring"
+contains "" "foo"; assert_status 1 $? "contains rejects: empty target"
 
 # str_len: Unicode code points in valid UTF-8, independent of shell/locale.
 res=$(str_len "hello"); assert_eq "5" "$res" "str_len: ASCII hello (5 code points)"

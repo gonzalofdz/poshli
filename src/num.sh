@@ -17,7 +17,7 @@ is_integer() {
 #	Example of use:
 #	is_integer "42" && echo "Valid integer" || echo "Invalid integer"
 #
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	case "${1#[+-]}" in
 		"" | *[!0-9]*) return 1 ;;
 	esac
@@ -29,7 +29,7 @@ is_natural() {
 #	Example of use:
 #	is_natural "42" && echo "Valid natural number" || echo "Invalid natural number"
 #
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	case "$1" in
 		"" | *[!0-9]*) return 1 ;;
 	esac
@@ -55,8 +55,7 @@ is_hex() {
 #	Example of use:
 #	is_hex "0xFF" && echo "Valid hexadecimal" || echo "Invalid hexadecimal"
 #
-	[ $# -ge 1 ] || return 2
-
+	[ $# -ge 1 ] || return 1
 	case "${1#0[xX]}" in
 		"" | *[!0-9a-fA-F]*) return 1 ;;
 	esac
@@ -68,8 +67,7 @@ is_bin() {
 #	Example of use:
 #	is_bin "0b1010" && echo "Valid binary" || echo "Invalid binary"
 #
-	[ $# -ge 1 ] || return 2
-
+	[ $# -ge 1 ] || return 1
 	case "${1#0[bB]}" in
 		"" | *[!01]*) return 1 ;;
 	esac
@@ -81,8 +79,7 @@ is_octal() {
 #	Example of use:
 #	is_octal "0o755" && echo "Valid octal" || echo "Invalid octal"
 #
-	[ $# -ge 1 ] || return 2
-
+	[ $# -ge 1 ] || return 1
 	case "${1#0[oO]}" in
 		"" | *[!0-7]*) return 1 ;;
 	esac
@@ -94,8 +91,7 @@ is_bool() {
 #	Example of use:
 #	is_bool "true" && echo "Valid boolean" || echo "Invalid boolean"
 #
-	[ $# -ge 1 ] || return 2
-
+	[ $# -ge 1 ] || return 1
 	case "$1" in
 		0 | 1 | [Tt][Rr][Uu][Ee] | [Ff][Aa][Ll][Ss][Ee])
 			return 0

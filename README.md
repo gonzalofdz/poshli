@@ -10,7 +10,7 @@
 - **General purpose and portable**: Linux is the primary continuous-integration platform. macOS, BSD, WSL, and Cygwin are supported targets where the required standard utilities behave portably; they are not all continuously tested, so platform-specific behavior may vary.
 - **Short and ergonomic API**: Clean, direct function names without unnecessary prefixes (`is_integer`, `is_file`, `trim`, `lower`, etc.).
 - **Self-contained bundle**: Distributed as a single file (`poshli.sh`) ready for direct inclusion or project vendoring.
-- **Predictable return codes**: Predicates return `0` (true) or `1` (false); missing mandatory arguments return `2` (except `is_number`, which treats a missing argument as invalid and returns `1`).
+- **Predictable return codes**: Boolean predicates return `0` (true) or `1` (false); an absent, empty, or invalid input is treated as false when the predicate can answer the question. Operational functions may return `2` for invalid usage, such as a missing mandatory argument.
 - **Unicode-aware helpers**: `str_len` counts UTF-8 code points independently of the locale; `lower`/`upper` map ASCII letters and use `gawk` for Unicode simple case mapping when it is available and the active locale is UTF-8, falling back to the system `awk` otherwise (typically ASCII-only).
 - **Minimal dependencies**: Built around the POSIX shell and standard POSIX utilities (`sed`, `od`, `awk`, `wc`). `gawk` is an optional enhancement that enables Unicode case mapping; when it is absent, `lower`/`upper` use the system `awk` (typically ASCII-only). No extra tool is required for normal use.
 
@@ -92,9 +92,17 @@ In any standard POSIX shell script, source the library using the dot (`.`) comma
 ---
 
 ### Return Code Conventions
-- **`0`**: Success / Condition met (`true`).
-- **`1`**: Condition not met (`false`).
-- **`2`**: Invalid usage / Missing mandatory arguments.
+
+POSHLI distinguishes boolean predicates from operational functions:
+
+- **Predicates** answer a yes/no question and return `0` for true and `1` for false. An absent, empty, or invalid input is treated as false when the predicate can answer the question; a separate error state is not used merely because an argument is missing.
+- **Operational functions** perform an action or produce output. They return `0` on success and `1` for invalid input; when a missing mandatory argument is a genuinely distinct usage error, they return `2`.
+
+| Code | Meaning |
+| :--- | :--- |
+| `0` | Success / condition met (`true`). |
+| `1` | Condition not met (`false`) or invalid input. |
+| `2` | Invalid usage in an operational function (for example, a missing mandatory argument). |
 
 ---
 
@@ -110,7 +118,7 @@ In any standard POSIX shell script, source the library using the dot (`.`) comma
 | `is_bool <val>` | Returns 0 if `<val>` is strictly `0`, `1`, `true`, `false`, `TRUE`, or `FALSE`. |
 | `randomize <limit>` | Prints a random integer from `0` to one less than `<limit>` (`randomize 5` prints `0`–`4`). Returns 1 if `<limit>` is not a natural number greater than `0`, or 2 if no argument is passed. |
 
-*All numeric functions return 2 if no argument is passed, except `is_number`, which returns 1.*
+*The numeric predicates return `1` when the argument is missing or invalid. `randomize` returns `2` when no argument is passed.*
 
 ---
 
@@ -126,7 +134,7 @@ In any standard POSIX shell script, source the library using the dot (`.`) comma
 | `is_empty_file <path>` | Returns 0 if `<path>` exists, is a regular file, and its size is 0 bytes (`[ -f ] && [ ! -s ]`). |
 | `is_plain_text <path>` | Returns 0 if `<path>` is readable and `file` reports it as text. Returns 1 if it is a binary or non-text file, or if it does not exist or is unreadable; 2 if no argument is passed. |
 
-*All file system functions return 2 if no argument is passed.*
+*Unlike the boolean predicates in `num.sh` and `str.sh`, the file-system predicates still return `2` when the path argument is missing.*
 
 ---
 
@@ -138,12 +146,14 @@ In any standard POSIX shell script, source the library using the dot (`.`) comma
 | `trim <str>` | Prints `<str>` with leading and trailing spaces and tabs removed. Preserves internal spacing. |
 | `lower <str>` | Prints `<str>` converted to lowercase. ASCII letters are always mapped. When `gawk` is available and the active locale is UTF-8, Unicode case mapping is also applied (delegated to `gawk` and the active locale, e.g. `É` → `é`). Without `gawk`, the system `awk` is used and non-ASCII characters are typically left unchanged. See [Unicode Support](#unicode-support). |
 | `upper <str>` | Prints `<str>` converted to uppercase. Same behavior as `lower`. |
-| `starts_with <str> <prefix>` | Returns 0 if `<str>` begins with `<prefix>`. Returns 2 if fewer than 2 arguments are passed. |
-| `ends_with <str> <suffix>` | Returns 0 if `<str>` ends with `<suffix>`. Returns 2 if fewer than 2 arguments are passed. |
-| `contains <str> <substr>` | Returns 0 if `<str>` contains `<substr>`. Returns 2 if fewer than 2 arguments are passed. |
-| `str_len <str>` | Prints the number of Unicode code points in `<str>` (valid UTF-8). Independent of `${#str}`, the shell, and the active locale. Combining marks and emoji components count separately; grapheme clusters are not counted. For invalid UTF-8 the result is approximate. Returns 2 if no argument is passed. |
-| `str_len_bytes <str>` | Prints the exact number of bytes in `<str>` using `wc -c`. Always locale-independent. Returns 2 if no argument is passed. |
-| `str_replace <search> <replace> <str>` | Prints `<str>` with all literal occurrences of `<search>` replaced with `<replace>`. Handles special characters safely. Returns 2 if fewer than 3 arguments are passed. |
+| `starts_with <str> <prefix>` | Returns 0 if `<str>` begins with `<prefix>`, and 1 otherwise. |
+| `ends_with <str> <suffix>` | Returns 0 if `<str>` ends with `<suffix>`, and 1 otherwise. |
+| `contains <str> <substr>` | Returns 0 if `<str>` contains `<substr>`, and 1 otherwise. |
+| `str_len <str>` | Prints the number of Unicode code points in `<str>` (valid UTF-8). Independent of `${#str}`, the shell, and the active locale. Combining marks and emoji components count separately; grapheme clusters are not counted. For invalid UTF-8 the result is approximate. |
+| `str_len_bytes <str>` | Prints the exact number of bytes in `<str>` using `wc -c`. Always locale-independent. |
+| `str_replace <search> <replace> <str>` | Prints `<str>` with all literal occurrences of `<search>` replaced with `<replace>`. Handles special characters safely. |
+
+*The operational functions (`trim`, `lower`, `upper`, `str_len`, `str_len_bytes`, `str_replace`) return `2` when a mandatory argument is missing.*
 
 ---
 

@@ -64,7 +64,7 @@ starts_with() {
 #	Example of use:
 #	starts_with "https://example.com" "https" && echo "URL uses HTTPS" || echo "URL does not use HTTPS"
 #
-	[ $# -ge 2 ] || return 2
+	[ $# -ge 2 ] || return 1
 	case "$1" in
 		"$2"*) return 0 ;;
 		*) return 1 ;;
@@ -77,7 +77,7 @@ ends_with() {
 #	Example of use:
 #	ends_with "script.sh" ".sh" && echo "Shell script" || echo "Not a shell script"
 #
-	[ $# -ge 2 ] || return 2
+	[ $# -ge 2 ] || return 1
 	case "$1" in
 		*"$2") return 0 ;;
 		*) return 1 ;;
@@ -90,7 +90,7 @@ contains() {
 #	Example of use:
 #	contains "hello world" "world" && echo "Substring found" || echo "Substring not found"
 #
-	[ $# -ge 2 ] || return 2
+	[ $# -ge 2 ] || return 1
 	case "$1" in
 		*"$2"*) return 0 ;;
 		*) return 1 ;;
