@@ -15,7 +15,7 @@ is_integer() {
 #	Returns 0 if the argument is a decimal integer with an optional sign.
 #
 #	Example of use:
-#	is_integer "42" && echo "Valid integer"
+#	is_integer "42" && echo "Valid integer" || echo "Invalid integer"
 #
 	[ $# -ge 1 ] || return 2
 	case "${1#[+-]}" in
@@ -28,7 +28,7 @@ is_natural() {
 #	Returns 0 if the argument is a natural number (including 0).
 #
 #	Example of use:
-#	is_natural "42" && echo "Valid natural number"
+#	is_natural "42" && echo "Valid natural number" || echo "Invalid natural number"
 #
 	[ $# -ge 1 ] || return 2
 	case "$1" in
@@ -41,7 +41,7 @@ is_number() {
 #	Returns 0 if the argument is a valid decimal number with optional sign and scientific notation.
 #
 #	Example of use:
-#	is_number "3.14" && echo "Valid number"
+#	is_number "3.14" && echo "Valid number" || echo "Invalid number"
 #
 	[ $# -ge 1 ] || return 2
 
@@ -98,10 +98,10 @@ is_number() {
 }
 
 is_hex() {
-#	Returns 0 if the argument contains valid hexadecimal digits, optionally prefixed with 0x or 0X.
+#	Returns 0 if the argument is a hexadecimal number, optionally prefixed with 0x or 0X.
 #
 #	Example of use:
-#	is_hex "0xFF" && echo "Valid hexadecimal"
+#	is_hex "0xFF" && echo "Valid hexadecimal" || echo "Invalid hexadecimal"
 #
 	[ $# -ge 1 ] || return 2
 
@@ -123,10 +123,10 @@ is_hex() {
 }
 
 is_bin() {
-#	Returns 0 if the argument contains valid binary digits, optionally prefixed with 0b or 0B.
+#	Returns 0 if the argument is a binary number, optionally prefixed with 0b or 0B.
 #
 #	Example of use:
-#	is_bin "0b1010" && echo "Valid binary"
+#	is_bin "0b1010" && echo "Valid binary" || echo "Invalid binary"
 #
 	[ $# -ge 1 ] || return 2
 
@@ -148,10 +148,10 @@ is_bin() {
 }
 
 is_octal() {
-#	Returns 0 if the argument contains valid octal digits, optionally prefixed with 0o or 0O.
+#	Returns 0 if the argument is an octal number, optionally prefixed with 0o or 0O.
 #
 #	Example of use:
-#	is_octal "0o755" && echo "Valid octal"
+#	is_octal "0o755" && echo "Valid octal" || echo "Invalid octal"
 #
 	[ $# -ge 1 ] || return 2
 
@@ -176,7 +176,7 @@ is_bool() {
 #	Returns 0 if the argument is 0, 1, true or false (case-insensitive).
 #
 #	Example of use:
-#	is_bool "true" && echo "Valid boolean"
+#	is_bool "true" && echo "Valid boolean" || echo "Invalid boolean"
 #
 	[ $# -ge 1 ] || return 2
 

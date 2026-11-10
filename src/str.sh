@@ -23,7 +23,7 @@ is_empty() {
 #	Returns 0 if no argument is given or the argument is empty.
 #
 #	Example of use:
-#	is_empty "$STR" && echo "String is empty"
+#	is_empty "$STR" && echo "String is empty" || echo "String is not empty"
 #
 	[ $# -eq 0 ] || [ -z "$1" ]
 }
@@ -62,7 +62,7 @@ starts_with() {
 #	Returns 0 if the first argument begins with the second argument.
 #
 #	Example of use:
-#	starts_with "https://example.com" "https" && echo "Secure URL"
+#	starts_with "https://example.com" "https" && echo "URL uses HTTPS" || echo "URL does not use HTTPS"
 #
 	[ $# -ge 2 ] || return 2
 	case "$1" in
@@ -75,7 +75,7 @@ ends_with() {
 #	Returns 0 if the first argument ends with the second argument.
 #
 #	Example of use:
-#	ends_with "script.sh" ".sh" && echo "Shell script"
+#	ends_with "script.sh" ".sh" && echo "Shell script" || echo "Not a shell script"
 #
 	[ $# -ge 2 ] || return 2
 	case "$1" in
@@ -88,7 +88,7 @@ contains() {
 #	Returns 0 if the first argument contains the second argument.
 #
 #	Example of use:
-#	contains "hello world" "world" && echo "Found"
+#	contains "hello world" "world" && echo "Substring found" || echo "Substring not found"
 #
 	[ $# -ge 2 ] || return 2
 	case "$1" in
