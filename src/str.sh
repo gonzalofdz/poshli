@@ -20,25 +20,50 @@ else
 fi
 
 is_empty() {
+#	Returns 0 if no argument is given or the argument is empty.
+#
+#	Example of use:
+#	is_empty "$STR" && echo "String is empty"
+#
 	[ $# -eq 0 ] || [ -z "$1" ]
 }
 
 trim() {
+#	Prints the argument with leading and trailing spaces and tabs removed.
+#
+#	Example of use:
+#	TRIMMED=$(trim "  hello  ")
+#
 	[ $# -ge 1 ] || return 2
 	printf '%s\n' "$1" | sed -e 's/^[ 	]*//' -e 's/[ 	]*$//'
 }
 
 lower() {
+#	Prints the argument converted to lowercase.
+#
+#	Example of use:
+#	LOWER=$(lower "HELLO")
+#
 	[ $# -ge 1 ] || return 2
 	printf '%s\n' "$1" | "$_POSHLI_AWK" '{ print tolower($0) }'
 }
 
 upper() {
+#	Prints the argument converted to uppercase.
+#
+#	Example of use:
+#	UPPER=$(upper "hello")
+#
 	[ $# -ge 1 ] || return 2
 	printf '%s\n' "$1" | "$_POSHLI_AWK" '{ print toupper($0) }'
 }
 
 starts_with() {
+#	Returns 0 if the first argument begins with the second argument.
+#
+#	Example of use:
+#	starts_with "https://example.com" "https" && echo "Secure URL"
+#
 	[ $# -ge 2 ] || return 2
 	case "$1" in
 		"$2"*) return 0 ;;
@@ -47,6 +72,11 @@ starts_with() {
 }
 
 ends_with() {
+#	Returns 0 if the first argument ends with the second argument.
+#
+#	Example of use:
+#	ends_with "script.sh" ".sh" && echo "Shell script"
+#
 	[ $# -ge 2 ] || return 2
 	case "$1" in
 		*"$2") return 0 ;;
@@ -55,6 +85,11 @@ ends_with() {
 }
 
 contains() {
+#	Returns 0 if the first argument contains the second argument.
+#
+#	Example of use:
+#	contains "hello world" "world" && echo "Found"
+#
 	[ $# -ge 2 ] || return 2
 	case "$1" in
 		*"$2"*) return 0 ;;
@@ -62,13 +97,12 @@ contains() {
 	esac
 }
 
-# str_len counts Unicode code points in valid UTF-8. It counts UTF-8 leading
-# bytes with od and awk, so the result is independent of the shell's native
-# ${#1} expansion and of the active locale. Combining marks and the individual
-# components of emoji sequences count separately; grapheme clusters are not
-# counted. For invalid UTF-8 the result is approximate; use str_len_bytes for
-# raw byte data.
 str_len() {
+#	Prints the number of Unicode code points in the argument.
+#
+#	Example of use:
+#	LEN=$(str_len "España")
+#
 	[ $# -ge 1 ] || return 2
 	printf '%s' "$1" | od -An -v -tu1 | awk '
 		{
@@ -80,16 +114,22 @@ str_len() {
 	'
 }
 
-# str_len_bytes counts bytes exactly, independent of the locale. Some wc
-# implementations (for example BSD and macOS wc) pad the count with leading
-# blanks, so the first whitespace-separated field is printed to guarantee a
-# clean numeric result.
 str_len_bytes() {
+#	Prints the exact number of bytes in the argument.
+#
+#	Example of use:
+#	BYTES=$(str_len_bytes "España")
+#
 	[ $# -ge 1 ] || return 2
 	printf '%s' "$1" | wc -c | awk '{print $1}'
 }
 
 str_replace() {
+#	Prints the third argument with every occurrence of the first replaced by the second.
+#
+#	Example of use:
+#	RESULT=$(str_replace "foo" "bar" "foo baz")
+#
 	[ $# -ge 3 ] || return 2
 	[ -n "$1" ] || { printf '%s\n' "$3"; return 0; }
 	_sr_search="$1"

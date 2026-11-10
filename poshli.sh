@@ -1,39 +1,21 @@
 #!/bin/sh
 #
-# POSHLI - POSIX Shell Library (Single File Bundle)
-# GNU Lesser General Public License v3.0
+# POSHLI
 #
+# GNU Lesser General Public License v3.0
 
 [ -n "${_POSHLI_LOADED+x}" ] && return 0
 _POSHLI_LOADED=1
-
-#
-# POSHLI - POSIX Shell Library
-# Core module & version metadata
-#
-# GNU Lesser General Public License v3.0
-#
 
 if [ -z "${_POSHLI_CORE_LOADED+x}" ]; then
 _POSHLI_CORE_LOADED=1
 
 POSHLI_VERSION='1.0.0'
 fi
-#!/bin/sh
-#
-# POSHLI - POSIX Shell Library
-# Numeric validations module
-#
-# Copyright (C) 2026 Gonzalo Fernández-Díez
-#
-# GNU Lesser General Public License v3.0
-#
 
 if [ -z "${_POSHLI_NUM_LOADED+x}" ]; then
 _POSHLI_NUM_LOADED=1
 
-# Returns 0 if the argument is a decimal integer with an optional sign.
-# Returns 1 if it is not an integer, or 2 if no argument is provided.
 is_integer() {
 	[ $# -ge 1 ] || return 2
 	case "${1#[+-]}" in
@@ -42,8 +24,6 @@ is_integer() {
 	esac
 }
 
-# Returns 0 if the argument is a natural number (including 0).
-# Returns 1 if it is not a natural number, or 2 if no argument is provided.
 is_natural() {
 	[ $# -ge 1 ] || return 2
 	case "$1" in
@@ -52,10 +32,6 @@ is_natural() {
 	esac
 }
 
-# Returns 0 if the argument is a valid decimal number with an optional sign
-# and optional scientific notation.
-# Examples: 42, -42, .5, 1., 1.5, 1e10, 1.5e-3.
-# Returns 1 if invalid, or 2 if no argument is provided.
 is_number() {
 	[ $# -ge 1 ] || return 2
 
@@ -111,9 +87,6 @@ is_number() {
 	return 0
 }
 
-# Returns 0 if the argument contains valid hexadecimal digits, optionally
-# prefixed with 0x or 0X.
-# Returns 1 if invalid, or 2 if no argument is provided.
 is_hex() {
 	[ $# -ge 1 ] || return 2
 
@@ -134,9 +107,6 @@ is_hex() {
 	esac
 }
 
-# Returns 0 if the argument contains valid binary digits, optionally
-# prefixed with 0b or 0B.
-# Returns 1 if invalid, or 2 if no argument is provided.
 is_bin() {
 	[ $# -ge 1 ] || return 2
 
@@ -157,9 +127,6 @@ is_bin() {
 	esac
 }
 
-# Returns 0 if the argument contains valid octal digits, optionally
-# prefixed with 0o or 0O.
-# Returns 1 if invalid, or 2 if no argument is provided.
 is_octal() {
 	[ $# -ge 1 ] || return 2
 
@@ -180,9 +147,6 @@ is_octal() {
 	esac
 }
 
-# Returns 0 if the argument is 0, 1, true or false.
-# true and false are matched case-insensitively for ASCII letters.
-# Returns 1 if invalid, or 2 if no argument is provided.
 is_bool() {
 	[ $# -ge 1 ] || return 2
 
@@ -196,11 +160,6 @@ is_bool() {
 	esac
 }
 
-#	Prints a random integer from 0 to one less than the given limit.
-#
-#	Example of use:
-#	RANDNUM=$(randomize 5)
-#
 randomize() {
 	[ $# -ge 1 ] || return 2
 	is_natural "$1" || return 1
@@ -213,12 +172,6 @@ randomize() {
 }
 
 fi
-#
-# POSHLI - POSIX Shell Library
-# File system checks module
-#
-# GNU Lesser General Public License v3.0
-#
 
 if [ -z "${_POSHLI_FS_LOADED+x}" ]; then
 _POSHLI_FS_LOADED=1
@@ -253,35 +206,17 @@ is_empty_file() {
 	[ -f "$1" ] && [ ! -s "$1" ]
 }
 
-#	Is a plain text file?
-#
-#	Example of use:
-#	( is_plain_text "${HOME}/.profile" ) && echo "Plain text file" || echo "That's not true"
-#
 is_plain_text() {
 	[ $# -ge 1 ] || return 2
 	[ -r "$1" ] || return 1
 
-	#	-b omits the file name so it cannot fool the 'text' match;
-	#	LC_ALL=C keeps the description stable across locales.
 	LC_ALL=C file -b "$1" | grep -q 'text'
 }
 fi
-#
-# POSHLI - POSIX Shell Library
-# String manipulation and predicates module
-#
-# GNU Lesser General Public License v3.0
-#
 
 if [ -z "${_POSHLI_STR_LOADED+x}" ]; then
 _POSHLI_STR_LOADED=1
 
-# Case mapping backend: gawk when available, else awk. gawk is an optional
-# dependency that enables Unicode simple case mapping in a UTF-8 locale.
-# Otherwise (mawk, BusyBox awk, ...) awk typically leaves non-ASCII bytes
-# unchanged in the C and UTF-8 locales; the result still depends on the
-# active locale and on the awk implementation.
 if command -v gawk >/dev/null 2>&1; then
 	_POSHLI_AWK=gawk
 else
@@ -331,12 +266,6 @@ contains() {
 	esac
 }
 
-# str_len counts Unicode code points in valid UTF-8. It counts UTF-8 leading
-# bytes with od and awk, so the result is independent of the shell's native
-# ${#1} expansion and of the active locale. Combining marks and the individual
-# components of emoji sequences count separately; grapheme clusters are not
-# counted. For invalid UTF-8 the result is approximate; use str_len_bytes for
-# raw byte data.
 str_len() {
 	[ $# -ge 1 ] || return 2
 	printf '%s' "$1" | od -An -v -tu1 | awk '
@@ -349,10 +278,6 @@ str_len() {
 	'
 }
 
-# str_len_bytes counts bytes exactly, independent of the locale. Some wc
-# implementations (for example BSD and macOS wc) pad the count with leading
-# blanks, so the first whitespace-separated field is printed to guarantee a
-# clean numeric result.
 str_len_bytes() {
 	[ $# -ge 1 ] || return 2
 	printf '%s' "$1" | wc -c | awk '{print $1}'
@@ -377,34 +302,16 @@ str_replace() {
 	unset _sr_search _sr_replace _sr_str _sr_out _sr_prefix _sr_rest
 }
 fi
-#
-# POSHLI - POSIX Shell Library
-# Encoding module (Base64)
-#
-# Base64 is an encoding, not an encryption: it provides no confidentiality.
-#
-# GNU Lesser General Public License v3.0
-#
 
 if [ -z "${_POSHLI_ENCODING_LOADED+x}" ]; then
 _POSHLI_ENCODING_LOADED=1
 
-#	Prints the input string base64 encoded.
-#
-#	Example:	encoded=$(base64_enc "String")
-#
 base64_enc() {
 	[ $# -ge 1 ] || return 2
 
-	#	GNU coreutils and BusyBox wrap their output at 76 columns; drop
-	#	the line breaks so the result is always a single line.
 	printf '%s' "${*}" | base64 | tr -d '\n'
 }
 
-#	Prints the input string base64 decoded.
-#
-#	Example:	decoded=$(base64_dec "$encoded")
-#
 base64_dec() {
 	[ $# -ge 1 ] || return 2
 	printf '%s' "${*}" | base64 -d || return 1

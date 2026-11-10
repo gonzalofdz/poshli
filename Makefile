@@ -15,12 +15,12 @@ all: bundle
 
 bundle: $(BUNDLE_OUTPUT)
 
-$(BUNDLE_OUTPUT): $(BUNDLE_SOURCES)
+$(BUNDLE_OUTPUT): $(BUNDLE_SOURCES) Makefile
 	@printf 'Generating %s bundle...\n' "$@"
 	@rm -f "$@.tmp"
-	@printf '#!/bin/sh\n#\n# POSHLI - POSIX Shell Library (Single File Bundle)\n# GNU Lesser General Public License v3.0\n#\n\n' > "$@.tmp"
-	@printf '[ -n "$${_POSHLI_LOADED+x}" ] && return 0\n_POSHLI_LOADED=1\n\n' >> "$@.tmp"
-	@cat $(BUNDLE_SOURCES) >> "$@.tmp"
+	@printf '#!/bin/sh\n#\n# POSHLI\n#\n# GNU Lesser General Public License v3.0\n\n' > "$@.tmp"
+	@printf '[ -n "$${_POSHLI_LOADED+x}" ] && return 0\n_POSHLI_LOADED=1\n' >> "$@.tmp"
+	@awk '/^[[:space:]]*#/ { next } { print }' $(BUNDLE_SOURCES) >> "$@.tmp"
 	@chmod 644 "$@.tmp"
 	@mv -f "$@.tmp" "$@"
 	@printf '%s generated successfully.\n' "$@"

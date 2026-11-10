@@ -11,9 +11,12 @@
 if [ -z "${_POSHLI_NUM_LOADED+x}" ]; then
 _POSHLI_NUM_LOADED=1
 
-# Returns 0 if the argument is a decimal integer with an optional sign.
-# Returns 1 if it is not an integer, or 2 if no argument is provided.
 is_integer() {
+#	Returns 0 if the argument is a decimal integer with an optional sign.
+#
+#	Example of use:
+#	is_integer "42" && echo "Valid integer"
+#
 	[ $# -ge 1 ] || return 2
 	case "${1#[+-]}" in
 		"" | *[!0-9]*) return 1 ;;
@@ -21,9 +24,12 @@ is_integer() {
 	esac
 }
 
-# Returns 0 if the argument is a natural number (including 0).
-# Returns 1 if it is not a natural number, or 2 if no argument is provided.
 is_natural() {
+#	Returns 0 if the argument is a natural number (including 0).
+#
+#	Example of use:
+#	is_natural "42" && echo "Valid natural number"
+#
 	[ $# -ge 1 ] || return 2
 	case "$1" in
 		"" | *[!0-9]*) return 1 ;;
@@ -31,11 +37,12 @@ is_natural() {
 	esac
 }
 
-# Returns 0 if the argument is a valid decimal number with an optional sign
-# and optional scientific notation.
-# Examples: 42, -42, .5, 1., 1.5, 1e10, 1.5e-3.
-# Returns 1 if invalid, or 2 if no argument is provided.
 is_number() {
+#	Returns 0 if the argument is a valid decimal number with optional sign and scientific notation.
+#
+#	Example of use:
+#	is_number "3.14" && echo "Valid number"
+#
 	[ $# -ge 1 ] || return 2
 
 	case "$1" in
@@ -90,10 +97,12 @@ is_number() {
 	return 0
 }
 
-# Returns 0 if the argument contains valid hexadecimal digits, optionally
-# prefixed with 0x or 0X.
-# Returns 1 if invalid, or 2 if no argument is provided.
 is_hex() {
+#	Returns 0 if the argument contains valid hexadecimal digits, optionally prefixed with 0x or 0X.
+#
+#	Example of use:
+#	is_hex "0xFF" && echo "Valid hexadecimal"
+#
 	[ $# -ge 1 ] || return 2
 
 	case "$1" in
@@ -113,10 +122,12 @@ is_hex() {
 	esac
 }
 
-# Returns 0 if the argument contains valid binary digits, optionally
-# prefixed with 0b or 0B.
-# Returns 1 if invalid, or 2 if no argument is provided.
 is_bin() {
+#	Returns 0 if the argument contains valid binary digits, optionally prefixed with 0b or 0B.
+#
+#	Example of use:
+#	is_bin "0b1010" && echo "Valid binary"
+#
 	[ $# -ge 1 ] || return 2
 
 	case "$1" in
@@ -136,10 +147,12 @@ is_bin() {
 	esac
 }
 
-# Returns 0 if the argument contains valid octal digits, optionally
-# prefixed with 0o or 0O.
-# Returns 1 if invalid, or 2 if no argument is provided.
 is_octal() {
+#	Returns 0 if the argument contains valid octal digits, optionally prefixed with 0o or 0O.
+#
+#	Example of use:
+#	is_octal "0o755" && echo "Valid octal"
+#
 	[ $# -ge 1 ] || return 2
 
 	case "$1" in
@@ -159,10 +172,12 @@ is_octal() {
 	esac
 }
 
-# Returns 0 if the argument is 0, 1, true or false.
-# true and false are matched case-insensitively for ASCII letters.
-# Returns 1 if invalid, or 2 if no argument is provided.
 is_bool() {
+#	Returns 0 if the argument is 0, 1, true or false (case-insensitive).
+#
+#	Example of use:
+#	is_bool "true" && echo "Valid boolean"
+#
 	[ $# -ge 1 ] || return 2
 
 	case "$1" in
@@ -175,12 +190,12 @@ is_bool() {
 	esac
 }
 
+randomize() {
 #	Prints a random integer from 0 to one less than the given limit.
 #
 #	Example of use:
 #	RANDNUM=$(randomize 5)
 #
-randomize() {
 	[ $# -ge 1 ] || return 2
 	is_natural "$1" || return 1
 	[ "$1" -gt 0 ] || return 1
