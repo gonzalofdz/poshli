@@ -21,6 +21,7 @@ is_readable; assert_status 2 $? "is_readable requires argument (status 2)"
 is_writable; assert_status 2 $? "is_writable requires argument (status 2)"
 is_exec; assert_status 2 $? "is_exec requires argument (status 2)"
 is_empty_file; assert_status 2 $? "is_empty_file requires argument (status 2)"
+is_plain_text; assert_status 2 $? "is_plain_text requires argument (status 2)"
 
 # Setup temporary test fixtures
 TMP_FIXTURE_DIR="/tmp/poshli_test_fs_$$"
@@ -33,6 +34,10 @@ SUB_DIR="$TMP_FIXTURE_DIR/subdir"
 EXEC_FILE="$TMP_FIXTURE_DIR/exec.sh"
 NO_EXEC_FILE="$TMP_FIXTURE_DIR/no_exec.txt"
 RO_FILE="$TMP_FIXTURE_DIR/readonly.txt"
+BIN_FILE="$TMP_FIXTURE_DIR/binary.bin"
+TRICK_FILE="$TMP_FIXTURE_DIR/text_binary.bin"
+UTF8_FILE="$TMP_FIXTURE_DIR/utf8.txt"
+UNREADABLE_FILE="$TMP_FIXTURE_DIR/unreadable.txt"
 NON_EXISTENT="$TMP_FIXTURE_DIR/non_existent_file_$$"
 
 printf 'hello world\n' > "$REG_FILE"
@@ -44,6 +49,11 @@ printf 'not exec\n' > "$NO_EXEC_FILE"
 chmod 644 "$NO_EXEC_FILE"
 printf 'read only\n' > "$RO_FILE"
 chmod 444 "$RO_FILE"
+printf 'a\000b\001c' > "$BIN_FILE"
+printf 'x\000y' > "$TRICK_FILE"
+printf 'España\n' > "$UTF8_FILE"
+printf 'secret\n' > "$UNREADABLE_FILE"
+chmod 000 "$UNREADABLE_FILE"
 
 # is_file
 is_file "$REG_FILE"; assert_true $? "is_file: regular file"
@@ -81,6 +91,21 @@ is_empty_file "$EMPTY_FILE"; assert_true $? "is_empty_file: 0-byte file"
 is_empty_file "$REG_FILE"; assert_false $? "is_empty_file: file with content"
 is_empty_file "$SUB_DIR"; assert_false $? "is_empty_file: directory is not empty file"
 is_empty_file "$NON_EXISTENT"; assert_false $? "is_empty_file: non-existent path"
+
+# is_plain_text
+is_plain_text "$REG_FILE"; assert_true $? "is_plain_text: ASCII text file"
+is_plain_text "$UTF8_FILE"; assert_true $? "is_plain_text: UTF-8 text file"
+is_plain_text "$EXEC_FILE"; assert_true $? "is_plain_text: executable script"
+is_plain_text "$BIN_FILE"; assert_false $? "is_plain_text: binary file"
+is_plain_text "$TRICK_FILE"; assert_false $? "is_plain_text: binary file named 'text_*' is not fooled"
+is_plain_text "$EMPTY_FILE"; assert_false $? "is_plain_text: empty file"
+is_plain_text "$SUB_DIR"; assert_false $? "is_plain_text: directory"
+is_plain_text "$NON_EXISTENT"; assert_status 1 $? "is_plain_text: non-existent path (status 1)"
+if [ "$(id -u 2>/dev/null)" = "0" ]; then
+	printf '  [SKIP] is_plain_text: unreadable file (mode 000) [skipped when run as root]\n'
+else
+	is_plain_text "$UNREADABLE_FILE"; assert_status 1 $? "is_plain_text: unreadable file (status 1)"
+fi
 
 # Cleanup fixtures
 rm -rf "$TMP_FIXTURE_DIR"

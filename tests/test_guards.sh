@@ -46,6 +46,12 @@ run_guard_test '
 '
 assert_true $? "Scenario 1: str.sh defines trim and does not load num"
 
+run_guard_test '
+	. ./src/encoding.sh
+	command -v base64_enc >/dev/null 2>&1 && [ "$_POSHLI_ENCODING_LOADED" = "1" ] && ! command -v trim >/dev/null 2>&1
+'
+assert_true $? "Scenario 1: encoding.sh defines base64_enc and does not load str"
+
 # ==============================================================================
 # Scenario 2: Load bundle poshli.sh
 # ==============================================================================
@@ -55,7 +61,8 @@ run_guard_test '
 	[ "$_POSHLI_LOADED" = "1" ] &&
 	command -v is_integer >/dev/null 2>&1 &&
 	command -v is_file >/dev/null 2>&1 &&
-	command -v trim >/dev/null 2>&1
+	command -v trim >/dev/null 2>&1 &&
+	command -v base64_enc >/dev/null 2>&1
 '
 assert_true $? "Scenario 2: poshli.sh loads all modules and defines all functions"
 

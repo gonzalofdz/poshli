@@ -24,6 +24,7 @@ STATUS=0
 run_suite "$TEST_DIR/test_num.sh" || STATUS=1
 run_suite "$TEST_DIR/test_fs.sh" || STATUS=1
 run_suite "$TEST_DIR/test_str.sh" || STATUS=1
+run_suite "$TEST_DIR/test_encoding.sh" || STATUS=1
 run_suite "$TEST_DIR/test_guards.sh" || STATUS=1
 
 printf '\n========================================\n'

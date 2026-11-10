@@ -196,6 +196,22 @@ is_bool() {
 	esac
 }
 
+#	Prints a random integer from 0 to one less than the given limit.
+#
+#	Example of use:
+#	RANDNUM=$(randomize 5)
+#
+randomize() {
+	[ $# -ge 1 ] || return 2
+	is_natural "$1" || return 1
+	[ "$1" -gt 0 ] || return 1
+
+	awk -v limit="$1" 'BEGIN {
+		srand()
+		printf "%d\n", int(rand() * limit)
+	}'
+}
+
 fi
 #
 # POSHLI - POSIX Shell Library
@@ -235,6 +251,20 @@ is_exec() {
 is_empty_file() {
 	[ $# -ge 1 ] || return 2
 	[ -f "$1" ] && [ ! -s "$1" ]
+}
+
+#	Is a plain text file?
+#
+#	Example of use:
+#	( is_plain_text "${HOME}/.profile" ) && echo "Plain text file" || echo "That's not true"
+#
+is_plain_text() {
+	[ $# -ge 1 ] || return 2
+	[ -r "$1" ] || return 1
+
+	#	-b omits the file name so it cannot fool the 'text' match;
+	#	LC_ALL=C keeps the description stable across locales.
+	LC_ALL=C file -b "$1" | grep -q 'text'
 }
 fi
 #
@@ -345,5 +375,39 @@ str_replace() {
 	_sr_out="${_sr_out}${_sr_str}"
 	printf '%s\n' "$_sr_out"
 	unset _sr_search _sr_replace _sr_str _sr_out _sr_prefix _sr_rest
+}
+fi
+#
+# POSHLI - POSIX Shell Library
+# Encoding module (Base64)
+#
+# Base64 is an encoding, not an encryption: it provides no confidentiality.
+#
+# GNU Lesser General Public License v3.0
+#
+
+if [ -z "${_POSHLI_ENCODING_LOADED+x}" ]; then
+_POSHLI_ENCODING_LOADED=1
+
+#	Prints the input string base64 encoded.
+#
+#	Example:	encoded=$(base64_enc "String")
+#
+base64_enc() {
+	[ $# -ge 1 ] || return 2
+
+	#	GNU coreutils and BusyBox wrap their output at 76 columns; drop
+	#	the line breaks so the result is always a single line.
+	printf '%s' "${*}" | base64 | tr -d '\n'
+}
+
+#	Prints the input string base64 decoded.
+#
+#	Example:	decoded=$(base64_dec "$encoded")
+#
+base64_dec() {
+	[ $# -ge 1 ] || return 2
+	printf '%s' "${*}" | base64 -d || return 1
+	return 0
 }
 fi

@@ -6,7 +6,7 @@ PREFIX ?= $(HOME)/.local
 DESTDIR ?=
 POSHLI_TEST_SHELL ?= /bin/sh
 BUNDLE_OUTPUT ?= poshli.sh
-BUNDLE_SOURCES = src/core.sh src/num.sh src/fs.sh src/str.sh
+BUNDLE_SOURCES = src/core.sh src/num.sh src/fs.sh src/str.sh src/encoding.sh
 LIBDIR = $(DESTDIR)$(PREFIX)/lib/poshli
 
 .PHONY: all bundle check-bundle test test-bundle install uninstall clean

@@ -37,4 +37,18 @@ is_empty_file() {
 	[ $# -ge 1 ] || return 2
 	[ -f "$1" ] && [ ! -s "$1" ]
 }
+
+#	Is a plain text file?
+#
+#	Example of use:
+#	( is_plain_text "${HOME}/.profile" ) && echo "Plain text file" || echo "That's not true"
+#
+is_plain_text() {
+	[ $# -ge 1 ] || return 2
+	[ -r "$1" ] || return 1
+
+	#	-b omits the file name so it cannot fool the 'text' match;
+	#	LC_ALL=C keeps the description stable across locales.
+	LC_ALL=C file -b "$1" | grep -q 'text'
+}
 fi

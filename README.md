@@ -77,7 +77,7 @@ In any standard POSIX shell script, source the library using the dot (`.`) comma
 
 > **Note on Namespaces**: POSHLI exports short, ergonomic functions directly into the shell's global function table for maximum ease of use. Ensure your scripts do not define conflicting function names.
 
-> **Modular sources**: The `src/` directory contains the individual modules (`core.sh`, `num.sh`, `fs.sh`, `str.sh`). Each module is self-contained and can be sourced on its own during development, but the supported distribution format is the generated `poshli.sh` bundle.
+> **Modular sources**: The `src/` directory contains the individual modules (`core.sh`, `num.sh`, `fs.sh`, `str.sh`, `encoding.sh`). Each module is self-contained and can be sourced on its own during development, but the supported distribution format is the generated `poshli.sh` bundle.
 
 ---
 
@@ -108,6 +108,7 @@ In any standard POSIX shell script, source the library using the dot (`.`) comma
 | `is_hex <val>` | Returns 0 if `<val>` is hexadecimal (`0xFF`, `1a`, `DEADBEEF`), with optional `0x`/`0X` prefix. |
 | `is_bin <val>` | Returns 0 if `<val>` is binary (`10110`, `0b1010`), with optional `0b`/`0B` prefix. |
 | `is_bool <val>` | Returns 0 if `<val>` is strictly `0`, `1`, `true`, `false`, `TRUE`, or `FALSE`. |
+| `randomize <limit>` | Prints a random integer from `0` to one less than `<limit>` (`randomize 5` prints `0`–`4`). Returns 1 if `<limit>` is not a natural number greater than `0`, or 2 if no argument is passed. |
 
 *All numeric functions return 2 if no argument is passed.*
 
@@ -123,6 +124,7 @@ In any standard POSIX shell script, source the library using the dot (`.`) comma
 | `is_writable <path>` | Returns 0 if `<path>` exists and has write permissions (`[ -w ]`). |
 | `is_exec <path>` | Returns 0 if `<path>` exists and has execute permissions (`[ -x ]`). |
 | `is_empty_file <path>` | Returns 0 if `<path>` exists, is a regular file, and its size is 0 bytes (`[ -f ] && [ ! -s ]`). |
+| `is_plain_text <path>` | Returns 0 if `<path>` is readable and `file` reports it as text. Returns 1 if it is a binary or non-text file, or if it does not exist or is unreadable; 2 if no argument is passed. |
 
 *All file system functions return 2 if no argument is passed.*
 
@@ -142,6 +144,17 @@ In any standard POSIX shell script, source the library using the dot (`.`) comma
 | `str_len <str>` | Prints the number of Unicode code points in `<str>` (valid UTF-8). Independent of `${#str}`, the shell, and the active locale. Combining marks and emoji components count separately; grapheme clusters are not counted. For invalid UTF-8 the result is approximate. Returns 2 if no argument is passed. |
 | `str_len_bytes <str>` | Prints the exact number of bytes in `<str>` using `wc -c`. Always locale-independent. Returns 2 if no argument is passed. |
 | `str_replace <search> <replace> <str>` | Prints `<str>` with all literal occurrences of `<search>` replaced with `<replace>`. Handles special characters safely. Returns 2 if fewer than 3 arguments are passed. |
+
+---
+
+### 4. Encoding (`encoding.sh`)
+
+| Function | Description |
+| :--- | :--- |
+| `base64_enc <str>` | Prints `<str>` encoded in Base64 as a single line. Returns 2 if no argument is passed. |
+| `base64_dec <str>` | Prints `<str>` decoded from Base64. Returns 1 if the input is not valid Base64, or 2 if no argument is passed. |
+
+> Base64 is an encoding, not an encryption: it provides no confidentiality.
 
 ---
 

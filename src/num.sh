@@ -175,4 +175,20 @@ is_bool() {
 	esac
 }
 
+#	Prints a random integer from 0 to one less than the given limit.
+#
+#	Example of use:
+#	RANDNUM=$(randomize 5)
+#
+randomize() {
+	[ $# -ge 1 ] || return 2
+	is_natural "$1" || return 1
+	[ "$1" -gt 0 ] || return 1
+
+	awk -v limit="$1" 'BEGIN {
+		srand()
+		printf "%d\n", int(rand() * limit)
+	}'
+}
+
 fi

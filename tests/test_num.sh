@@ -30,6 +30,8 @@ is_octal
 assert_status 2 $? "is_octal requires argument (status 2)"
 is_bool
 assert_status 2 $? "is_bool requires argument (status 2)"
+randomize
+assert_status 2 $? "randomize requires argument (status 2)"
 
 # is_integer tests
 is_integer "42"; assert_true $? "is_integer: 42"
@@ -183,5 +185,39 @@ is_bool "y"; assert_false $? "is_bool rejects: y"
 is_bool "n"; assert_false $? "is_bool rejects: n"
 is_bool "2"; assert_false $? "is_bool rejects: 2"
 is_bool "-1"; assert_false $? "is_bool rejects: -1"
+
+# randomize tests
+randomize 0; assert_status 1 $? "randomize rejects limit 0 (status 1)"
+randomize -1; assert_status 1 $? "randomize rejects negative limit (status 1)"
+randomize abc; assert_status 1 $? "randomize rejects non-natural limit (status 1)"
+randomize 1.5; assert_status 1 $? "randomize rejects decimal limit (status 1)"
+randomize ""; assert_status 1 $? "randomize rejects empty limit (status 1)"
+
+# Valid limit: prints a natural number below the limit
+res=$(randomize 5); assert_true $? "randomize 5 succeeds"
+is_natural "$res"; assert_true $? "randomize 5 prints a natural number"
+[ "$res" -lt 5 ]; assert_true $? "randomize 5 result is below the limit"
+
+# Result always stays within [0, limit) over repeated calls
+_i=0
+_rand_ok=0
+while [ "$_i" -lt 20 ]; do
+	_r=$(randomize 10)
+	is_natural "$_r" && [ "$_r" -lt 10 ] && _rand_ok=$((_rand_ok + 1))
+	_i=$((_i + 1))
+done
+assert_eq 20 "$_rand_ok" "randomize: 20 results all within [0, 10)"
+unset _i _rand_ok _r
+
+# Limit 1 can only produce 0
+_i=0
+_rand_one=0
+while [ "$_i" -lt 10 ]; do
+	_r=$(randomize 1)
+	[ "$_r" = "0" ] && _rand_one=$((_rand_one + 1))
+	_i=$((_i + 1))
+done
+assert_eq 10 "$_rand_one" "randomize: limit 1 always returns 0"
+unset _i _rand_one _r
 
 test_summary
