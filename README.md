@@ -143,17 +143,17 @@ POSHLI distinguishes boolean predicates from operational functions:
 | Function | Description |
 | :--- | :--- |
 | `is_empty [str]` | Returns 0 if `[str]` is empty (`""`) or if no argument is given. Returns 1 if `[str]` contains at least one character. |
-| `trim <str>` | Prints `<str>` with leading and trailing spaces and tabs removed. Preserves internal spacing. |
-| `lower <str>` | Prints `<str>` converted to lowercase. ASCII letters are always mapped. When `gawk` is available and the active locale is UTF-8, Unicode case mapping is also applied (delegated to `gawk` and the active locale, e.g. `É` → `é`). Without `gawk`, the system `awk` is used and non-ASCII characters are typically left unchanged. See [Unicode Support](#unicode-support). |
-| `upper <str>` | Prints `<str>` converted to uppercase. Same behavior as `lower`. |
-| `starts_with <str> <prefix>` | Returns 0 if `<str>` begins with `<prefix>`, and 1 otherwise. |
-| `ends_with <str> <suffix>` | Returns 0 if `<str>` ends with `<suffix>`, and 1 otherwise. |
-| `contains <str> <substr>` | Returns 0 if `<str>` contains `<substr>`, and 1 otherwise. |
-| `str_len <str>` | Prints the number of Unicode code points in `<str>` (valid UTF-8). Independent of `${#str}`, the shell, and the active locale. Combining marks and emoji components count separately; grapheme clusters are not counted. For invalid UTF-8 the result is approximate. |
-| `str_len_bytes <str>` | Prints the exact number of bytes in `<str>` using `wc -c`. Always locale-independent. |
-| `str_replace <search> <replace> <str>` | Prints `<str>` with all literal occurrences of `<search>` replaced with `<replace>`. Handles special characters safely. |
+| `trim [str]` | Prints `[str]` with leading and trailing spaces and tabs removed. If no argument is given, treats it as empty string. Preserves internal spacing. Returns 0 on success. |
+| `lower [str]` | Prints `[str]` converted to lowercase. If no argument is given, treats it as empty string. ASCII letters are always mapped. When `gawk` is available and the active locale is UTF-8, Unicode case mapping is also applied (delegated to `gawk` and the active locale, e.g. `É` → `é`). Without `gawk`, the system `awk` is used and non-ASCII characters are typically left unchanged. See [Unicode Support](#unicode-support). Returns 0 on success. |
+| `upper [str]` | Prints `[str]` converted to uppercase. Same behavior as `lower`. Returns 0 on success. |
+| `starts_with <str> <prefix>` | Returns 0 if `<str>` begins with `<prefix>`, and 1 otherwise. Returns 1 if arguments are missing or insufficient. |
+| `ends_with <str> <suffix>` | Returns 0 if `<str>` ends with `<suffix>`, and 1 otherwise. Returns 1 if arguments are missing or insufficient. |
+| `contains <str> <substr>` | Returns 0 if `<str>` contains `<substr>`, and 1 otherwise. Returns 1 if arguments are missing or insufficient. |
+| `str_len [str]` | Prints the number of Unicode code points in `[str]` (valid UTF-8). If no argument is given, treats it as empty string and prints `0`. Independent of `${#str}`, the shell, and the active locale. Combining marks and emoji components count separately; grapheme clusters are not counted. For invalid UTF-8 the result is approximate. Returns 0 on success. |
+| `str_len_bytes [str]` | Prints the exact number of bytes in `[str]` using `wc -c`. If no argument is given, treats it as empty string and prints `0`. Always locale-independent. Returns 0 on success. |
+| `str_replace <search> <replace> <str>` | Prints `<str>` with all literal occurrences of `<search>` replaced with `<replace>`. Handles special characters safely. Returns `2` when arguments are insufficient. |
 
-*The operational functions (`trim`, `lower`, `upper`, `str_len`, `str_len_bytes`, `str_replace`) return `2` when a mandatory argument is missing.*
+*The operational functions that require multiple mandatory arguments (`str_replace`) return `2` when arguments are missing.*
 
 ---
 

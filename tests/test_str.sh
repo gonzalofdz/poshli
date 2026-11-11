@@ -46,19 +46,19 @@ _str_locale() {
 	)
 }
 
-# Argument count validation: the operational functions report a missing mandatory
-# argument as invalid usage (status 2); the predicates treat it as false (status 1).
-trim; assert_status 2 $? "trim requires argument (status 2)"
-lower; assert_status 2 $? "lower requires argument (status 2)"
-upper; assert_status 2 $? "upper requires argument (status 2)"
+# Argument count validation: single-argument transformations treat missing argument as empty string;
+# predicates treat missing/insufficient arguments as false (status 1); str_replace requires 3 arguments (status 2).
+res=$(trim); assert_status 0 $? "trim without argument returns status 0"; assert_eq "" "$res" "trim without argument prints empty string"
+res=$(lower); assert_status 0 $? "lower without argument returns status 0"; assert_eq "" "$res" "lower without argument prints empty string"
+res=$(upper); assert_status 0 $? "upper without argument returns status 0"; assert_eq "" "$res" "upper without argument prints empty string"
 starts_with; assert_status 1 $? "starts_with without arguments is false (status 1)"
 starts_with "foo"; assert_status 1 $? "starts_with without prefix is false (status 1)"
 ends_with; assert_status 1 $? "ends_with without arguments is false (status 1)"
 ends_with "foo"; assert_status 1 $? "ends_with without suffix is false (status 1)"
 contains; assert_status 1 $? "contains without arguments is false (status 1)"
 contains "foo"; assert_status 1 $? "contains without substring is false (status 1)"
-str_len; assert_status 2 $? "str_len requires argument (status 2)"
-str_len_bytes; assert_status 2 $? "str_len_bytes requires argument (status 2)"
+res=$(str_len); assert_status 0 $? "str_len without argument returns status 0"; assert_eq "0" "$res" "str_len without argument prints 0"
+res=$(str_len_bytes); assert_status 0 $? "str_len_bytes without argument returns status 0"; assert_eq "0" "$res" "str_len_bytes without argument prints 0"
 str_replace "a" "b"; assert_status 2 $? "str_replace requires 3 arguments (status 2)"
 
 # is_empty

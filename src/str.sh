@@ -34,7 +34,10 @@ trim() {
 #	Example of use:
 #	TRIMMED=$(trim "  hello  ")
 #
-	[ $# -ge 1 ] || return 2
+	if [ $# -eq 0 ]; then
+		printf '%s\n' ""
+		return
+	fi
 	printf '%s\n' "$1" | sed -e 's/^[ 	]*//' -e 's/[ 	]*$//'
 }
 
@@ -44,7 +47,10 @@ lower() {
 #	Example of use:
 #	LOWER=$(lower "HELLO")
 #
-	[ $# -ge 1 ] || return 2
+	if [ $# -eq 0 ]; then
+		printf '%s\n' ""
+		return
+	fi
 	printf '%s\n' "$1" | "$_POSHLI_AWK" '{ print tolower($0) }'
 }
 
@@ -54,7 +60,10 @@ upper() {
 #	Example of use:
 #	UPPER=$(upper "hello")
 #
-	[ $# -ge 1 ] || return 2
+	if [ $# -eq 0 ]; then
+		printf '%s\n' ""
+		return
+	fi
 	printf '%s\n' "$1" | "$_POSHLI_AWK" '{ print toupper($0) }'
 }
 
@@ -103,7 +112,10 @@ str_len() {
 #	Example of use:
 #	LEN=$(str_len "España")
 #
-	[ $# -ge 1 ] || return 2
+	if [ $# -eq 0 ]; then
+		printf '0\n'
+		return
+	fi
 	printf '%s' "$1" | od -An -v -tu1 | awk '
 		{
 			for (i = 1; i <= NF; i++)
@@ -120,7 +132,10 @@ str_len_bytes() {
 #	Example of use:
 #	BYTES=$(str_len_bytes "España")
 #
-	[ $# -ge 1 ] || return 2
+	if [ $# -eq 0 ]; then
+		printf '0\n'
+		return
+	fi
 	printf '%s' "$1" | wc -c | awk '{print $1}'
 }
 
