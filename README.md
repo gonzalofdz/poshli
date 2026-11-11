@@ -159,12 +159,18 @@ POSHLI distinguishes boolean predicates from operational functions:
 
 ### 4. Encoding (`encoding.sh`)
 
+`base64` is **not** part of POSIX, so it is treated as a documented external dependency. POSHLI detects a usable decode flag functionally at load time (`-d` or `-D`) and does not add fallbacks such as `openssl`, Python, or `uudecode`.
+
 | Function | Description |
 | :--- | :--- |
-| `base64_enc <str>` | Prints `<str>` encoded in Base64 as a single line. Returns 2 if no argument is passed. |
-| `base64_dec <str>` | Prints `<str>` decoded from Base64. Returns 1 if the input is not valid Base64, or 2 if no argument is passed. |
+| `base64_enc <str>` | Prints `$1` encoded in standard Base64 as a single line. Extra arguments are ignored. Returns 1 if encoding fails or if no usable `base64` backend is available, or 2 if no argument is passed. |
+| `base64_dec <str>` | Decodes strict standard Base64 (RFC 4648) from `$1` and writes decoded bytes directly to stdout. The empty string is valid and produces no output. Extra arguments are ignored. Returns 1 if the input is invalid, decoding fails, or no usable `base64` backend is available; 2 if no argument is passed. |
+
+`base64_dec` accepts only the standard alphabet (`A-Z a-z 0-9 + /`), correct `=` padding, and a length multiple of 4. It rejects whitespace, line breaks, base64url (`-`/`_`), missing padding, and malformed padding. When POSHLI's validation rejects the input, no output is produced.
 
 > Base64 is an encoding, not an encryption: it provides no confidentiality.
+>
+> Capturing output with `$(...)` is not suitable for binary/NUL data and removes trailing newlines. Redirect decoded binary output to a file instead.
 
 ---
 

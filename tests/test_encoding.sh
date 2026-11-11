@@ -25,8 +25,13 @@ res=$(base64_enc ""); assert_eq "" "$res" "base64_enc: empty string"
 res=$(base64_enc "hello world"); assert_eq "aGVsbG8gd29ybGQ=" "$res" "base64_enc: hello world"
 res=$(base64_dec "aGVsbG8gd29ybGQ="); assert_eq "hello world" "$res" "base64_dec: hello world"
 
-# Multiple arguments are joined with a space, as in the historical function
-res=$(base64_enc "a" "b"); assert_eq "YSBi" "$res" "base64_enc: multiple arguments joined"
+# Extra arguments are ignored (conceptually a single string)
+res=$(base64_enc "a" "b"); assert_eq "YQ==" "$res" "base64_enc: extra arguments ignored"
+res=$(base64_dec "YQ==" "extra"); assert_eq "a" "$res" "base64_dec: extra arguments ignored"
+
+# Empty input is valid for strict decode and produces no output
+res=$(base64_dec ""); assert_status 0 $? "base64_dec: empty string status"
+assert_eq "" "$res" "base64_dec: empty string produces no output"
 
 # UTF-8 content survives a round trip
 res=$(base64_enc "España"); assert_eq "RXNwYcOxYQ==" "$res" "base64_enc: UTF-8"
@@ -40,7 +45,29 @@ assert_eq "$res" "$_long_stripped" "base64_enc: long input is a single line"
 res=$(base64_dec "$res"); assert_eq "$_long_str" "$res" "base64_dec: long input round trip"
 unset _long_str _long_stripped
 
-# Invalid input is rejected
-base64_dec "!!!not-base64!!!" 2>/dev/null; assert_false $? "base64_dec rejects invalid input"
+# Strict validation rejects non-RFC 4648 / ambiguous forms and produces no output
+for _poshli_b64_bad in \
+	"!!!not-base64!!!" \
+	"YWJj defg" \
+	"YWJj
+ZGVm" \
+	"YW-j" \
+	"YW_j" \
+	"YQ" \
+	"YWI" \
+	"====" \
+	"A===" \
+	"AA=A" \
+	"A==A" \
+	"=AAA" \
+	"AAAA====" \
+	"SGVsbG8=SGVs"
+do
+	_poshli_b64_out=$(base64_dec "$_poshli_b64_bad" 2>/dev/null)
+	_poshli_b64_status=$?
+	assert_status 1 "$_poshli_b64_status" "base64_dec rejects invalid input: $_poshli_b64_bad"
+	assert_eq "" "$_poshli_b64_out" "base64_dec produces no output on invalid input: $_poshli_b64_bad"
+done
+unset _poshli_b64_bad _poshli_b64_out _poshli_b64_status
 
 test_summary
