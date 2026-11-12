@@ -38,7 +38,14 @@ base64_enc() {
 #	76 columns; line breaks are removed so the result is always one line.
 #
 #	Example of use:
-#	encoded=$(base64_enc "String")
+#
+#		encoded=$(base64_enc "$text")
+#		status=$?
+#		case $status in
+#			0) printf '%s\n' "$encoded" ;;
+#			1) printf '%s\n' "Base64 encoding failed" >&2 ;;
+#			2) printf '%s\n' "Missing argument" >&2 ;;
+#		esac
 #
 	[ $# -ge 1 ] || return 2
 	command -v base64 >/dev/null 2>&1 || return 1
@@ -71,7 +78,14 @@ base64_dec() {
 #	removes trailing newlines; redirect to a file for binary output.
 #
 #	Example of use:
-#	decoded=$(base64_dec "$encoded")
+#
+#		decoded=$(base64_dec "$encoded")
+#		status=$?
+#		case $status in
+#			0) printf '%s\n' "$decoded" ;;
+#			1) printf '%s\n' "Not valid Base64" >&2 ;;
+#			2) printf '%s\n' "Missing argument" >&2 ;;
+#		esac
 #
 	[ $# -ge 1 ] || return 2
 	[ -n "$_poshli_base64_dec_flag" ] || return 1
