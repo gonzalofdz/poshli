@@ -1,9 +1,9 @@
 # shellcheck shell=sh
 #
-# POSHLI - POSIX Shell Library
-# Core module & version metadata
+#  POSHLI - POSIX Shell Library
+#  Core module & version metadata
 #
-# GNU Lesser General Public License v3.0
+#  GNU Lesser General Public License v3.0
 #
 
 if [ -z "${_POSHLI_CORE_LOADED+x}" ]; then

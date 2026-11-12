@@ -1,9 +1,9 @@
 # shellcheck shell=sh
 #
-# POSHLI - POSIX Shell Library
-# File system checks module
+#  POSHLI - POSIX Shell Library
+#  File system checks module
 #
-# GNU Lesser General Public License v3.0
+#  GNU Lesser General Public License v3.0
 #
 
 if [ -z "${_POSHLI_FS_LOADED+x}" ]; then

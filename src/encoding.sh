@@ -1,4 +1,4 @@
-#  shellcheck shell=sh
+# shellcheck shell=sh
 #
 #  POSHLI - POSIX Shell Library
 #  Encoding module
