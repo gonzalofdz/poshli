@@ -1,3 +1,4 @@
+# shellcheck shell=sh
 #
 # POSHLI - POSIX Shell Library
 # Core module & version metadata

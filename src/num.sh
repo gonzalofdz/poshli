@@ -1,11 +1,9 @@
-#!/bin/sh
+#  shellcheck shell=sh
 #
-# POSHLI - POSIX Shell Library
-# Numeric validations module
+#  POSHLI - POSIX Shell Library
+#  Numeric validations module
 #
-# Copyright (C) 2026 Gonzalo Fernández-Díez
-#
-# GNU Lesser General Public License v3.0
+#  GNU Lesser General Public License v3.0
 #
 
 if [ -z "${_POSHLI_NUM_LOADED+x}" ]; then

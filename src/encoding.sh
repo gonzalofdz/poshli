@@ -1,22 +1,16 @@
+#  shellcheck shell=sh
 #
-# POSHLI - POSIX Shell Library
-# Encoding module (Base64)
+#  POSHLI - POSIX Shell Library
+#  Encoding module
 #
-# Base64 is an encoding, not an encryption: it provides no confidentiality.
-#
-# base64 is not part of POSIX; it is treated as a documented external
-# dependency. No non-POSIX fallback (openssl, Python, uudecode, etc.) is
-# added. The decode flag is selected once at load time by functional
-# detection.
-#
-# GNU Lesser General Public License v3.0
+#  GNU Lesser General Public License v3.0
 #
 
 if [ -z "${_POSHLI_ENCODING_LOADED+x}" ]; then
 _POSHLI_ENCODING_LOADED=1
 
-#	Detect a usable base64 backend and decode flag at load time. A flag is
-#	accepted only if it decodes a known vector correctly.
+#	Base64 is not specified by POSIX. Detect a usable system base64
+#	utility and its supported decode flag (-d or -D) functionally.
 _poshli_base64_dec_flag=''
 if command -v base64 >/dev/null 2>&1; then
 	_poshli_base64_probe=$(printf '%s' 'QQ==' | base64 -d 2>/dev/null) && [ "$_poshli_base64_probe" = 'A' ] && _poshli_base64_dec_flag='-d'
@@ -27,14 +21,14 @@ if command -v base64 >/dev/null 2>&1; then
 fi
 
 base64_enc() {
-#	Prints "$1" encoded in standard Base64 as a single line.
+#	Encodes "$1" as standard Base64 and prints the result as a single line.
 #
 #	Returns:
 #		0 on success
-#		1 if encoding fails or if no usable base64 backend is available
+#		1 if encoding fails or no usable base64 utility is available
 #		2 if no argument is passed
 #
-#	Extra arguments are ignored. Some base64 implementations wrap output at
+#	Extra arguments are ignored. Some implementations wrap Base64 output at
 #	76 columns; line breaks are removed so the result is always one line.
 #
 #	Example of use:
@@ -63,19 +57,19 @@ base64_dec() {
 #	decoded bytes directly to stdout.
 #
 #	Returns:
-#		0 on success (including an empty string, which produces no output)
+#		0 on success, including an empty string, which produces no output
 #		1 if the input is invalid, decoding fails, or no usable base64
-#		  backend is available
+#		  utility is available
 #		2 if no argument is passed
 #
-#	Extra arguments are ignored. Accepted input uses the standard alphabet
-#	(A-Z a-z 0-9 + /), correct "=" padding, and a length that is a multiple
-#	of 4. Spaces, line breaks, base64url (- and _), missing padding, and
-#	malformed padding are rejected. When POSHLI's validation rejects the
-#	input, no output is produced.
+#	Extra arguments are ignored. Input must use the standard alphabet
+#	(A-Z, a-z, 0-9, +, /), correct "=" padding, and a length that is a
+#	multiple of 4. Whitespace, line breaks, base64url (- and _), missing
+#	padding, and malformed padding are rejected. When POSHLI validation
+#	rejects the input, no output is produced.
 #
-#	Capturing output with $(...) is not suitable for binary/NUL data and
-#	removes trailing newlines; redirect to a file for binary output.
+#	Capturing output with $(...) is not suitable for binary or NUL data and
+#	removes trailing newlines; redirect stdout to a file for binary output.
 #
 #	Example of use:
 #

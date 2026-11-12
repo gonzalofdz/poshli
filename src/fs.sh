@@ -1,3 +1,4 @@
+# shellcheck shell=sh
 #
 # POSHLI - POSIX Shell Library
 # File system checks module

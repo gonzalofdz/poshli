@@ -1,8 +1,9 @@
+#  shellcheck shell=sh
 #
-# POSHLI - POSIX Shell Library
-# String manipulation and predicates module
+#  POSHLI - POSIX Shell Library
+#  String manipulation and predicates module
 #
-# GNU Lesser General Public License v3.0
+#  GNU Lesser General Public License v3.0
 #
 
 if [ -z "${_POSHLI_STR_LOADED+x}" ]; then
