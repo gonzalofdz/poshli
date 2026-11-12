@@ -136,17 +136,26 @@ is_empty() {
 }
 
 trim() {
-	[ $# -ge 1 ] || return 2
+	if [ $# -eq 0 ]; then
+		printf '%s\n' ""
+		return
+	fi
 	printf '%s\n' "$1" | sed -e 's/^[ 	]*//' -e 's/[ 	]*$//'
 }
 
 lower() {
-	[ $# -ge 1 ] || return 2
+	if [ $# -eq 0 ]; then
+		printf '%s\n' ""
+		return
+	fi
 	printf '%s\n' "$1" | "$_POSHLI_AWK" '{ print tolower($0) }'
 }
 
 upper() {
-	[ $# -ge 1 ] || return 2
+	if [ $# -eq 0 ]; then
+		printf '%s\n' ""
+		return
+	fi
 	printf '%s\n' "$1" | "$_POSHLI_AWK" '{ print toupper($0) }'
 }
 
@@ -175,7 +184,10 @@ contains() {
 }
 
 str_len() {
-	[ $# -ge 1 ] || return 2
+	if [ $# -eq 0 ]; then
+		printf '0\n'
+		return
+	fi
 	printf '%s' "$1" | od -An -v -tu1 | awk '
 		{
 			for (i = 1; i <= NF; i++)
@@ -187,7 +199,10 @@ str_len() {
 }
 
 str_len_bytes() {
-	[ $# -ge 1 ] || return 2
+	if [ $# -eq 0 ]; then
+		printf '0\n'
+		return
+	fi
 	printf '%s' "$1" | wc -c | awk '{print $1}'
 }
 
@@ -214,15 +229,58 @@ fi
 if [ -z "${_POSHLI_ENCODING_LOADED+x}" ]; then
 _POSHLI_ENCODING_LOADED=1
 
+_poshli_base64_dec_flag=''
+if command -v base64 >/dev/null 2>&1; then
+	_poshli_base64_probe=$(printf '%s' 'QQ==' | base64 -d 2>/dev/null) && [ "$_poshli_base64_probe" = 'A' ] && _poshli_base64_dec_flag='-d'
+	if [ -z "$_poshli_base64_dec_flag" ]; then
+		_poshli_base64_probe=$(printf '%s' 'QQ==' | base64 -D 2>/dev/null) && [ "$_poshli_base64_probe" = 'A' ] && _poshli_base64_dec_flag='-D'
+	fi
+	unset _poshli_base64_probe
+fi
+
 base64_enc() {
 	[ $# -ge 1 ] || return 2
+	command -v base64 >/dev/null 2>&1 || return 1
 
-	printf '%s' "${*}" | base64 | tr -d '\n'
+	_poshli_base64_out=$(printf '%s' "$1" | base64 2>/dev/null) || {
+		unset _poshli_base64_out
+		return 1
+	}
+	printf '%s' "$_poshli_base64_out" | tr -d '\n'
+	unset _poshli_base64_out
 }
 
 base64_dec() {
 	[ $# -ge 1 ] || return 2
-	printf '%s' "${*}" | base64 -d || return 1
-	return 0
+	[ -n "$_poshli_base64_dec_flag" ] || return 1
+
+	[ -n "$1" ] || return 0
+
+	case $1 in
+		*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=]*)
+			return 1
+			;;
+	esac
+	[ $(( ${#1} % 4 )) -eq 0 ] || return 1
+	case $1 in
+		*==)
+			_poshli_b64_prefix=${1%??}
+			;;
+		*=)
+			_poshli_b64_prefix=${1%?}
+			;;
+		*)
+			_poshli_b64_prefix=$1
+			;;
+	esac
+	case $_poshli_b64_prefix in
+		*=*)
+			unset _poshli_b64_prefix
+			return 1
+			;;
+	esac
+	unset _poshli_b64_prefix
+
+	printf '%s' "$1" | base64 "$_poshli_base64_dec_flag" 2>/dev/null || return 1
 }
 fi
