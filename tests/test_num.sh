@@ -208,6 +208,14 @@ is_octal "09"; assert_status 1 $? "is_octal rejects: 09"
 is_octal "0o8"; assert_status 1 $? "is_octal rejects: 0o8"
 is_octal "0o0o1"; assert_status 1 $? "is_octal rejects: 0o0o1"
 
+# Non-ASCII digits are never accepted, regardless of locale or shell
+is_integer "١٢"; assert_status 1 $? "is_integer rejects: Arabic-Indic digits"
+is_natural "١٢"; assert_status 1 $? "is_natural rejects: Arabic-Indic digits"
+is_number "١٢.٥"; assert_status 1 $? "is_number rejects: Arabic-Indic digits"
+is_hex "١a"; assert_status 1 $? "is_hex rejects: Arabic-Indic digit"
+is_octal "١"; assert_status 1 $? "is_octal rejects: Arabic-Indic digit"
+is_integer "１２"; assert_status 1 $? "is_integer rejects: fullwidth digits"
+
 # is_bool tests
 is_bool "0"; assert_true $? "is_bool: 0"
 is_bool "1"; assert_true $? "is_bool: 1"

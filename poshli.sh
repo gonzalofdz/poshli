@@ -19,28 +19,28 @@ _POSHLI_NUM_LOADED=1
 is_integer() {
 	[ $# -ge 1 ] || return 1
 	case "${1#[+-]}" in
-		"" | *[!0-9]*) return 1 ;;
+		"" | *[!0123456789]*) return 1 ;;
 	esac
 }
 
 is_natural() {
 	[ $# -ge 1 ] || return 1
 	case "$1" in
-		"" | *[!0-9]*) return 1 ;;
+		"" | *[!0123456789]*) return 1 ;;
 	esac
 }
 
 is_number() {
 	[ $# -ge 1 ] || return 1
 	case "${1#[+-]}" in
-		"" | . | *[!0-9.]* | *.*.*) return 1 ;;
+		"" | . | *[!0123456789.]* | *.*.*) return 1 ;;
 	esac
 }
 
 is_hex() {
 	[ $# -ge 1 ] || return 1
 	case "${1#0[xX]}" in
-		"" | *[!0-9a-fA-F]*) return 1 ;;
+		"" | *[!0123456789abcdefABCDEF]*) return 1 ;;
 	esac
 }
 
@@ -54,7 +54,7 @@ is_bin() {
 is_octal() {
 	[ $# -ge 1 ] || return 1
 	case "${1#0[oO]}" in
-		"" | *[!0-7]*) return 1 ;;
+		"" | *[!01234567]*) return 1 ;;
 	esac
 }
 
