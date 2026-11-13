@@ -26,4 +26,4 @@ Any behavior that deliberately disrupts development or disrespects others will n
 
 Project maintainers reserve the right to edit, close, or remove comments, commits, code, or issues that do not align with these guidelines.
 
-If you observe serious misconduct affecting the project, please report it privately to **github+humanogonzalo@gmail.com**. Maintainers will evaluate the situation based on the facts and take appropriate action, ranging from a warning to banning the user from the repository.
+If you observe serious misconduct affecting the project, please report it privately to **humanogonzalo+github@gmail.com**. Maintainers will evaluate the situation based on the facts and take appropriate action, ranging from a warning to banning the user from the repository.
