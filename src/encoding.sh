@@ -9,17 +9,6 @@
 if [ -z "${_POSHLI_ENCODING_LOADED+x}" ]; then
 _POSHLI_ENCODING_LOADED=1
 
-#	Base64 is not specified by POSIX. Detect a usable system base64
-#	utility and its supported decode flag (-d or -D) functionally.
-_poshli_base64_dec_flag=''
-if command -v base64 >/dev/null 2>&1; then
-	_poshli_base64_probe=$(printf '%s' 'QQ==' | base64 -d 2>/dev/null) && [ "$_poshli_base64_probe" = 'A' ] && _poshli_base64_dec_flag='-d'
-	if [ -z "$_poshli_base64_dec_flag" ]; then
-		_poshli_base64_probe=$(printf '%s' 'QQ==' | base64 -D 2>/dev/null) && [ "$_poshli_base64_probe" = 'A' ] && _poshli_base64_dec_flag='-D'
-	fi
-	unset _poshli_base64_probe
-fi
-
 base64_enc() {
 #	Encodes "$1" as standard Base64 and prints the result as a single line.
 #
@@ -82,23 +71,41 @@ base64_dec() {
 #		esac
 #
 	[ $# -ge 1 ] || return 2
+
+	#	Base64 is not specified by POSIX. Detect a usable system base64
+	#	utility and its supported decode flag (-d or -D) on first use.
+	#	A set-but-empty flag records that no usable utility was found.
+	if [ -z "${_poshli_base64_dec_flag+x}" ]; then
+		_poshli_base64_dec_flag=''
+		if command -v base64 >/dev/null 2>&1; then
+			_poshli_base64_probe=$(printf '%s' 'QQ==' | base64 -d 2>/dev/null) && [ "$_poshli_base64_probe" = 'A' ] && _poshli_base64_dec_flag='-d'
+			if [ -z "$_poshli_base64_dec_flag" ]; then
+				_poshli_base64_probe=$(printf '%s' 'QQ==' | base64 -D 2>/dev/null) && [ "$_poshli_base64_probe" = 'A' ] && _poshli_base64_dec_flag='-D'
+			fi
+			unset _poshli_base64_probe
+		fi
+	fi
 	[ -n "$_poshli_base64_dec_flag" ] || return 1
 
 	#	Empty string is valid Base64 and decodes to no bytes.
 	[ -n "$1" ] || return 0
 
 	#	Strict RFC 4648 form: standard alphabet, length multiple of 4,
-	#	padding only as final "=" or "==", and no "=" outside padding.
+	#	padding only as final "=" or "==", no "=" outside padding, and
+	#	zero padding bits (canonical form).
 	case $1 in
 		*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=]*)
 			return 1
 			;;
 	esac
 	[ $(( ${#1} % 4 )) -eq 0 ] || return 1
+	#	Canonical form: zero padding bits restrict the last data character.
 	case $1 in
+		*[!AQgw]==) return 1 ;;
 		*==)
 			_poshli_b64_prefix=${1%??}
 			;;
+		*[!AEIMQUYcgkosw048]=) return 1 ;;
 		*=)
 			_poshli_b64_prefix=${1%?}
 			;;
