@@ -80,6 +80,9 @@ res=$(trim "		"); assert_eq "" "$res" "trim: only tabs"
 res=$(trim ""); assert_eq "" "$res" "trim: empty string"
 res=$(trim "  *.*  "); assert_eq "*.*" "$res" "trim: wildcards"
 res=$(trim "  -n  "); assert_eq "-n" "$res" "trim: leading hyphen"
+_str_trim_multiline=$(printf '  a  \n  b  ')
+res=$(trim "$_str_trim_multiline")
+assert_eq "$(printf 'a  \n  b')" "$res" "trim: preserves internal spacing across newlines"
 
 # lower
 res=$(lower "HELLO"); assert_eq "hello" "$res" "lower: all uppercase"

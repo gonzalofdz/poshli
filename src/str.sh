@@ -39,7 +39,11 @@ trim() {
 		printf '%s\n' ""
 		return
 	fi
-	printf '%s\n' "$1" | sed -e 's/^[ 	]*//' -e 's/[ 	]*$//'
+	_trim_str=$1
+	_trim_str=${_trim_str#"${_trim_str%%[! 	]*}"}
+	_trim_str=${_trim_str%"${_trim_str##*[! 	]}"}
+	printf '%s\n' "$_trim_str"
+	unset _trim_str
 }
 
 lower() {
