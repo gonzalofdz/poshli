@@ -78,8 +78,12 @@ is_plain_text() {
 	[ $# -ge 1 ] || return 2
 	[ -r "$1" ] || return 1
 
+	#	file(1) parses a leading '-' as an option and a lone '-' as stdin.
+	case $1 in -*) set -- "./$1" ;; esac
+
 	#	-b omits the file name so it cannot fool the 'text' match;
+	#	-L follows symlinks regardless of POSIXLY_CORRECT;
 	#	LC_ALL=C keeps the description stable across locales.
-	LC_ALL=C file -b "$1" | grep -q 'text'
+	LC_ALL=C file -b -L "$1" | grep -q 'text'
 }
 fi

@@ -118,7 +118,9 @@ is_plain_text() {
 	[ $# -ge 1 ] || return 2
 	[ -r "$1" ] || return 1
 
-	LC_ALL=C file -b "$1" | grep -q 'text'
+	case $1 in -*) set -- "./$1" ;; esac
+
+	LC_ALL=C file -b -L "$1" | grep -q 'text'
 }
 fi
 

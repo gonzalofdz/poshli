@@ -39,6 +39,8 @@ TRICK_FILE="$TMP_FIXTURE_DIR/text_binary.bin"
 UTF8_FILE="$TMP_FIXTURE_DIR/utf8.txt"
 UNREADABLE_FILE="$TMP_FIXTURE_DIR/unreadable.txt"
 NON_EXISTENT="$TMP_FIXTURE_DIR/non_existent_file_$$"
+HYPHEN_FILE="$TMP_FIXTURE_DIR/-n"
+LINK_FILE="$TMP_FIXTURE_DIR/link.txt"
 
 printf 'hello world\n' > "$REG_FILE"
 : > "$EMPTY_FILE"
@@ -54,6 +56,8 @@ printf 'x\000y' > "$TRICK_FILE"
 printf 'España\n' > "$UTF8_FILE"
 printf 'secret\n' > "$UNREADABLE_FILE"
 chmod 000 "$UNREADABLE_FILE"
+printf 'hello world\n' > "$HYPHEN_FILE"
+ln -s "$REG_FILE" "$LINK_FILE"
 
 # is_file
 is_file "$REG_FILE"; assert_true $? "is_file: regular file"
@@ -106,6 +110,8 @@ if [ "$(id -u 2>/dev/null)" = "0" ]; then
 else
 	is_plain_text "$UNREADABLE_FILE"; assert_status 1 $? "is_plain_text: unreadable file (status 1)"
 fi
+( cd "$TMP_FIXTURE_DIR" && is_plain_text -n ); assert_true $? "is_plain_text: leading hyphen filename"
+is_plain_text "$LINK_FILE"; assert_true $? "is_plain_text: symlink to text file"
 
 # Cleanup fixtures
 rm -rf "$TMP_FIXTURE_DIR"
