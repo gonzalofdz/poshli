@@ -56,143 +56,143 @@ _str_locale() {
 
 # Argument count validation: single-argument transformations treat missing argument as empty string;
 # predicates treat missing/insufficient arguments as false (status 1); str_replace requires 3 arguments (status 2).
-res=$(trim); assert_status 0 $? "trim without argument returns status 0"; assert_eq "" "$res" "trim without argument prints empty string"
-res=$(lower); assert_status 0 $? "lower without argument returns status 0"; assert_eq "" "$res" "lower without argument prints empty string"
-res=$(upper); assert_status 0 $? "upper without argument returns status 0"; assert_eq "" "$res" "upper without argument prints empty string"
-starts_with; assert_status 1 $? "starts_with without arguments is false (status 1)"
-starts_with "foo"; assert_status 1 $? "starts_with without prefix is false (status 1)"
-ends_with; assert_status 1 $? "ends_with without arguments is false (status 1)"
-ends_with "foo"; assert_status 1 $? "ends_with without suffix is false (status 1)"
-contains; assert_status 1 $? "contains without arguments is false (status 1)"
-contains "foo"; assert_status 1 $? "contains without substring is false (status 1)"
+res=$(str_trim); assert_status 0 $? "str_trim without argument returns status 0"; assert_eq "" "$res" "str_trim without argument prints empty string"
+res=$(str_lower); assert_status 0 $? "str_lower without argument returns status 0"; assert_eq "" "$res" "str_lower without argument prints empty string"
+res=$(str_upper); assert_status 0 $? "str_upper without argument returns status 0"; assert_eq "" "$res" "str_upper without argument prints empty string"
+str_starts_with; assert_status 1 $? "str_starts_with without arguments is false (status 1)"
+str_starts_with "foo"; assert_status 1 $? "str_starts_with without prefix is false (status 1)"
+str_ends_with; assert_status 1 $? "str_ends_with without arguments is false (status 1)"
+str_ends_with "foo"; assert_status 1 $? "str_ends_with without suffix is false (status 1)"
+str_contains; assert_status 1 $? "str_contains without arguments is false (status 1)"
+str_contains "foo"; assert_status 1 $? "str_contains without substring is false (status 1)"
 res=$(str_len); assert_status 0 $? "str_len without argument returns status 0"; assert_eq "0" "$res" "str_len without argument prints 0"
 res=$(str_len_bytes); assert_status 0 $? "str_len_bytes without argument returns status 0"; assert_eq "0" "$res" "str_len_bytes without argument prints 0"
 str_replace "a" "b"; assert_status 2 $? "str_replace requires 3 arguments (status 2)"
 
-# is_empty
-is_empty ""; assert_true $? "is_empty: empty string"
-is_empty; assert_true $? "is_empty: no arguments is empty"
-is_empty "hello"; assert_status 1 $? "is_empty: non-empty string"
-is_empty " "; assert_status 1 $? "is_empty: space is not empty"
-is_empty "0"; assert_status 1 $? "is_empty: 0 is not empty"
+# str_empty
+str_empty ""; assert_true $? "str_empty: empty string"
+str_empty; assert_true $? "str_empty: no arguments is empty"
+str_empty "hello"; assert_status 1 $? "str_empty: non-empty string"
+str_empty " "; assert_status 1 $? "str_empty: space is not empty"
+str_empty "0"; assert_status 1 $? "str_empty: 0 is not empty"
 
-# trim
-res=$(trim "hola"); assert_eq "hola" "$res" "trim: no spaces"
-res=$(trim " hola "); assert_eq "hola" "$res" "trim: single spaces"
-res=$(trim "    hola    "); assert_eq "hola" "$res" "trim: multiple spaces"
-res=$(trim "	hola	"); assert_eq "hola" "$res" "trim: tabs"
-res=$(trim " 	  hola 	 "); assert_eq "hola" "$res" "trim: mixed spaces and tabs"
-res=$(trim "  hola   mundo  "); assert_eq "hola   mundo" "$res" "trim: preserves interior spaces"
-res=$(trim "     "); assert_eq "" "$res" "trim: only spaces"
-res=$(trim "		"); assert_eq "" "$res" "trim: only tabs"
-res=$(trim ""); assert_eq "" "$res" "trim: empty string"
-res=$(trim "  *.*  "); assert_eq "*.*" "$res" "trim: wildcards"
-res=$(trim "  -n  "); assert_eq "-n" "$res" "trim: leading hyphen"
+# str_trim
+res=$(str_trim "hola"); assert_eq "hola" "$res" "str_trim: no spaces"
+res=$(str_trim " hola "); assert_eq "hola" "$res" "str_trim: single spaces"
+res=$(str_trim "    hola    "); assert_eq "hola" "$res" "str_trim: multiple spaces"
+res=$(str_trim "	hola	"); assert_eq "hola" "$res" "str_trim: tabs"
+res=$(str_trim " 	  hola 	 "); assert_eq "hola" "$res" "str_trim: mixed spaces and tabs"
+res=$(str_trim "  hola   mundo  "); assert_eq "hola   mundo" "$res" "str_trim: preserves interior spaces"
+res=$(str_trim "     "); assert_eq "" "$res" "str_trim: only spaces"
+res=$(str_trim "		"); assert_eq "" "$res" "str_trim: only tabs"
+res=$(str_trim ""); assert_eq "" "$res" "str_trim: empty string"
+res=$(str_trim "  *.*  "); assert_eq "*.*" "$res" "str_trim: wildcards"
+res=$(str_trim "  -n  "); assert_eq "-n" "$res" "str_trim: leading hyphen"
 _str_trim_multiline=$(printf '  a  \n  b  ')
-res=$(trim "$_str_trim_multiline")
-assert_eq "$(printf 'a  \n  b')" "$res" "trim: preserves internal spacing across newlines"
+res=$(str_trim "$_str_trim_multiline")
+assert_eq "$(printf 'a  \n  b')" "$res" "str_trim: preserves internal spacing across newlines"
 
-# lower
-res=$(lower "HELLO"); assert_eq "hello" "$res" "lower: all uppercase"
-res=$(lower "Hello World"); assert_eq "hello world" "$res" "lower: mixed case"
-res=$(lower "123 ABC !?"); assert_eq "123 abc !?" "$res" "lower: numbers and symbols"
-res=$(lower ""); assert_eq "" "$res" "lower: empty string"
+# str_lower
+res=$(str_lower "HELLO"); assert_eq "hello" "$res" "str_lower: all uppercase"
+res=$(str_lower "Hello World"); assert_eq "hello world" "$res" "str_lower: mixed case"
+res=$(str_lower "123 ABC !?"); assert_eq "123 abc !?" "$res" "str_lower: numbers and symbols"
+res=$(str_lower ""); assert_eq "" "$res" "str_lower: empty string"
 
-# upper
-res=$(upper "hello"); assert_eq "HELLO" "$res" "upper: all lowercase"
-res=$(upper "Hello World"); assert_eq "HELLO WORLD" "$res" "upper: mixed case"
-res=$(upper "123 abc !?"); assert_eq "123 ABC !?" "$res" "upper: numbers and symbols"
-res=$(upper ""); assert_eq "" "$res" "upper: empty string"
+# str_upper
+res=$(str_upper "hello"); assert_eq "HELLO" "$res" "str_upper: all lowercase"
+res=$(str_upper "Hello World"); assert_eq "HELLO WORLD" "$res" "str_upper: mixed case"
+res=$(str_upper "123 abc !?"); assert_eq "123 ABC !?" "$res" "str_upper: numbers and symbols"
+res=$(str_upper ""); assert_eq "" "$res" "str_upper: empty string"
 
-# lower/upper: the contract is deterministic and identical in every locale:
+# str_lower/str_upper: the contract is deterministic and identical in every locale:
 # Unicode case mapping is applied to cased code points (ASCII, Latin, Greek
 # and Cyrillic guaranteed; any other code point with a generated mapping is
 # converted too), code points without a mapping are preserved unchanged, and
 # invalid UTF-8 is rejected with status 1 (like str_len).
 
 # Latin
-res=$(lower "España"); assert_status 0 $? "lower: Latin maps"; assert_eq "españa" "$res" "lower: España -> españa"
-res=$(upper "España"); assert_status 0 $? "upper: Latin maps"; assert_eq "ESPAÑA" "$res" "upper: España -> ESPAÑA"
-res=$(lower "ÁRBOL ÑANDÚ"); assert_eq "árbol ñandú" "$res" "lower: ÁRBOL ÑANDÚ -> árbol ñandú"
-res=$(upper "España café"); assert_eq "ESPAÑA CAFÉ" "$res" "upper: España café -> ESPAÑA CAFÉ"
-res=$(lower "áéíóúüñ"); assert_eq "áéíóúüñ" "$res" "lower: keeps lowercase letters unchanged"
-res=$(upper "ÁÉÍÓÚÜÑ"); assert_eq "ÁÉÍÓÚÜÑ" "$res" "upper: keeps uppercase letters unchanged"
-res=$(lower "HELLO España"); assert_eq "hello españa" "$res" "lower: ASCII and Latin together"
+res=$(str_lower "España"); assert_status 0 $? "str_lower: Latin maps"; assert_eq "españa" "$res" "str_lower: España -> españa"
+res=$(str_upper "España"); assert_status 0 $? "str_upper: Latin maps"; assert_eq "ESPAÑA" "$res" "str_upper: España -> ESPAÑA"
+res=$(str_lower "ÁRBOL ÑANDÚ"); assert_eq "árbol ñandú" "$res" "str_lower: ÁRBOL ÑANDÚ -> árbol ñandú"
+res=$(str_upper "España café"); assert_eq "ESPAÑA CAFÉ" "$res" "str_upper: España café -> ESPAÑA CAFÉ"
+res=$(str_lower "áéíóúüñ"); assert_eq "áéíóúüñ" "$res" "str_lower: keeps lowercase letters unchanged"
+res=$(str_upper "ÁÉÍÓÚÜÑ"); assert_eq "ÁÉÍÓÚÜÑ" "$res" "str_upper: keeps uppercase letters unchanged"
+res=$(str_lower "HELLO España"); assert_eq "hello españa" "$res" "str_lower: ASCII and Latin together"
 
 # Greek. Case mapping preserves accents as they are: U+0391 maps to U+03B1;
 # mapping never adds or removes diacritics.
-res=$(lower "ΠΡΙΒΕΤ"); assert_eq "πριβετ" "$res" "lower: ΠΡΙΒΕΤ -> πριβετ"
-res=$(upper "πριβετ"); assert_eq "ΠΡΙΒΕΤ" "$res" "upper: πριβετ -> ΠΡΙΒΕΤ"
-res=$(upper "ελληνικά"); assert_eq "ΕΛΛΗΝΙΚΆ" "$res" "upper: Greek with tonos maps and keeps the accent"
-res=$(lower "ΕΛΛΑΔΑ"); assert_eq "ελλαδα" "$res" "lower: unaccented capitals map to unaccented small letters"
-res=$(lower "ΟΔΟΣ"); assert_eq "οδοσ" "$res" "lower: sigma maps to U+03C3 (no contextual final sigma)"
+res=$(str_lower "ΠΡΙΒΕΤ"); assert_eq "πριβετ" "$res" "str_lower: ΠΡΙΒΕΤ -> πριβετ"
+res=$(str_upper "πριβετ"); assert_eq "ΠΡΙΒΕΤ" "$res" "str_upper: πριβετ -> ΠΡΙΒΕΤ"
+res=$(str_upper "ελληνικά"); assert_eq "ΕΛΛΗΝΙΚΆ" "$res" "str_upper: Greek with tonos maps and keeps the accent"
+res=$(str_lower "ΕΛΛΑΔΑ"); assert_eq "ελλαδα" "$res" "str_lower: unaccented capitals map to unaccented small letters"
+res=$(str_lower "ΟΔΟΣ"); assert_eq "οδοσ" "$res" "str_lower: sigma maps to U+03C3 (no contextual final sigma)"
 
 # Cyrillic
-res=$(lower "ПРИВЕТ"); assert_eq "привет" "$res" "lower: ПРИВЕТ -> привет"
-res=$(upper "привет"); assert_eq "ПРИВЕТ" "$res" "upper: привет -> ПРИВЕТ"
-res=$(lower "ЁЛКА"); assert_eq "ёлка" "$res" "lower: ЁЛКА -> ёлка"
+res=$(str_lower "ПРИВЕТ"); assert_eq "привет" "$res" "str_lower: ПРИВЕТ -> привет"
+res=$(str_upper "привет"); assert_eq "ПРИВЕТ" "$res" "str_upper: привет -> ПРИВЕТ"
+res=$(str_lower "ЁЛКА"); assert_eq "ёлка" "$res" "str_lower: ЁЛКА -> ёлка"
 
 # Mixed text: scripts are mapped, everything else is preserved (emoji, CJK,
 # symbols, punctuation and ASCII emoticonos).
-res=$(upper "Hola ;-) España 😀 你好 € — 🎉"); assert_eq "HOLA ;-) ESPAÑA 😀 你好 € — 🎉" "$res" "upper: mixed text maps letters and preserves the rest"
-res=$(lower "ÁRBOL ПРИВЕТ ΕΛΛΑΔΑ 🎉"); assert_eq "árbol привет ελλαδα 🎉" "$res" "lower: mixed text maps letters and preserves the rest"
+res=$(str_upper "Hola ;-) España 😀 你好 € — 🎉"); assert_eq "HOLA ;-) ESPAÑA 😀 你好 € — 🎉" "$res" "str_upper: mixed text maps letters and preserves the rest"
+res=$(str_lower "ÁRBOL ПРИВЕТ ΕΛΛΑΔΑ 🎉"); assert_eq "árbol привет ελλαδα 🎉" "$res" "str_lower: mixed text maps letters and preserves the rest"
 
 # Code points without a mapping are preserved: combining marks, emoji, CJK,
 # symbols, unassigned code points (U+0378) and noncharacters (U+FDD0).
-res=$(upper "$_str_combining"); assert_eq "$_str_combining_upper" "$res" "upper: maps base letter and preserves combining mark"
-res=$(lower "😀 你好 €"); assert_eq "😀 你好 €" "$res" "lower: preserves emoji, CJK and symbols"
-res=$(lower ";-)"); assert_eq ";-)" "$res" "lower: preserves ASCII emoticonos"
-res=$(upper "$(printf '\315\270\357\267\220')"); assert_eq "$(printf '\315\270\357\267\220')" "$res" "upper: preserves unassigned code points and noncharacters"
+res=$(str_upper "$_str_combining"); assert_eq "$_str_combining_upper" "$res" "str_upper: maps base letter and preserves combining mark"
+res=$(str_lower "😀 你好 €"); assert_eq "😀 你好 €" "$res" "str_lower: preserves emoji, CJK and symbols"
+res=$(str_lower ";-)"); assert_eq ";-)" "$res" "str_lower: preserves ASCII emoticonos"
+res=$(str_upper "$(printf '\315\270\357\267\220')"); assert_eq "$(printf '\315\270\357\267\220')" "$res" "str_upper: preserves unassigned code points and noncharacters"
 
 # One-to-many mappings are applied (Unicode unconditional expansions).
-res=$(upper "grüße"); assert_eq "GRÜSSE" "$res" "upper: U+00DF expands to SS"
-res=$(lower "grüße"); assert_eq "grüße" "$res" "lower: U+00DF has no lowercase mapping and is preserved"
-res=$(lower "İSTANBUL"); assert_eq "$(printf 'i\314\207stanbul')" "$res" "lower: U+0130 expands to i + U+0307"
+res=$(str_upper "grüße"); assert_eq "GRÜSSE" "$res" "str_upper: U+00DF expands to SS"
+res=$(str_lower "grüße"); assert_eq "grüße" "$res" "str_lower: U+00DF has no lowercase mapping and is preserved"
+res=$(str_lower "İSTANBUL"); assert_eq "$(printf 'i\314\207stanbul')" "$res" "str_lower: U+0130 expands to i + U+0307"
 
-# lower/upper: identical in every locale.
-res=$(_str_locale C lower "ПРИВЕТ ΠΡΙΒΕΤ"); assert_eq "привет πριβετ" "$res" "lower: C locale maps Greek and Cyrillic"
-res=$(_str_locale C upper "España café"); assert_eq "ESPAÑA CAFÉ" "$res" "upper: C locale maps guaranteed letters"
+# str_lower/str_upper: identical in every locale.
+res=$(_str_locale C str_lower "ПРИВЕТ ΠΡΙΒΕΤ"); assert_eq "привет πριβετ" "$res" "str_lower: C locale maps Greek and Cyrillic"
+res=$(_str_locale C str_upper "España café"); assert_eq "ESPAÑA CAFÉ" "$res" "str_upper: C locale maps guaranteed letters"
 if [ -n "$_str_utf8_locale" ]; then
-	res=$(_str_locale "$_str_utf8_locale" lower "ÁRBOL ÑANDÚ"); assert_status 0 $? "lower: UTF-8 locale maps guaranteed letters"; assert_eq "árbol ñandú" "$res" "lower: UTF-8 locale maps guaranteed letters"
-	res=$(_str_locale "$_str_utf8_locale" upper "πριβετ привет"); assert_eq "ΠΡΙΒΕΤ ПРИВЕТ" "$res" "upper: UTF-8 locale maps Greek and Cyrillic"
+	res=$(_str_locale "$_str_utf8_locale" str_lower "ÁRBOL ÑANDÚ"); assert_status 0 $? "str_lower: UTF-8 locale maps guaranteed letters"; assert_eq "árbol ñandú" "$res" "str_lower: UTF-8 locale maps guaranteed letters"
+	res=$(_str_locale "$_str_utf8_locale" str_upper "πριβετ привет"); assert_eq "ΠΡΙΒΕΤ ПРИВЕТ" "$res" "str_upper: UTF-8 locale maps Greek and Cyrillic"
 fi
 
-# lower/upper: invalid UTF-8 is rejected like in str_len.
-res=$(lower "$_str_invalid_truncated" 2>/dev/null); assert_status 1 $? "lower: rejects invalid UTF-8"; assert_eq "" "$res" "lower: prints nothing for invalid UTF-8"
-res=$(upper "$_str_invalid_embedded" 2>/dev/null); assert_status 1 $? "upper: rejects invalid UTF-8"; assert_eq "" "$res" "upper: prints nothing for invalid UTF-8"
-res=$(lower "$_str_invalid_overlong" 2>/dev/null); assert_status 1 $? "lower: rejects overlong UTF-8"; assert_eq "" "$res" "lower: prints nothing for overlong UTF-8"
-res=$(upper "$_str_invalid_surrogate" 2>/dev/null); assert_status 1 $? "upper: rejects UTF-8 surrogates"; assert_eq "" "$res" "upper: prints nothing for UTF-8 surrogates"
+# str_lower/str_upper: invalid UTF-8 is rejected like in str_len.
+res=$(str_lower "$_str_invalid_truncated" 2>/dev/null); assert_status 1 $? "str_lower: rejects invalid UTF-8"; assert_eq "" "$res" "str_lower: prints nothing for invalid UTF-8"
+res=$(str_upper "$_str_invalid_embedded" 2>/dev/null); assert_status 1 $? "str_upper: rejects invalid UTF-8"; assert_eq "" "$res" "str_upper: prints nothing for invalid UTF-8"
+res=$(str_lower "$_str_invalid_overlong" 2>/dev/null); assert_status 1 $? "str_lower: rejects overlong UTF-8"; assert_eq "" "$res" "str_lower: prints nothing for overlong UTF-8"
+res=$(str_upper "$_str_invalid_surrogate" 2>/dev/null); assert_status 1 $? "str_upper: rejects UTF-8 surrogates"; assert_eq "" "$res" "str_upper: prints nothing for UTF-8 surrogates"
 
-# lower/upper: the diagnostic reports invalid UTF-8.
-err=$(lower "$_str_invalid_truncated" 2>&1 >/dev/null)
+# str_lower/str_upper: the diagnostic reports invalid UTF-8.
+err=$(str_lower "$_str_invalid_truncated" 2>&1 >/dev/null)
 _str_diag=""
 case "$err" in *"input is not valid UTF-8"*) _str_diag="invalid-utf8" ;; esac
-assert_eq "invalid-utf8" "$_str_diag" "lower: diagnostic reports invalid UTF-8"
+assert_eq "invalid-utf8" "$_str_diag" "str_lower: diagnostic reports invalid UTF-8"
 unset err _str_diag
 
-# starts_with
-starts_with "http://example.com" "http://"; assert_true $? "starts_with: URL protocol"
-starts_with "foobar" "foo"; assert_true $? "starts_with: prefix"
-starts_with "foobar" "foobar"; assert_true $? "starts_with: exact match"
-starts_with "foobar" ""; assert_true $? "starts_with: empty prefix"
-starts_with "foobar" "bar"; assert_status 1 $? "starts_with rejects: wrong prefix"
-starts_with "" "foo"; assert_status 1 $? "starts_with rejects: empty target"
+# str_starts_with
+str_starts_with "http://example.com" "http://"; assert_true $? "str_starts_with: URL protocol"
+str_starts_with "foobar" "foo"; assert_true $? "str_starts_with: prefix"
+str_starts_with "foobar" "foobar"; assert_true $? "str_starts_with: exact match"
+str_starts_with "foobar" ""; assert_true $? "str_starts_with: empty prefix"
+str_starts_with "foobar" "bar"; assert_status 1 $? "str_starts_with rejects: wrong prefix"
+str_starts_with "" "foo"; assert_status 1 $? "str_starts_with rejects: empty target"
 
-# ends_with
-ends_with "archive.tar.gz" ".tar.gz"; assert_true $? "ends_with: compound extension"
-ends_with "script.sh" ".sh"; assert_true $? "ends_with: extension"
-ends_with "foobar" "foobar"; assert_true $? "ends_with: exact match"
-ends_with "foobar" ""; assert_true $? "ends_with: empty suffix"
-ends_with "foobar" "foo"; assert_status 1 $? "ends_with rejects: wrong suffix"
-ends_with "" "bar"; assert_status 1 $? "ends_with rejects: empty target"
+# str_ends_with
+str_ends_with "archive.tar.gz" ".tar.gz"; assert_true $? "str_ends_with: compound extension"
+str_ends_with "script.sh" ".sh"; assert_true $? "str_ends_with: extension"
+str_ends_with "foobar" "foobar"; assert_true $? "str_ends_with: exact match"
+str_ends_with "foobar" ""; assert_true $? "str_ends_with: empty suffix"
+str_ends_with "foobar" "foo"; assert_status 1 $? "str_ends_with rejects: wrong suffix"
+str_ends_with "" "bar"; assert_status 1 $? "str_ends_with rejects: empty target"
 
-# contains
-contains "the quick brown fox" "brown"; assert_true $? "contains: middle substring"
-contains "the quick brown fox" "the"; assert_true $? "contains: start substring"
-contains "the quick brown fox" "fox"; assert_true $? "contains: end substring"
-contains "foobar" ""; assert_true $? "contains: empty substring"
-contains "the quick brown fox" "cat"; assert_status 1 $? "contains rejects: absent substring"
-contains "" "foo"; assert_status 1 $? "contains rejects: empty target"
+# str_contains
+str_contains "the quick brown fox" "brown"; assert_true $? "str_contains: middle substring"
+str_contains "the quick brown fox" "the"; assert_true $? "str_contains: start substring"
+str_contains "the quick brown fox" "fox"; assert_true $? "str_contains: end substring"
+str_contains "foobar" ""; assert_true $? "str_contains: empty substring"
+str_contains "the quick brown fox" "cat"; assert_status 1 $? "str_contains rejects: absent substring"
+str_contains "" "foo"; assert_status 1 $? "str_contains rejects: empty target"
 
 # str_len: Unicode code points in valid UTF-8, independent of shell/locale.
 res=$(str_len "hello"); assert_eq "5" "$res" "str_len: ASCII hello (5 code points)"
@@ -303,16 +303,16 @@ res=$(str_len "$_str_ascii_rep"); assert_status 0 $? "str_len: 1000 repeated ASC
 res=$(str_len "$_str_mb_rep"); assert_status 0 $? "str_len: 400 repeated 2-byte code points returns 0"; assert_eq "400" "$res" "str_len: 400 repeated 2-byte code points"
 res=$(str_len "$_str_emoji_rep"); assert_status 0 $? "str_len: 250 repeated emoji returns 0"; assert_eq "250" "$res" "str_len: 250 repeated 4-byte code points"
 
-# lower/upper: every repetition is mapped; none is dropped or substituted.
-res=$(lower "$_str_ascii_rep_up"); assert_status 0 $? "lower: 1000 repeated ASCII letters returns 0"; assert_eq "$_str_ascii_rep" "$res" "lower: 1000 repeated ASCII letters map completely"
-res=$(upper "$_str_mb_rep"); assert_status 0 $? "upper: 400 repeated ñ returns 0"; assert_eq "$_str_mb_rep_up" "$res" "upper: 400 repeated ñ map completely"
-res=$(lower "$_str_emoji_rep"); assert_status 0 $? "lower: 250 repeated emoji returns 0"; assert_eq "$_str_emoji_rep" "$res" "lower: 250 repeated emoji preserved unchanged"
-res=$(upper "$_str_emoji_rep"); assert_status 0 $? "upper: 250 repeated emoji returns 0"; assert_eq "$_str_emoji_rep" "$res" "upper: 250 repeated emoji preserved unchanged"
+# str_lower/str_upper: every repetition is mapped; none is dropped or substituted.
+res=$(str_lower "$_str_ascii_rep_up"); assert_status 0 $? "str_lower: 1000 repeated ASCII letters returns 0"; assert_eq "$_str_ascii_rep" "$res" "str_lower: 1000 repeated ASCII letters map completely"
+res=$(str_upper "$_str_mb_rep"); assert_status 0 $? "str_upper: 400 repeated ñ returns 0"; assert_eq "$_str_mb_rep_up" "$res" "str_upper: 400 repeated ñ map completely"
+res=$(str_lower "$_str_emoji_rep"); assert_status 0 $? "str_lower: 250 repeated emoji returns 0"; assert_eq "$_str_emoji_rep" "$res" "str_lower: 250 repeated emoji preserved unchanged"
+res=$(str_upper "$_str_emoji_rep"); assert_status 0 $? "str_upper: 250 repeated emoji returns 0"; assert_eq "$_str_emoji_rep" "$res" "str_upper: 250 repeated emoji preserved unchanged"
 
 # The mapped results keep every byte.
-res=$(str_len_bytes "$(lower "$_str_ascii_rep_up")"); assert_eq "1000" "$res" "lower: mapped ASCII keeps 1000 bytes"
-res=$(str_len_bytes "$(upper "$_str_mb_rep")"); assert_eq "800" "$res" "upper: mapped 2-byte UTF-8 keeps 800 bytes"
-res=$(str_len_bytes "$(upper "$_str_emoji_rep")"); assert_eq "1000" "$res" "upper: preserved emoji keeps 1000 bytes"
+res=$(str_len_bytes "$(str_lower "$_str_ascii_rep_up")"); assert_eq "1000" "$res" "str_lower: mapped ASCII keeps 1000 bytes"
+res=$(str_len_bytes "$(str_upper "$_str_mb_rep")"); assert_eq "800" "$res" "str_upper: mapped 2-byte UTF-8 keeps 800 bytes"
+res=$(str_len_bytes "$(str_upper "$_str_emoji_rep")"); assert_eq "1000" "$res" "str_upper: preserved emoji keeps 1000 bytes"
 
 # str_replace
 res=$(str_replace "dog" "cat" "my dog is a dog"); assert_eq "my cat is a cat" "$res" "str_replace: simple words"

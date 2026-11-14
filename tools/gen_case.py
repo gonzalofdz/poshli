@@ -5,7 +5,7 @@
 #  GNU Lesser General Public License v3.0
 #
 #  Generates src/case_data.sh, the case mapping data consumed at runtime
-#  by lower/upper in src/str.sh. Writes to standard output:
+#  by str_lower/str_upper in src/str.sh. Writes to standard output:
 #
 #	make case-data
 #	(plainly: python3 tools/gen_case.py > src/case_data.sh)

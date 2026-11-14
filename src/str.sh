@@ -9,26 +9,26 @@
 if [ -z "${_POSHLI_STR_LOADED+x}" ]; then
 _POSHLI_STR_LOADED=1
 
-# Case mapping in lower/upper converts numeric code points with our own
+# Case mapping in str_lower/str_upper converts numeric code points with our own
 # generated Unicode data (see src/case_data.sh and tools/gen_case.py), so
 # the result is the same in every locale, shell and awk implementation.
 # UTF-8 is validated, decoded, mapped and re-encoded through ASCII and
 # numbers only (od, awk, printf): no tool ever interprets non-ASCII text.
 
-is_empty() {
+str_empty() {
 #	Returns 0 if no argument is given or the argument is empty.
 #
 #	Example of use:
-#	is_empty "$STR" && echo "String is empty" || echo "String is not empty"
+#	str_empty "$STR" && echo "String is empty" || echo "String is not empty"
 #
 	[ $# -eq 0 ] || [ -z "$1" ]
 }
 
-trim() {
+str_trim() {
 #	Prints the argument with leading and trailing spaces and tabs removed.
 #
 #	Example of use:
-#	TRIMMED=$(trim "  hello  ")
+#	TRIMMED=$(str_trim "  hello  ")
 #
 	if [ $# -eq 0 ]; then
 		printf '%s\n' ""
@@ -54,7 +54,7 @@ _poshli_case_map() {
 #	UTF-8 prints nothing, writes a diagnostic to standard error and
 #	returns 1, exactly like str_len. Contextual and language-specific
 #	rules are not applied: U+03A3 always lowercases to U+03C3 (no
-#	contextual final sigma) and upper "i" is I in every locale.
+#	contextual final sigma) and str_upper "i" is I in every locale.
 #
 #	The conversion is performed over numeric code points with our own
 #	generated data (src/case_data.sh), so the result is identical in
@@ -207,7 +207,7 @@ _poshli_case_map() {
 	unset _poshli_case_table _poshli_case_out
 }
 
-lower() {
+str_lower() {
 #	Prints the argument converted to lowercase.
 #
 #	Applies Unicode case mapping with the generated POSHLI data:
@@ -220,7 +220,7 @@ lower() {
 #	awk implementation. See Unicode Support in README.md.
 #
 #	Example of use:
-#	LOWER=$(lower "HELLO")
+#	LOWER=$(str_lower "HELLO")
 #
 	if [ $# -eq 0 ]; then
 		printf '%s\n' ""
@@ -229,10 +229,10 @@ lower() {
 	_poshli_case_map lower "$1"
 }
 
-upper() {
+str_upper() {
 #	Prints the argument converted to uppercase.
 #
-#	Same behavior as lower: Unicode case mapping with the generated
+#	Same behavior as str_lower: Unicode case mapping with the generated
 #	POSHLI data, including the unconditional one-to-many mappings
 #	(for example U+00DF expands to SS and the result can be longer
 #	than the input). Code points without a mapping are preserved
@@ -241,7 +241,7 @@ upper() {
 #	README.md.
 #
 #	Example of use:
-#	UPPER=$(upper "hello")
+#	UPPER=$(str_upper "hello")
 #
 	if [ $# -eq 0 ]; then
 		printf '%s\n' ""
@@ -250,11 +250,11 @@ upper() {
 	_poshli_case_map upper "$1"
 }
 
-starts_with() {
+str_starts_with() {
 #	Returns 0 if the first argument begins with the second argument.
 #
 #	Example of use:
-#	starts_with "https://example.com" "https" && echo "URL uses HTTPS" || echo "URL does not use HTTPS"
+#	str_starts_with "https://example.com" "https" && echo "URL uses HTTPS" || echo "URL does not use HTTPS"
 #
 	[ $# -ge 2 ] || return 1
 	case "$1" in
@@ -263,11 +263,11 @@ starts_with() {
 	esac
 }
 
-ends_with() {
+str_ends_with() {
 #	Returns 0 if the first argument ends with the second argument.
 #
 #	Example of use:
-#	ends_with "script.sh" ".sh" && echo "Shell script" || echo "Not a shell script"
+#	str_ends_with "script.sh" ".sh" && echo "Shell script" || echo "Not a shell script"
 #
 	[ $# -ge 2 ] || return 1
 	case "$1" in
@@ -276,11 +276,11 @@ ends_with() {
 	esac
 }
 
-contains() {
+str_contains() {
 #	Returns 0 if the first argument contains the second argument.
 #
 #	Example of use:
-#	contains "hello world" "world" && echo "Substring found" || echo "Substring not found"
+#	str_contains "hello world" "world" && echo "Substring found" || echo "Substring not found"
 #
 	[ $# -ge 2 ] || return 1
 	case "$1" in

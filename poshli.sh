@@ -16,49 +16,49 @@ fi
 if [ -z "${_POSHLI_NUM_LOADED+x}" ]; then
 _POSHLI_NUM_LOADED=1
 
-is_integer() {
+num_is_integer() {
 	[ $# -ge 1 ] || return 1
 	case "${1#[+-]}" in
 		"" | *[!0123456789]*) return 1 ;;
 	esac
 }
 
-is_natural() {
+num_is_natural() {
 	[ $# -ge 1 ] || return 1
 	case "$1" in
 		"" | *[!0123456789]*) return 1 ;;
 	esac
 }
 
-is_number() {
+num_is_number() {
 	[ $# -ge 1 ] || return 1
 	case "${1#[+-]}" in
 		"" | . | *[!0123456789.]* | *.*.*) return 1 ;;
 	esac
 }
 
-is_hex() {
+num_is_hex() {
 	[ $# -ge 1 ] || return 1
 	case "${1#0[xX]}" in
 		"" | *[!0123456789abcdefABCDEF]*) return 1 ;;
 	esac
 }
 
-is_bin() {
+num_is_bin() {
 	[ $# -ge 1 ] || return 1
 	case "${1#0[bB]}" in
 		"" | *[!01]*) return 1 ;;
 	esac
 }
 
-is_octal() {
+num_is_octal() {
 	[ $# -ge 1 ] || return 1
 	case "${1#0[oO]}" in
 		"" | *[!01234567]*) return 1 ;;
 	esac
 }
 
-is_bool() {
+num_is_bool() {
 	[ $# -ge 1 ] || return 1
 	case "$1" in
 		0 | 1 | [Tt][Rr][Uu][Ee] | [Ff][Aa][Ll][Ss][Ee])
@@ -68,9 +68,9 @@ is_bool() {
 	return 1
 }
 
-randomize() {
+num_randomize() {
 	[ $# -ge 1 ] || return 2
-	is_natural "$1" || return 1
+	num_is_natural "$1" || return 1
 	[ "$1" -gt 0 ] || return 1
 
 	awk -v limit="$1" 'BEGIN {
@@ -84,37 +84,37 @@ fi
 if [ -z "${_POSHLI_FS_LOADED+x}" ]; then
 _POSHLI_FS_LOADED=1
 
-is_file() {
+fs_is_file() {
 	[ $# -ge 1 ] || return 2
 	[ -f "$1" ]
 }
 
-is_dir() {
+fs_is_dir() {
 	[ $# -ge 1 ] || return 2
 	[ -d "$1" ]
 }
 
-is_readable() {
+fs_is_readable() {
 	[ $# -ge 1 ] || return 2
 	[ -r "$1" ]
 }
 
-is_writable() {
+fs_is_writable() {
 	[ $# -ge 1 ] || return 2
 	[ -w "$1" ]
 }
 
-is_exec() {
+fs_is_exec() {
 	[ $# -ge 1 ] || return 2
 	[ -x "$1" ]
 }
 
-is_empty_file() {
+fs_is_empty_file() {
 	[ $# -ge 1 ] || return 2
 	[ -f "$1" ] && [ ! -s "$1" ]
 }
 
-is_plain_text() {
+fs_is_plain_text() {
 	[ $# -ge 1 ] || return 2
 	[ -r "$1" ] || return 1
 
@@ -1581,11 +1581,11 @@ if [ -z "${_POSHLI_STR_LOADED+x}" ]; then
 _POSHLI_STR_LOADED=1
 
 
-is_empty() {
+str_empty() {
 	[ $# -eq 0 ] || [ -z "$1" ]
 }
 
-trim() {
+str_trim() {
 	if [ $# -eq 0 ]; then
 		printf '%s\n' ""
 		return
@@ -1729,7 +1729,7 @@ _poshli_case_map() {
 	unset _poshli_case_table _poshli_case_out
 }
 
-lower() {
+str_lower() {
 	if [ $# -eq 0 ]; then
 		printf '%s\n' ""
 		return
@@ -1737,7 +1737,7 @@ lower() {
 	_poshli_case_map lower "$1"
 }
 
-upper() {
+str_upper() {
 	if [ $# -eq 0 ]; then
 		printf '%s\n' ""
 		return
@@ -1745,7 +1745,7 @@ upper() {
 	_poshli_case_map upper "$1"
 }
 
-starts_with() {
+str_starts_with() {
 	[ $# -ge 2 ] || return 1
 	case "$1" in
 		"$2"*) return 0 ;;
@@ -1753,7 +1753,7 @@ starts_with() {
 	esac
 }
 
-ends_with() {
+str_ends_with() {
 	[ $# -ge 2 ] || return 1
 	case "$1" in
 		*"$2") return 0 ;;
@@ -1761,7 +1761,7 @@ ends_with() {
 	esac
 }
 
-contains() {
+str_contains() {
 	[ $# -ge 2 ] || return 1
 	case "$1" in
 		*"$2"*) return 0 ;;
@@ -1895,7 +1895,7 @@ fi
 if [ -z "${_POSHLI_ENCODING_LOADED+x}" ]; then
 _POSHLI_ENCODING_LOADED=1
 
-base64_enc() {
+encoding_base64_encode() {
 	[ $# -ge 1 ] || return 2
 	command -v base64 >/dev/null 2>&1 || return 1
 
@@ -1907,7 +1907,7 @@ base64_enc() {
 	unset _poshli_base64_out
 }
 
-base64_dec() {
+encoding_base64_decode() {
 	[ $# -ge 1 ] || return 2
 
 	if [ -z "${_poshli_base64_dec_flag+x}" ]; then

@@ -19,13 +19,13 @@ Thank you for contributing to the **POSHLI** project. All contributions that ali
 
 Every POSHLI function must strictly follow one of two predictable behaviors:
 
-1. **Predicate Functions** (`is_*`, `starts_with`, `ends_with`, `contains`):
+1. **Predicate Functions** (`num_is_*`, `fs_is_*`, `str_empty`, `str_contains`, `str_starts_with`, `str_ends_with`):
    - Silent: do not print anything to `stdout` or `stderr`.
    - Return `0` for true / condition met.
    - Return `1` for false / condition not met.
    - Return `2` if required arguments are missing.
 
-2. **Transformer / Producer Functions** (`trim`, `lower`, `upper`, `str_len`, `str_len_bytes`, `str_replace`):
+2. **Transformer / Producer Functions** (`str_trim`, `str_lower`, `str_upper`, `str_len`, `str_len_bytes`, `str_replace`):
    - Print the processed result to `stdout` using `printf '%s\n'`.
    - Return `0` on success.
    - Return `1` if the input is invalid or the operation cannot be performed correctly.
@@ -47,8 +47,9 @@ Every POSHLI function must strictly follow one of two predictable behaviors:
 
 - **Function Names**:
   - Lowercase with underscores (`snake_case`).
-  - Short, intuitive, and descriptive: `is_integer`, `is_file`, `trim`, `lower`.
-  - Avoid overly verbose or hierarchical names (e.g. use `is_dir`, not `poshli_fs_is_directory`).
+  - Every public function carries its module prefix (`num_`, `str_`, `fs_`, `encoding_`); see the Naming Policy section in `README.md`.
+  - Short, intuitive, and descriptive: `num_is_integer`, `fs_is_file`, `str_trim`, `str_lower`.
+  - Avoid overly verbose or hierarchical names (e.g. use `fs_is_dir`, not `poshli_fs_is_directory`).
 - **Temporary Variables**:
   - The `local` keyword is **not** defined in POSIX IEEE 1003.1. Do not use `local`.
   - Temporary variables must use a distinct private prefix (e.g., `_trim_str`, `_in_val`).

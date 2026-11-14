@@ -13,7 +13,7 @@ Thank you for your interest in contributing to **POSHLI**! We welcome bug report
 
 2. **Follow Design Rules**:
    - Read and adhere to the guidelines in [DEVELOPER.md](DEVELOPER.md).
-   - Use short, intuitive function names (`is_*`, `trim`, etc.).
+   - Use the module-prefixed naming convention (`num_is_integer`, `str_trim`, etc.); see the Naming Policy in [README.md](../README.md).
    - Ensure strict POSIX compatibility and avoid non-standard GNU/BSD options.
    - Use standard `unset variable` (no `-v`) for any temporary variables.
 

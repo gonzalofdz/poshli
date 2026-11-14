@@ -15,13 +15,13 @@ fi
 printf '\n--- Running fs.sh tests ---\n'
 
 # Argument count validation (returns 2 if no argument)
-is_file; assert_status 2 $? "is_file requires argument (status 2)"
-is_dir; assert_status 2 $? "is_dir requires argument (status 2)"
-is_readable; assert_status 2 $? "is_readable requires argument (status 2)"
-is_writable; assert_status 2 $? "is_writable requires argument (status 2)"
-is_exec; assert_status 2 $? "is_exec requires argument (status 2)"
-is_empty_file; assert_status 2 $? "is_empty_file requires argument (status 2)"
-is_plain_text; assert_status 2 $? "is_plain_text requires argument (status 2)"
+fs_is_file; assert_status 2 $? "fs_is_file requires argument (status 2)"
+fs_is_dir; assert_status 2 $? "fs_is_dir requires argument (status 2)"
+fs_is_readable; assert_status 2 $? "fs_is_readable requires argument (status 2)"
+fs_is_writable; assert_status 2 $? "fs_is_writable requires argument (status 2)"
+fs_is_exec; assert_status 2 $? "fs_is_exec requires argument (status 2)"
+fs_is_empty_file; assert_status 2 $? "fs_is_empty_file requires argument (status 2)"
+fs_is_plain_text; assert_status 2 $? "fs_is_plain_text requires argument (status 2)"
 
 # Setup temporary test fixtures
 TMP_FIXTURE_DIR="/tmp/poshli_test_fs_$$"
@@ -59,59 +59,59 @@ chmod 000 "$UNREADABLE_FILE"
 printf 'hello world\n' > "$HYPHEN_FILE"
 ln -s "$REG_FILE" "$LINK_FILE"
 
-# is_file
-is_file "$REG_FILE"; assert_true $? "is_file: regular file"
-is_file "$EMPTY_FILE"; assert_true $? "is_file: empty file is regular"
-is_file "$SUB_DIR"; assert_false $? "is_file: directory is not regular file"
-is_file "$NON_EXISTENT"; assert_false $? "is_file: non-existent path"
+# fs_is_file
+fs_is_file "$REG_FILE"; assert_true $? "fs_is_file: regular file"
+fs_is_file "$EMPTY_FILE"; assert_true $? "fs_is_file: empty file is regular"
+fs_is_file "$SUB_DIR"; assert_false $? "fs_is_file: directory is not regular file"
+fs_is_file "$NON_EXISTENT"; assert_false $? "fs_is_file: non-existent path"
 
-# is_dir
-is_dir "$SUB_DIR"; assert_true $? "is_dir: directory"
-is_dir "$REG_FILE"; assert_false $? "is_dir: file is not directory"
-is_dir "$NON_EXISTENT"; assert_false $? "is_dir: non-existent path"
+# fs_is_dir
+fs_is_dir "$SUB_DIR"; assert_true $? "fs_is_dir: directory"
+fs_is_dir "$REG_FILE"; assert_false $? "fs_is_dir: file is not directory"
+fs_is_dir "$NON_EXISTENT"; assert_false $? "fs_is_dir: non-existent path"
 
-# is_readable
-is_readable "$REG_FILE"; assert_true $? "is_readable: regular file"
-is_readable "$SUB_DIR"; assert_true $? "is_readable: directory"
-is_readable "$NON_EXISTENT"; assert_false $? "is_readable: non-existent path"
+# fs_is_readable
+fs_is_readable "$REG_FILE"; assert_true $? "fs_is_readable: regular file"
+fs_is_readable "$SUB_DIR"; assert_true $? "fs_is_readable: directory"
+fs_is_readable "$NON_EXISTENT"; assert_false $? "fs_is_readable: non-existent path"
 
-# is_writable
-is_writable "$REG_FILE"; assert_true $? "is_writable: regular file"
-is_writable "$SUB_DIR"; assert_true $? "is_writable: directory"
-is_writable "$NON_EXISTENT"; assert_false $? "is_writable: non-existent path"
+# fs_is_writable
+fs_is_writable "$REG_FILE"; assert_true $? "fs_is_writable: regular file"
+fs_is_writable "$SUB_DIR"; assert_true $? "fs_is_writable: directory"
+fs_is_writable "$NON_EXISTENT"; assert_false $? "fs_is_writable: non-existent path"
 if [ "$(id -u 2>/dev/null)" = "0" ]; then
-	printf '  [SKIP] is_writable: read-only file (mode 444) [skipped when run as root]\n'
+	printf '  [SKIP] fs_is_writable: read-only file (mode 444) [skipped when run as root]\n'
 else
-	is_writable "$RO_FILE"; assert_false $? "is_writable: read-only file (mode 444)"
+	fs_is_writable "$RO_FILE"; assert_false $? "fs_is_writable: read-only file (mode 444)"
 fi
 
-# is_exec
-is_exec "$EXEC_FILE"; assert_true $? "is_exec: executable file (mode 755)"
-is_exec "$NO_EXEC_FILE"; assert_false $? "is_exec: non-executable file (mode 644)"
-is_exec "$NON_EXISTENT"; assert_false $? "is_exec: non-existent path"
+# fs_is_exec
+fs_is_exec "$EXEC_FILE"; assert_true $? "fs_is_exec: executable file (mode 755)"
+fs_is_exec "$NO_EXEC_FILE"; assert_false $? "fs_is_exec: non-executable file (mode 644)"
+fs_is_exec "$NON_EXISTENT"; assert_false $? "fs_is_exec: non-existent path"
 
-# is_empty_file
-is_empty_file "$EMPTY_FILE"; assert_true $? "is_empty_file: 0-byte file"
-is_empty_file "$REG_FILE"; assert_false $? "is_empty_file: file with content"
-is_empty_file "$SUB_DIR"; assert_false $? "is_empty_file: directory is not empty file"
-is_empty_file "$NON_EXISTENT"; assert_false $? "is_empty_file: non-existent path"
+# fs_is_empty_file
+fs_is_empty_file "$EMPTY_FILE"; assert_true $? "fs_is_empty_file: 0-byte file"
+fs_is_empty_file "$REG_FILE"; assert_false $? "fs_is_empty_file: file with content"
+fs_is_empty_file "$SUB_DIR"; assert_false $? "fs_is_empty_file: directory is not empty file"
+fs_is_empty_file "$NON_EXISTENT"; assert_false $? "fs_is_empty_file: non-existent path"
 
-# is_plain_text
-is_plain_text "$REG_FILE"; assert_true $? "is_plain_text: ASCII text file"
-is_plain_text "$UTF8_FILE"; assert_true $? "is_plain_text: UTF-8 text file"
-is_plain_text "$EXEC_FILE"; assert_true $? "is_plain_text: executable script"
-is_plain_text "$BIN_FILE"; assert_false $? "is_plain_text: binary file"
-is_plain_text "$TRICK_FILE"; assert_false $? "is_plain_text: binary file named 'text_*' is not fooled"
-is_plain_text "$EMPTY_FILE"; assert_false $? "is_plain_text: empty file"
-is_plain_text "$SUB_DIR"; assert_false $? "is_plain_text: directory"
-is_plain_text "$NON_EXISTENT"; assert_status 1 $? "is_plain_text: non-existent path (status 1)"
+# fs_is_plain_text
+fs_is_plain_text "$REG_FILE"; assert_true $? "fs_is_plain_text: ASCII text file"
+fs_is_plain_text "$UTF8_FILE"; assert_true $? "fs_is_plain_text: UTF-8 text file"
+fs_is_plain_text "$EXEC_FILE"; assert_true $? "fs_is_plain_text: executable script"
+fs_is_plain_text "$BIN_FILE"; assert_false $? "fs_is_plain_text: binary file"
+fs_is_plain_text "$TRICK_FILE"; assert_false $? "fs_is_plain_text: binary file named 'text_*' is not fooled"
+fs_is_plain_text "$EMPTY_FILE"; assert_false $? "fs_is_plain_text: empty file"
+fs_is_plain_text "$SUB_DIR"; assert_false $? "fs_is_plain_text: directory"
+fs_is_plain_text "$NON_EXISTENT"; assert_status 1 $? "fs_is_plain_text: non-existent path (status 1)"
 if [ "$(id -u 2>/dev/null)" = "0" ]; then
-	printf '  [SKIP] is_plain_text: unreadable file (mode 000) [skipped when run as root]\n'
+	printf '  [SKIP] fs_is_plain_text: unreadable file (mode 000) [skipped when run as root]\n'
 else
-	is_plain_text "$UNREADABLE_FILE"; assert_status 1 $? "is_plain_text: unreadable file (status 1)"
+	fs_is_plain_text "$UNREADABLE_FILE"; assert_status 1 $? "fs_is_plain_text: unreadable file (status 1)"
 fi
-( cd "$TMP_FIXTURE_DIR" && is_plain_text -n ); assert_true $? "is_plain_text: leading hyphen filename"
-is_plain_text "$LINK_FILE"; assert_true $? "is_plain_text: symlink to text file"
+( cd "$TMP_FIXTURE_DIR" && fs_is_plain_text -n ); assert_true $? "fs_is_plain_text: leading hyphen filename"
+fs_is_plain_text "$LINK_FILE"; assert_true $? "fs_is_plain_text: symlink to text file"
 
 # Cleanup fixtures
 rm -rf "$TMP_FIXTURE_DIR"

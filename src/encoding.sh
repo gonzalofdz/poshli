@@ -9,7 +9,7 @@
 if [ -z "${_POSHLI_ENCODING_LOADED+x}" ]; then
 _POSHLI_ENCODING_LOADED=1
 
-base64_enc() {
+encoding_base64_encode() {
 #	Encodes "$1" as standard Base64 and prints the result as a single line.
 #
 #	Returns:
@@ -22,7 +22,7 @@ base64_enc() {
 #
 #	Example of use:
 #
-#		encoded=$(base64_enc "$text")
+#		encoded=$(encoding_base64_encode "$text")
 #		status=$?
 #		case $status in
 #			0) printf '%s\n' "$encoded" ;;
@@ -41,7 +41,7 @@ base64_enc() {
 	unset _poshli_base64_out
 }
 
-base64_dec() {
+encoding_base64_decode() {
 #	Decodes strict standard Base64 (RFC 4648) from "$1" and writes the
 #	decoded bytes directly to stdout.
 #
@@ -62,7 +62,7 @@ base64_dec() {
 #
 #	Example of use:
 #
-#		decoded=$(base64_dec "$encoded")
+#		decoded=$(encoding_base64_decode "$encoded")
 #		status=$?
 #		case $status in
 #			0) printf '%s\n' "$decoded" ;;

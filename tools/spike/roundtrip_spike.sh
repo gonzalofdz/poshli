@@ -6,7 +6,7 @@
 #
 #  PURPOSE
 #  -------
-#  Prove (or refute) that the future Unicode support of lower/upper in
+#  Prove (or refute) that the future Unicode support of str_lower/str_upper in
 #  src/str.sh can rest on this transport layer, using only POSIX Shell and
 #  POSIX utilities:
 #
@@ -30,7 +30,7 @@
 #
 #  SCOPE (deliberately NOT here)
 #  -----------------------------
-#  No lower/upper, no Unicode case table, no case_data.sh, no generator.
+#  No str_lower/str_upper, no Unicode case table, no case_data.sh, no generator.
 #  The demo table contains one toy ASCII mapping record (U+0041 -> U+0061)
 #  whose only purpose is proving the lookup stage of the pipeline; it is
 #  not Unicode case mapping. This file is UTF-8 (see the fixtures below).
@@ -44,7 +44,7 @@
 #  --------------------
 #  - A POSIX shell argument (or variable) can never contain a NUL byte.
 #    That is a fundamental limit of the shell itself and applies to every
-#    string API, so the future lower/upper (which take a string argument)
+#    string API, so the future str_lower/str_upper (which take a string argument)
 #    can never be handed U+0000 either way.
 #  - The transport layer itself is NUL-transparent: od reports NUL as the
 #    number 0, awk and the shell only move ASCII text, and printf '%b'
