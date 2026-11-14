@@ -151,7 +151,75 @@ fs_is_file, fs_is_dir, fs_is_readable, fs_is_writable, fs_is_exec, fs_is_empty_f
 
 ### History
 
-The module-prefix convention replaced the earlier unprefixed names (`trim`, `lower`, `upper`, `is_file`, `randomize`, `base64_enc`, ...). This rename is a breaking change against `v1.0.0` and no compatibility aliases are provided: update call sites to the prefixed names.
+The module-prefix convention replaced the earlier unprefixed names (`trim`, `lower`, `upper`, `is_file`, `randomize`, `base64_enc`, ...). This rename was technically a breaking change and no compatibility aliases are provided: update call sites to the prefixed names. It took place during the initial consolidation of the public API and intentionally did not trigger a major version bump (`POSHLI_VERSION` remains `1.0.0`); see [Versioning Policy](#versioning-policy).
+
+---
+
+## Versioning Policy
+
+POSHLI follows Semantic Versioning using the format:
+
+```text
+MAJOR.MINOR.PATCH
+```
+
+The current version is exposed as `POSHLI_VERSION` (see [Library Metadata](#library-metadata-coresh)) and is currently `1.0.0`.
+
+### PATCH — compatible fixes
+
+```text
+1.0.0 → 1.0.1
+```
+
+Used for bug fixes, corrections of incorrect behavior, internal improvements that do not break the public API incompatibly, portability fixes, and documentation fixes belonging to a maintenance release.
+
+> A PATCH release must not break compatibility with the existing public API.
+
+### MINOR — compatible features
+
+```text
+1.0.0 → 1.1.0
+```
+
+Used for new functionality, new public functions, new compatible modules, and extended capabilities that keep the existing API intact. For example, adding `num_clamp`, `str_repeat`, `str_width` or `term.sh` while preserving existing names and behavior.
+
+> A MINOR release adds new capabilities without breaking existing public APIs.
+
+### MAJOR — incompatible changes
+
+```text
+1.0.0 → 2.0.0
+```
+
+Used for incompatible changes: removing public functions, renaming public functions without compatibility aliases, changing arguments or public behavior incompatibly, or architectural changes that break the users' code.
+
+> If a user must modify existing code to upgrade, it is normally a MAJOR bump.
+
+Expected progression:
+
+```text
+1.0.0 → 1.0.1  compatible fixes
+      → 1.1.0  compatible features
+      → 1.2.0  compatible features
+      → 2.0.0  incompatible change
+```
+
+### Historical exception: naming cleanup
+
+The module-prefix renaming (see [Naming Policy](#naming-policy)) was technically a breaking change relative to the earlier names. It happened while the public API was still being consolidated, so `POSHLI_VERSION` is intentionally kept at `1.0.0` and no retroactive `2.0.0` is created for it. This is a one-time decision for the consolidation baseline, **not** a reusable rule for future releases: from this consolidation onward, every change must follow the Semantic Versioning policy above strictly.
+
+### Debian packaging (future)
+
+When Debian packages are produced, the package version separates the upstream version from the Debian revision:
+
+```text
+1.1.0-1
+```
+
+- `1.1.0` — upstream Poshli version (`POSHLI_VERSION`).
+- `-1` — first revision of the Debian package.
+
+A packaging-only change bumps only the revision (`1.1.0-2`) and leaves the upstream version untouched. Poshli keeps a clean upstream version (`1.0.0`, `1.1.0`, `1.1.1`, ...). Debian packaging is not implemented; this is documented only as the policy for future releases.
 
 ---
 

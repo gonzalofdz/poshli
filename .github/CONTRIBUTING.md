@@ -14,6 +14,7 @@ Thank you for your interest in contributing to **POSHLI**! We welcome bug report
 2. **Follow Design Rules**:
    - Read and adhere to the guidelines in [DEVELOPER.md](DEVELOPER.md).
    - Use the module-prefixed naming convention (`num_is_integer`, `str_trim`, etc.); see the Naming Policy in [README.md](../README.md).
+   - Classify the version impact of your change (none / PATCH / MINOR / MAJOR); see the Versioning Policy in [README.md](../README.md).
    - Ensure strict POSIX compatibility and avoid non-standard GNU/BSD options.
    - Use standard `unset variable` (no `-v`) for any temporary variables.
 
@@ -37,6 +38,7 @@ Thank you for your interest in contributing to **POSHLI**! We welcome bug report
 
 6. **Submit a Pull Request**:
    - Provide a clear description of the problem solved or the function added.
+   - State the expected version impact (none / PATCH / MINOR / MAJOR).
    - Reference any relevant issues.
 
 ---
