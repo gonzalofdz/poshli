@@ -10,9 +10,9 @@
 - **General purpose and portable**: Linux is the primary continuous-integration platform. macOS, BSD, WSL, and Cygwin are supported targets where the required standard utilities behave portably; they are not all continuously tested, so platform-specific behavior may vary.
 - **Short and ergonomic API**: Clean, direct function names without unnecessary prefixes (`is_integer`, `is_file`, `trim`, `lower`, etc.).
 - **Self-contained bundle**: Distributed as a single file (`poshli.sh`) ready for direct inclusion or project vendoring.
-- **Predictable return codes**: Boolean predicates return `0` (true) or `1` (false); an absent, empty, or invalid input is treated as false when the predicate can answer the question. Operational functions may return `2` for invalid usage, such as a missing mandatory argument.
-- **Unicode-aware helpers**: `str_len` counts UTF-8 code points independently of the locale; `lower`/`upper` map ASCII letters and use `gawk` for Unicode simple case mapping when it is available and the active locale is UTF-8, falling back to the system `awk` otherwise (typically ASCII-only).
-- **Minimal dependencies**: Built around the POSIX shell and standard POSIX utilities (`sed`, `od`, `awk`, `wc`). `gawk` is an optional enhancement that enables Unicode case mapping; when it is absent, `lower`/`upper` use the system `awk` (typically ASCII-only). No extra tool is required for normal use.
+- **Predictable return codes**: Boolean predicates return `0` (true) or `1` (false); an absent, empty, or invalid input is treated as false when the predicate can answer the question. Operational functions return `1` when the input is invalid or the operation cannot be performed correctly, and may return `2` for invalid usage, such as a missing mandatory argument.
+- **Unicode-aware helpers**: `str_len` counts Unicode code points in valid UTF-8 independently of the locale and rejects invalid UTF-8. `lower`/`upper` apply Unicode case mapping (Latin, Greek and Cyrillic guaranteed) with data generated into the library itself, so the result is identical in every locale, shell and `awk`; valid code points without a mapping (emoji, CJK, symbols) are preserved unchanged and invalid UTF-8 is rejected with status `1`.
+- **Minimal dependencies**: Built around the POSIX shell and standard POSIX utilities (`od`, `awk`, `wc`, `tr`). Case mapping works over numeric code points with data generated at development time (Python is a development-only tool): the runtime needs no Unicode database, no extra tool, and no Unicode-aware `awk`.
 
 ---
 
@@ -77,7 +77,7 @@ In any standard POSIX shell script, source the library using the dot (`.`) comma
 
 > **Note on Namespaces**: POSHLI exports short, ergonomic functions directly into the shell's global function table for maximum ease of use. Ensure your scripts do not define conflicting function names.
 
-> **Modular sources**: The `src/` directory contains the individual modules (`core.sh`, `num.sh`, `fs.sh`, `str.sh`, `encoding.sh`). Each module is self-contained and can be sourced on its own during development, but the supported distribution format is the generated `poshli.sh` bundle.
+> **Modular sources**: The `src/` directory contains the individual modules (`core.sh`, `num.sh`, `fs.sh`, `case_data.sh`, `str.sh`, `encoding.sh`). Each module is self-contained and can be sourced on its own during development (`str.sh` needs `src/case_data.sh` for `lower`/`upper`), but the supported distribution format is the generated `poshli.sh` bundle.
 
 ---
 
@@ -96,12 +96,12 @@ In any standard POSIX shell script, source the library using the dot (`.`) comma
 POSHLI distinguishes boolean predicates from operational functions:
 
 - **Predicates** answer a yes/no question and return `0` for true and `1` for false. An absent, empty, or invalid input is treated as false when the predicate can answer the question; a separate error state is not used merely because an argument is missing.
-- **Operational functions** perform an action or produce output. They return `0` on success and `1` for invalid input; when a missing mandatory argument is a genuinely distinct usage error, they return `2`.
+- **Operational functions** perform an action or produce output. They return `0` on success, `1` when the input is invalid or the operation cannot be performed correctly (for example, `lower`/`upper` receiving invalid UTF-8), and `2` when a missing mandatory argument is a genuinely distinct usage error.
 
 | Code | Meaning |
 | :--- | :--- |
 | `0` | Success / condition met (`true`). |
-| `1` | Condition not met (`false`) or invalid input. |
+| `1` | Condition not met (`false`), invalid input, or input the operation cannot handle correctly. |
 | `2` | Invalid usage in an operational function (for example, a missing mandatory argument). |
 
 ---
@@ -144,12 +144,12 @@ POSHLI distinguishes boolean predicates from operational functions:
 | :--- | :--- |
 | `is_empty [str]` | Returns 0 if `[str]` is empty (`""`) or if no argument is given. Returns 1 if `[str]` contains at least one character. |
 | `trim [str]` | Prints `[str]` with leading and trailing spaces and tabs removed. If no argument is given, treats it as empty string. Preserves internal spacing. Returns 0 on success. |
-| `lower [str]` | Prints `[str]` converted to lowercase. If no argument is given, treats it as empty string. ASCII letters are always mapped. When `gawk` is available and the active locale is UTF-8, Unicode case mapping is also applied (delegated to `gawk` and the active locale, e.g. `É` → `é`). Without `gawk`, the system `awk` is used and non-ASCII characters are typically left unchanged. See [Unicode Support](#unicode-support). Returns 0 on success. |
-| `upper [str]` | Prints `[str]` converted to uppercase. Same behavior as `lower`. Returns 0 on success. |
+| `lower [str]` | Prints `[str]` converted to lowercase with Unicode case mapping (guaranteed for ASCII, Latin, Greek and Cyrillic; every other code point with a generated mapping is converted too). Code points without a mapping (emoji, CJK, symbols, punctuation, combining marks) are preserved unchanged. Invalid UTF-8 prints nothing, writes a diagnostic to standard error, and returns `1`. If no argument is given, treats it as empty string and prints ``. See [Unicode Support](#unicode-support). |
+| `upper [str]` | Prints `[str]` converted to uppercase. Same behavior as `lower`, including the unconditional one-to-many mappings (`upper "grüße"` prints `GRÜSSE`). |
 | `starts_with <str> <prefix>` | Returns 0 if `<str>` begins with `<prefix>`, and 1 otherwise. Returns 1 if arguments are missing or insufficient. |
 | `ends_with <str> <suffix>` | Returns 0 if `<str>` ends with `<suffix>`, and 1 otherwise. Returns 1 if arguments are missing or insufficient. |
 | `contains <str> <substr>` | Returns 0 if `<str>` contains `<substr>`, and 1 otherwise. Returns 1 if arguments are missing or insufficient. |
-| `str_len [str]` | Prints the number of Unicode code points in `[str]` (valid UTF-8). If no argument is given, treats it as empty string and prints `0`. Independent of `${#str}`, the shell, and the active locale. Combining marks and emoji components count separately; grapheme clusters are not counted. For invalid UTF-8 the result is approximate. Returns 0 on success. |
+| `str_len [str]` | Prints the number of Unicode code points in `[str]` (valid UTF-8). If no argument is given, treats it as empty string and prints `0`. Independent of `${#str}`, the shell, and the active locale. Combining marks and emoji components count separately; grapheme clusters are not counted. For invalid UTF-8, prints nothing, writes a diagnostic to standard error, and returns `1`. |
 | `str_len_bytes [str]` | Prints the exact number of bytes in `[str]` using `wc -c`. If no argument is given, treats it as empty string and prints `0`. Always locale-independent. Returns 0 on success. |
 | `str_replace <search> <replace> <str>` | Prints `<str>` with all literal occurrences of `<search>` replaced with `<replace>`. Handles special characters safely. Returns `2` when arguments are insufficient. |
 
@@ -190,39 +190,37 @@ POSHLI distinguishes three concepts that are often all called "length":
 
 ### Length semantics
 
-- `str_len` counts **Unicode code points** in valid UTF-8. It uses `od` and `awk` to count UTF-8 leading bytes, so the result is consistent across `dash`, BusyBox `sh`, and `bash --posix`, and independent of the active locale.
+- `str_len` counts **Unicode code points** in valid UTF-8. It uses `od` and `awk` to count UTF-8 leading bytes and validate the sequence, so the result is consistent across `dash`, BusyBox `sh`, and `bash --posix`, and independent of the active locale.
 - `str_len_bytes` counts **bytes** exactly and is always locale-independent. The `wc -c` output is normalized, because some BSD and macOS `wc` implementations pad the count with leading blanks.
 - Neither function counts **grapheme clusters** (visual characters). A combining mark or the components of a ZWJ emoji are counted separately. POSHLI does not normalize text, so `é` (U+00E9) and `e` + U+0301 are different code-point sequences even when they render identically.
-- For invalid UTF-8, `str_len` returns an approximate count based on UTF-8 leading-byte heuristics. Use `str_len_bytes` when the data is not known to be valid UTF-8.
+- For invalid UTF-8, `str_len` prints nothing, writes a diagnostic to standard error, and returns `1`. Use `str_len_bytes` when the data is not known to be valid UTF-8.
 
 ### Case mapping (`lower` / `upper`)
 
-ASCII letters are mapped by both backends, but the exact mapping is locale-dependent when `gawk` is used; set `LC_ALL=C` for deterministic ASCII behavior. For case mapping, POSHLI uses `gawk` when it is available and otherwise the system `awk`, a mandatory POSIX utility:
+`lower`/`upper` apply Unicode case mapping with POSHLI's own generated data. The result is identical in every shell, locale and `awk` implementation: the conversion never uses the locale, never uses `tolower()`/`toupper()` from `awk`, and never depends on any Unicode capability of the platform.
 
-- If `gawk` is available in `PATH`, it is preferred and applies Unicode case mapping when the active locale is UTF-8. `gawk` is free software and can be installed through the package manager of most Linux distributions, Cygwin, WSL, macOS (Homebrew or MacPorts), and the BSDs.
-- Otherwise the system `awk` is used. Most implementations (for example `mawk` and BusyBox `awk`) leave non-ASCII bytes unchanged in the C and UTF-8 locales, so the result is typically ASCII-only. POSHLI does not guarantee Unicode case mapping without `gawk`, and the result still depends on the `awk` implementation and the active locale.
+The input is validated and decoded from UTF-8 exactly like `str_len`, converted per code point, and re-encoded to UTF-8. All intermediate processing happens over ASCII text and numbers (`od`, POSIX `awk`, `printf`); no tool ever interprets non-ASCII text. The mapping data (`src/case_data.sh`) is generated at development time by `tools/gen_case.py` from the Unicode Character Database (Unicode 15.0.0) and compiled into the `poshli.sh` bundle, so the runtime needs no external Unicode database and no Python.
 
-The backend is selected once when the library is loaded; there is no runtime probing and no cache. Results depend on the selected backend (`gawk` or the system `awk`) and on the active locale: when `gawk` is used, it delegates to the casing rules of that locale. In a single-byte non-UTF-8 locale (for example ISO-8859-1), a system `awk` may map high bytes and alter UTF-8 input.
+What is mapped:
 
-For deterministic ASCII-only behavior, set `LC_ALL=C` (or use `tr` directly). The Unicode path delegates case mapping to `gawk` (or to the system `awk`); it is not full case folding:
+- The Unicode **simple case mappings**, plus the **unconditional one-to-many mappings**: `upper "ß"` prints `SS`, `lower "İ"` prints `i` + U+0307, `upper "ﬁ"` prints `FI`, and similar. These expansions can make the result longer than the input.
+- ASCII, **Latin**, **Greek** and **Cyrillic** letters are guaranteed and covered by the test suite. Every other code point with a generated mapping (Armenian, Georgian, and so on) is converted with the same rule.
+- Code points **without a mapping are preserved unchanged**: emoji (`😀`, `🎉`), CJK (`你好`), symbols (`€`), punctuation, combining marks and ASCII emoticonos (`;-)`) pass through, and the ASCII letters inside the text are mapped like any other ASCII letter.
+- Case mapping preserves accents exactly as they are: `lower "ΕΛΛΑΔΑ"` prints `ελλαδα` (U+0391 maps to U+03B1). Mapping never adds or removes diacritics and POSHLI never normalizes text.
 
-- It does not expand `ß` to `SS`, expand ligatures such as `ﬀ`, or apply contextual rules such as Greek final sigma.
-- It does not normalize text or perform grapheme-aware operations.
-- It does not implement locale-specific tailoring itself, but when `gawk` is used the casing rules of the active locale apply. For example, in a Turkish or Azeri locale `upper "i"` returns `İ` and `lower "I"` returns `ı`.
+What is not applied (documented limitations):
 
-For arbitrary binary data, use `str_len_bytes` and keep case conversion in ASCII mode.
+- **Contextual rules**. `lower` always maps U+03A3 to U+03C3: the contextual final sigma is never selected (unlike, for example, Python's `str.lower()`, which applies it at string level). POSHLI does not guess word boundaries.
+- **Language-specific tailoring**. No Turkish/Azerbaijani dotted and dotless `i`, no Lithuanian rules, no locale tailoring at all: `upper "i"` returns `I` in every locale.
+- **Case folding**. This is case mapping, not full case folding, and there is no normalization or grapheme-aware processing.
+
+Invalid UTF-8 is rejected exactly like `str_len`: `lower`/`upper` print nothing, write a diagnostic to standard error, and return `1`. For arbitrary binary data, use `str_len_bytes`; case conversion is not defined for binary data.
 
 ### Dependencies
 
-- **Required**: a POSIX shell and the standard POSIX utilities `sed`, `od`, `awk` and `wc`. These are mandatory in POSIX environments and require no extra installation.
-- **Optional**: `gawk` enables Unicode case mapping. If it is not installed, `lower`/`upper` remain fully functional for ASCII text. Install it with the package manager of your system:
-  - Debian/Ubuntu/WSL: `sudo apt-get install gawk`
-  - Fedora/RHEL: `sudo dnf install gawk`
-  - Alpine: `apk add gawk`
-  - Arch: `sudo pacman -S gawk`
-  - macOS: `brew install gawk`
-  - Cygwin: install the `gawk` package with Cygwin Setup
-- No Python, Perl or Node.js dependency is introduced.
+- **Required**: a POSIX shell and the standard POSIX utilities `od`, `awk`, `wc` and `tr`. These are mandatory in POSIX environments and require no extra installation.
+- **Unicode case mapping**: the data is generated into `src/case_data.sh` at development time by `tools/gen_case.py` (Python 3, development only) and ships inside `poshli.sh`. The runtime does not need Python, an external Unicode database, or a Unicode-aware `awk`.
+- No Python, Perl or Node.js dependency is introduced **at runtime**.
 
 ---
 
@@ -262,7 +260,7 @@ fi
 
 ## Testing
 
-POSHLI includes a self-contained automated test suite that runs under standard POSIX shells and uses only standard utilities. The number of tests adapts to the environment: locale-dependent tests run only when a UTF-8 locale is available, and the Unicode case-mapping assertions run only when a UTF-8 locale and `gawk` are available (254 tests with a UTF-8 locale and no `gawk`; 257 with `gawk` and a UTF-8 locale):
+POSHLI includes a self-contained automated test suite that runs under standard POSIX shells and uses only standard utilities. The number of tests adapts to the environment: locale-dependent tests run only when a UTF-8 locale is available. The case-mapping tests are environment-independent, because `lower`/`upper` are guaranteed to behave identically with any `awk` and in any locale:
 
 ```sh
 # Run test suite against modular sources (src/):

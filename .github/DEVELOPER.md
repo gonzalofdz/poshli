@@ -28,6 +28,7 @@ Every POSHLI function must strictly follow one of two predictable behaviors:
 2. **Transformer / Producer Functions** (`trim`, `lower`, `upper`, `str_len`, `str_len_bytes`, `str_replace`):
    - Print the processed result to `stdout` using `printf '%s\n'`.
    - Return `0` on success.
+   - Return `1` if the input is invalid or the operation cannot be performed correctly.
    - Return `2` if required arguments are missing.
 
 ---
@@ -85,10 +86,26 @@ Every function added or modified must include unit tests in `tests/`:
 
 ## 8. Architecture and Module Layout
 
-- `src/` contains the modular source files (`core.sh`, `num.sh`, `fs.sh`, `str.sh`). Each module is self-contained and uses a load guard so it can be sourced independently and repeatedly.
+- `src/` contains the modular source files (`core.sh`, `num.sh`, `fs.sh`, `case_data.sh`, `str.sh`, `encoding.sh`). Each module is self-contained and uses a load guard so it can be sourced independently and repeatedly.
+- `src/case_data.sh` is generated data (Unicode case mapping) produced by `tools/gen_case.py`; regenerate it with `make case-data`, never edit it by hand. The data is pinned to Unicode 15.0.0: the generator refuses to run if the Python interpreter embeds a different Unicode version, so the data never changes silently. Following a new Unicode version is a deliberate act (update the pin in `tools/gen_case.py` and regenerate).
 - `poshli.sh` is the generated Core bundle. It is produced by the Makefile from the module list in `BUNDLE_SOURCES`; never edit it by hand.
 - Bundles are concatenations, not loaders. Do not introduce relative-path sourcing (`. ./src/num.sh`): it depends on the current working directory and breaks installation and vendoring. POSIX shell also lacks a portable way to resolve the directory of a sourced file.
 - New general-purpose modules belong in `src/` and are added to `BUNDLE_SOURCES`.
 - Specialized modules with extra dependencies (for example cryptography or networking) should be distributed as separate optional bundles, not added to the Core bundle.
 - Each generated bundle must use a unique top-level load guard so that loading more than one bundle is safe.
 - Keep the public API stable. Adding functions is fine; changing or removing existing functions requires a compatibility review.
+
+---
+
+## 9. `tools/spike/` (Development Verification Only)
+
+- `tools/spike/` holds `run_spike.sh` and `roundtrip_spike.sh`, a self-contained technical spike that proves the portable UTF-8 byte-transport technique behind the Unicode support in `src/str.sh` (UTF-8 bytes → `od` numbers → POSIX `awk` → `printf '%b'` bytes).
+- It is a development/verification tool: **not part of the runtime**, **not public API**, and not wired into `make test`, `make test-bundle`, or CI. It is run manually and independently.
+- Its purpose is to verify the byte-exact UTF-8 round-trip and its portability across the supported shells (dash, BusyBox `sh`, `bash --posix`), locales, and the BusyBox `od`/`awk` applets.
+- Run the full matrix:
+
+  ```sh
+  tools/spike/run_spike.sh
+  ```
+
+  or a single shell: `dash tools/spike/roundtrip_spike.sh` (also `busybox sh ...` or `bash --posix ...`).

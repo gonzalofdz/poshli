@@ -9,6 +9,7 @@ TEST_DIR=$(cd "$(dirname "$0")" && pwd)
 if [ -n "$POSHLI_TEST_BUNDLE" ]; then
 	. "$TEST_DIR/../poshli.sh"
 else
+	. "$TEST_DIR/../src/case_data.sh"
 	. "$TEST_DIR/../src/str.sh"
 fi
 
@@ -22,6 +23,13 @@ _str_zwj='👨‍👩‍👧‍👦'                       # family ZWJ sequence
 _str_flag='🇪🇸'
 _str_skin='👍🏽'
 _str_keycap='1️⃣'
+_str_invalid_continuation=$(printf '\200')
+_str_invalid_truncated=$(printf '\303')
+_str_invalid_overlong=$(printf '\300\257')
+_str_invalid_surrogate=$(printf '\355\240\200')
+_str_invalid_out_of_range=$(printf '\364\220\200\200')
+_str_invalid_embedded=$(printf 'a\200b')
+_str_valid_max=$(printf '\364\217\277\277')
 
 # Find an installed UTF-8 locale for explicit locale tests (may be empty).
 _str_utf8_locale=""
@@ -96,45 +104,71 @@ res=$(upper "Hello World"); assert_eq "HELLO WORLD" "$res" "upper: mixed case"
 res=$(upper "123 abc !?"); assert_eq "123 ABC !?" "$res" "upper: numbers and symbols"
 res=$(upper ""); assert_eq "" "$res" "upper: empty string"
 
-# lower/upper: under a non-UTF-8 locale no Unicode backend must be selected.
-# The ASCII fallback must leave non-ASCII bytes untouched, never corrupt them.
-res=$(_str_locale C lower "HELLO España"); assert_eq "hello españa" "$res" "lower: C locale ASCII fallback"
-res=$(_str_locale C upper "hello España"); assert_eq "HELLO ESPAñA" "$res" "upper: C locale ASCII fallback"
-res=$(_str_locale C lower "ÁÉÍÓÚ"); assert_eq "ÁÉÍÓÚ" "$res" "lower: C locale leaves non-ASCII uppercase unchanged"
-res=$(_str_locale C upper "áéíóú"); assert_eq "áéíóú" "$res" "upper: C locale leaves non-ASCII lowercase unchanged"
-res=$(_str_locale C lower "😀 你好"); assert_eq "😀 你好" "$res" "lower: C locale leaves emoji/CJK unchanged"
-res=$(_str_locale C upper "😀 你好"); assert_eq "😀 你好" "$res" "upper: C locale leaves emoji/CJK unchanged"
-res=$(_str_locale C lower "$_str_combining"); assert_eq "$_str_combining" "$res" "lower: C locale preserves combining mark"
-res=$(_str_locale C upper "$_str_combining"); assert_eq "$_str_combining_upper" "$res" "upper: C locale preserves combining mark"
+# lower/upper: the contract is deterministic and identical in every locale:
+# Unicode case mapping is applied to cased code points (ASCII, Latin, Greek
+# and Cyrillic guaranteed; any other code point with a generated mapping is
+# converted too), code points without a mapping are preserved unchanged, and
+# invalid UTF-8 is rejected with status 1 (like str_len).
 
-# lower/upper: in an available UTF-8 locale, verify the behavior that the
-# detected capabilities imply. If É maps to é, a broader Unicode set must map
-# consistently; otherwise the safe ASCII fallback must leave it unchanged.
+# Latin
+res=$(lower "España"); assert_status 0 $? "lower: Latin maps"; assert_eq "españa" "$res" "lower: España -> españa"
+res=$(upper "España"); assert_status 0 $? "upper: Latin maps"; assert_eq "ESPAÑA" "$res" "upper: España -> ESPAÑA"
+res=$(lower "ÁRBOL ÑANDÚ"); assert_eq "árbol ñandú" "$res" "lower: ÁRBOL ÑANDÚ -> árbol ñandú"
+res=$(upper "España café"); assert_eq "ESPAÑA CAFÉ" "$res" "upper: España café -> ESPAÑA CAFÉ"
+res=$(lower "áéíóúüñ"); assert_eq "áéíóúüñ" "$res" "lower: keeps lowercase letters unchanged"
+res=$(upper "ÁÉÍÓÚÜÑ"); assert_eq "ÁÉÍÓÚÜÑ" "$res" "upper: keeps uppercase letters unchanged"
+res=$(lower "HELLO España"); assert_eq "hello españa" "$res" "lower: ASCII and Latin together"
+
+# Greek. Case mapping preserves accents as they are: U+0391 maps to U+03B1;
+# mapping never adds or removes diacritics.
+res=$(lower "ΠΡΙΒΕΤ"); assert_eq "πριβετ" "$res" "lower: ΠΡΙΒΕΤ -> πριβετ"
+res=$(upper "πριβετ"); assert_eq "ΠΡΙΒΕΤ" "$res" "upper: πριβετ -> ΠΡΙΒΕΤ"
+res=$(upper "ελληνικά"); assert_eq "ΕΛΛΗΝΙΚΆ" "$res" "upper: Greek with tonos maps and keeps the accent"
+res=$(lower "ΕΛΛΑΔΑ"); assert_eq "ελλαδα" "$res" "lower: unaccented capitals map to unaccented small letters"
+res=$(lower "ΟΔΟΣ"); assert_eq "οδοσ" "$res" "lower: sigma maps to U+03C3 (no contextual final sigma)"
+
+# Cyrillic
+res=$(lower "ПРИВЕТ"); assert_eq "привет" "$res" "lower: ПРИВЕТ -> привет"
+res=$(upper "привет"); assert_eq "ПРИВЕТ" "$res" "upper: привет -> ПРИВЕТ"
+res=$(lower "ЁЛКА"); assert_eq "ёлка" "$res" "lower: ЁЛКА -> ёлка"
+
+# Mixed text: scripts are mapped, everything else is preserved (emoji, CJK,
+# symbols, punctuation and ASCII emoticonos).
+res=$(upper "Hola ;-) España 😀 你好 € — 🎉"); assert_eq "HOLA ;-) ESPAÑA 😀 你好 € — 🎉" "$res" "upper: mixed text maps letters and preserves the rest"
+res=$(lower "ÁRBOL ПРИВЕТ ΕΛΛΑΔΑ 🎉"); assert_eq "árbol привет ελλαδα 🎉" "$res" "lower: mixed text maps letters and preserves the rest"
+
+# Code points without a mapping are preserved: combining marks, emoji, CJK,
+# symbols, unassigned code points (U+0378) and noncharacters (U+FDD0).
+res=$(upper "$_str_combining"); assert_eq "$_str_combining_upper" "$res" "upper: maps base letter and preserves combining mark"
+res=$(lower "😀 你好 €"); assert_eq "😀 你好 €" "$res" "lower: preserves emoji, CJK and symbols"
+res=$(lower ";-)"); assert_eq ";-)" "$res" "lower: preserves ASCII emoticonos"
+res=$(upper "$(printf '\315\270\357\267\220')"); assert_eq "$(printf '\315\270\357\267\220')" "$res" "upper: preserves unassigned code points and noncharacters"
+
+# One-to-many mappings are applied (Unicode unconditional expansions).
+res=$(upper "grüße"); assert_eq "GRÜSSE" "$res" "upper: U+00DF expands to SS"
+res=$(lower "grüße"); assert_eq "grüße" "$res" "lower: U+00DF has no lowercase mapping and is preserved"
+res=$(lower "İSTANBUL"); assert_eq "$(printf 'i\314\207stanbul')" "$res" "lower: U+0130 expands to i + U+0307"
+
+# lower/upper: identical in every locale.
+res=$(_str_locale C lower "ПРИВЕТ ΠΡΙΒΕΤ"); assert_eq "привет πριβετ" "$res" "lower: C locale maps Greek and Cyrillic"
+res=$(_str_locale C upper "España café"); assert_eq "ESPAÑA CAFÉ" "$res" "upper: C locale maps guaranteed letters"
 if [ -n "$_str_utf8_locale" ]; then
-	_str_case_probe=$(_str_locale "$_str_utf8_locale" lower "É")
-	if [ "$_str_case_probe" = "é" ]; then
-		res=$(_str_locale "$_str_utf8_locale" lower "ÁÉÍÓÚ")
-		assert_eq "áéíóú" "$res" "lower: UTF-8 Unicode simple mapping"
-		res=$(_str_locale "$_str_utf8_locale" upper "áéíóú")
-		assert_eq "ÁÉÍÓÚ" "$res" "upper: UTF-8 Unicode simple mapping"
-		res=$(_str_locale "$_str_utf8_locale" upper "España")
-		assert_eq "ESPAÑA" "$res" "upper: UTF-8 maps Ñ"
-		res=$(_str_locale "$_str_utf8_locale" lower "ПРИВЕТ")
-		assert_eq "привет" "$res" "lower: UTF-8 maps Cyrillic"
-		res=$(_str_locale "$_str_utf8_locale" lower "$_str_combining_upper")
-		assert_eq "$_str_combining" "$res" "lower: UTF-8 preserves combining mark"
-	else
-		res=$(_str_locale "$_str_utf8_locale" lower "ÁÉÍÓÚ")
-		assert_eq "ÁÉÍÓÚ" "$res" "lower: UTF-8 falls back to ASCII"
-		res=$(_str_locale "$_str_utf8_locale" upper "áéíóú")
-		assert_eq "áéíóú" "$res" "upper: UTF-8 falls back to ASCII"
-	fi
-	res=$(_str_locale "$_str_utf8_locale" lower "😀 你好")
-	assert_eq "😀 你好" "$res" "lower: UTF-8 leaves emoji/CJK unchanged"
-	res=$(_str_locale "$_str_utf8_locale" upper "😀 你好")
-	assert_eq "😀 你好" "$res" "upper: UTF-8 leaves emoji/CJK unchanged"
+	res=$(_str_locale "$_str_utf8_locale" lower "ÁRBOL ÑANDÚ"); assert_status 0 $? "lower: UTF-8 locale maps guaranteed letters"; assert_eq "árbol ñandú" "$res" "lower: UTF-8 locale maps guaranteed letters"
+	res=$(_str_locale "$_str_utf8_locale" upper "πριβετ привет"); assert_eq "ΠΡΙΒΕΤ ПРИВЕТ" "$res" "upper: UTF-8 locale maps Greek and Cyrillic"
 fi
-unset _str_case_probe
+
+# lower/upper: invalid UTF-8 is rejected like in str_len.
+res=$(lower "$_str_invalid_truncated" 2>/dev/null); assert_status 1 $? "lower: rejects invalid UTF-8"; assert_eq "" "$res" "lower: prints nothing for invalid UTF-8"
+res=$(upper "$_str_invalid_embedded" 2>/dev/null); assert_status 1 $? "upper: rejects invalid UTF-8"; assert_eq "" "$res" "upper: prints nothing for invalid UTF-8"
+res=$(lower "$_str_invalid_overlong" 2>/dev/null); assert_status 1 $? "lower: rejects overlong UTF-8"; assert_eq "" "$res" "lower: prints nothing for overlong UTF-8"
+res=$(upper "$_str_invalid_surrogate" 2>/dev/null); assert_status 1 $? "upper: rejects UTF-8 surrogates"; assert_eq "" "$res" "upper: prints nothing for UTF-8 surrogates"
+
+# lower/upper: the diagnostic reports invalid UTF-8.
+err=$(lower "$_str_invalid_truncated" 2>&1 >/dev/null)
+_str_diag=""
+case "$err" in *"input is not valid UTF-8"*) _str_diag="invalid-utf8" ;; esac
+assert_eq "invalid-utf8" "$_str_diag" "lower: diagnostic reports invalid UTF-8"
+unset err _str_diag
 
 # starts_with
 starts_with "http://example.com" "http://"; assert_true $? "starts_with: URL protocol"
@@ -184,6 +218,15 @@ if [ -n "$_str_utf8_locale" ]; then
 	assert_eq "7" "$res" "str_len: UTF-8 locale counts ZWJ code points"
 fi
 
+# str_len: invalid UTF-8 is rejected instead of yielding an approximate count.
+res=$(str_len "$_str_invalid_continuation" 2>/dev/null); assert_status 1 $? "str_len rejects a lone continuation byte"; assert_eq "" "$res" "str_len prints nothing for a lone continuation byte"
+res=$(str_len "$_str_invalid_truncated" 2>/dev/null); assert_status 1 $? "str_len rejects a truncated sequence"; assert_eq "" "$res" "str_len prints nothing for a truncated sequence"
+res=$(str_len "$_str_invalid_overlong" 2>/dev/null); assert_status 1 $? "str_len rejects an overlong sequence"; assert_eq "" "$res" "str_len prints nothing for an overlong sequence"
+res=$(str_len "$_str_invalid_surrogate" 2>/dev/null); assert_status 1 $? "str_len rejects a surrogate"; assert_eq "" "$res" "str_len prints nothing for a surrogate"
+res=$(str_len "$_str_invalid_out_of_range" 2>/dev/null); assert_status 1 $? "str_len rejects a code point beyond U+10FFFF"; assert_eq "" "$res" "str_len prints nothing for a code point beyond U+10FFFF"
+res=$(str_len "$_str_invalid_embedded" 2>/dev/null); assert_status 1 $? "str_len rejects invalid bytes embedded in valid text"; assert_eq "" "$res" "str_len prints nothing for invalid bytes embedded in valid text"
+res=$(str_len "$_str_valid_max"); assert_eq "1" "$res" "str_len accepts U+10FFFF"
+
 # str_len_bytes: exact byte counts, independent of shell/locale.
 res=$(str_len_bytes "hello"); assert_eq "5" "$res" "str_len_bytes: ASCII hello (5 bytes)"
 res=$(str_len_bytes ""); assert_eq "0" "$res" "str_len_bytes: empty string"
@@ -205,6 +248,71 @@ if [ -n "$_str_utf8_locale" ]; then
 	res=$(_str_locale "$_str_utf8_locale" str_len_bytes "$_str_zwj")
 	assert_eq "25" "$res" "str_len_bytes: UTF-8 locale ZWJ byte count"
 fi
+
+# od transport ("od -A n -v -t u1") and long repetitive input.
+# The invocation is strictly POSIX (XCU od in POSIX.1-2017/2024: -A n, -v
+# and -t u1 are all standard) and -v is what stops od from replacing groups
+# of repeated output lines with a "*" line. Long repetitive inputs must
+# reach the parsers complete: one number per byte, no "*" substitution.
+# Each fixture spans many od output lines, so any elision would be visible.
+_str_od_stats() {
+#	Prints "<fields> <stars>": the number of byte values emitted by the
+#	exact od invocation used in src/str.sh, and the number of "*" fields
+#	(od's repeated-line substitution marker, impossible with -v).
+#
+	printf '%s' "$1" | LC_ALL=C od -A n -v -t u1 | LC_ALL=C awk '
+		{ for (i = 1; i <= NF; i++) { n++; if ($i == "*") stars++ } }
+		END { print n + 0, stars + 0 }
+	'
+}
+
+# Repetitive fixtures: ASCII (1000 bytes), 2-byte UTF-8 (800 bytes) and
+# 4-byte UTF-8 emoji (1000 bytes), each repeated long enough to cover many
+# od output lines.
+_str_ascii_rep=''
+_str_ascii_rep_up=''
+_str_rep_i=0
+while [ "$_str_rep_i" -lt 1000 ]; do
+	_str_ascii_rep=${_str_ascii_rep}a
+	_str_ascii_rep_up=${_str_ascii_rep_up}A
+	_str_rep_i=$((_str_rep_i + 1))
+done
+_str_mb_rep=''
+_str_mb_rep_up=''
+_str_rep_i=0
+while [ "$_str_rep_i" -lt 400 ]; do
+	_str_mb_rep=${_str_mb_rep}ñ
+	_str_mb_rep_up=${_str_mb_rep_up}Ñ
+	_str_rep_i=$((_str_rep_i + 1))
+done
+_str_emoji_rep=''
+_str_rep_i=0
+while [ "$_str_rep_i" -lt 250 ]; do
+	_str_emoji_rep=${_str_emoji_rep}😀
+	_str_rep_i=$((_str_rep_i + 1))
+done
+unset _str_rep_i
+
+# od transport: no byte is lost and no "*" substitution appears.
+res=$(_str_od_stats "$_str_ascii_rep"); assert_eq "1000 0" "$res" "od transport: 1000 repeated ASCII bytes complete, no *"
+res=$(_str_od_stats "$_str_mb_rep"); assert_eq "800 0" "$res" "od transport: 800 bytes of repeated 2-byte UTF-8 complete, no *"
+res=$(_str_od_stats "$_str_emoji_rep"); assert_eq "1000 0" "$res" "od transport: 1000 bytes of repeated 4-byte UTF-8 complete, no *"
+
+# str_len: long repetitive input counts every code point.
+res=$(str_len "$_str_ascii_rep"); assert_status 0 $? "str_len: 1000 repeated ASCII returns 0"; assert_eq "1000" "$res" "str_len: 1000 repeated ASCII code points"
+res=$(str_len "$_str_mb_rep"); assert_status 0 $? "str_len: 400 repeated 2-byte code points returns 0"; assert_eq "400" "$res" "str_len: 400 repeated 2-byte code points"
+res=$(str_len "$_str_emoji_rep"); assert_status 0 $? "str_len: 250 repeated emoji returns 0"; assert_eq "250" "$res" "str_len: 250 repeated 4-byte code points"
+
+# lower/upper: every repetition is mapped; none is dropped or substituted.
+res=$(lower "$_str_ascii_rep_up"); assert_status 0 $? "lower: 1000 repeated ASCII letters returns 0"; assert_eq "$_str_ascii_rep" "$res" "lower: 1000 repeated ASCII letters map completely"
+res=$(upper "$_str_mb_rep"); assert_status 0 $? "upper: 400 repeated ñ returns 0"; assert_eq "$_str_mb_rep_up" "$res" "upper: 400 repeated ñ map completely"
+res=$(lower "$_str_emoji_rep"); assert_status 0 $? "lower: 250 repeated emoji returns 0"; assert_eq "$_str_emoji_rep" "$res" "lower: 250 repeated emoji preserved unchanged"
+res=$(upper "$_str_emoji_rep"); assert_status 0 $? "upper: 250 repeated emoji returns 0"; assert_eq "$_str_emoji_rep" "$res" "upper: 250 repeated emoji preserved unchanged"
+
+# The mapped results keep every byte.
+res=$(str_len_bytes "$(lower "$_str_ascii_rep_up")"); assert_eq "1000" "$res" "lower: mapped ASCII keeps 1000 bytes"
+res=$(str_len_bytes "$(upper "$_str_mb_rep")"); assert_eq "800" "$res" "upper: mapped 2-byte UTF-8 keeps 800 bytes"
+res=$(str_len_bytes "$(upper "$_str_emoji_rep")"); assert_eq "1000" "$res" "upper: preserved emoji keeps 1000 bytes"
 
 # str_replace
 res=$(str_replace "dog" "cat" "my dog is a dog"); assert_eq "my cat is a cat" "$res" "str_replace: simple words"

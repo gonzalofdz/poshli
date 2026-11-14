@@ -6,10 +6,10 @@ PREFIX ?= $(HOME)/.local
 DESTDIR ?=
 POSHLI_TEST_SHELL ?= /bin/sh
 BUNDLE_OUTPUT ?= poshli.sh
-BUNDLE_SOURCES = src/core.sh src/num.sh src/fs.sh src/str.sh src/encoding.sh
+BUNDLE_SOURCES = src/core.sh src/num.sh src/fs.sh src/case_data.sh src/str.sh src/encoding.sh
 LIBDIR = $(DESTDIR)$(PREFIX)/lib/poshli
 
-.PHONY: all bundle check-bundle test test-bundle install uninstall clean
+.PHONY: all bundle check-bundle case-data test test-bundle install uninstall clean
 
 all: bundle
 
@@ -36,6 +36,12 @@ check-bundle:
 		printf 'ERROR: poshli.sh is out of date with src/. Run "make bundle".\n' >&2; \
 		exit 1; \
 	fi
+
+case-data:
+	@printf 'Generating src/case_data.sh...\n'
+	@python3 tools/gen_case.py > src/case_data.sh.tmp || { rm -f src/case_data.sh.tmp; exit 1; }
+	@mv -f src/case_data.sh.tmp src/case_data.sh
+	@printf 'src/case_data.sh generated successfully.\n'
 
 test: bundle
 	@POSHLI_TEST_SHELL="$(POSHLI_TEST_SHELL)" $(POSHLI_TEST_SHELL) ./tests/run_all.sh

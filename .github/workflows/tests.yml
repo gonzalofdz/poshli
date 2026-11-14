@@ -22,8 +22,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install busybox and gawk
-        run: sudo apt-get update && sudo apt-get install -y busybox gawk
+      - name: Install busybox
+        run: sudo apt-get update && sudo apt-get install -y busybox
 
       - name: Verify bundle is synchronized with src/
         run: make check-bundle

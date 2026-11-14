@@ -41,6 +41,12 @@ run_guard_test '
 assert_true $? "Scenario 1: fs.sh defines is_file and does not load str"
 
 run_guard_test '
+	. ./src/case_data.sh
+	[ "$_POSHLI_CASE_LOADED" = "1" ] && [ -n "$_POSHLI_CASE_LOWER" ] && [ -n "$_POSHLI_CASE_UPPER" ] && ! command -v lower >/dev/null 2>&1
+'
+assert_true $? "Scenario 1: case_data.sh defines case data and does not load str"
+
+run_guard_test '
 	. ./src/str.sh
 	command -v trim >/dev/null 2>&1 && [ "$_POSHLI_STR_LOADED" = "1" ] && ! command -v is_integer >/dev/null 2>&1
 '
@@ -171,6 +177,13 @@ run_guard_test '
 	command -v is_file >/dev/null 2>&1
 '
 assert_true $? "Scenario 5: fs.sh loaded repeatedly is idempotent"
+
+run_guard_test '
+	. ./src/case_data.sh
+	. ./src/case_data.sh
+	[ "$_POSHLI_CASE_LOADED" = "1" ] && [ -n "$_POSHLI_CASE_LOWER" ]
+'
+assert_true $? "Scenario 5: case_data.sh loaded repeatedly is idempotent"
 
 run_guard_test '
 	. ./src/str.sh
