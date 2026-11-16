@@ -12,16 +12,16 @@ Practical, living record of Poshli development: what is done, what is active, an
 - [x] Initial audit of dependencies and external tools (runtime vs development, documentation claims vs real usage).
 - [x] POSIX-first architectural audit (levels: shell/POSIX core, POSIX utilities, explicit exceptions).
 - [x] Dependency, determinism and POSIX compatibility analysis (`fs_is_plain_text`, `encoding.sh`, case mapping, return codes).
+- [x] Adopt the POSIX-first dependency policy formally (levels: shell/POSIX core, POSIX utilities, optional improvements, explicit exceptions; README *Dependency Policy*, DEVELOPER.md).
+- [x] Make `fs_is_plain_text` POSIX and deterministic (documented byte heuristic with POSIX utilities instead of `file(1)`; defined semantics and behavior).
 
 ## Current
 
-- [ ] Adopt the POSIX-first dependency policy formally (levels: shell/POSIX core, POSIX utilities, optional improvements, explicit exceptions).
-- [ ] Document the dependency separation clearly:
+- [ ] Document the dependency separation clearly (the policy levels are documented; the per-function classification completes once Base64 is corrected):
 	- shell / pure POSIX;
 	- POSIX utilities;
 	- optional extensions or improvements;
 	- explicit exceptions.
-- [ ] Make `fs_is_plain_text` POSIX and deterministic (documented byte heuristic with POSIX utilities instead of `file(1)`; defined semantics and behavior).
 
 ## Next
 

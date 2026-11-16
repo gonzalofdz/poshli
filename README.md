@@ -12,7 +12,7 @@
 - **Self-contained bundle**: Distributed as a single file (`poshli.sh`) ready for direct inclusion or project vendoring.
 - **Predictable return codes**: Boolean predicates return `0` (true) or `1` (false); an absent, empty, or invalid input is treated as false when the predicate can answer the question. Operational functions return `1` when the input is invalid or the operation cannot be performed correctly, and may return `2` for invalid usage, such as a missing mandatory argument.
 - **Unicode-aware helpers**: `str_len` counts Unicode code points in valid UTF-8 independently of the locale and rejects invalid UTF-8. `str_lower`/`str_upper` apply Unicode case mapping (Latin, Greek and Cyrillic guaranteed) with data generated into the library itself, so the result is identical in every locale, shell and `awk`; valid code points without a mapping (emoji, CJK, symbols) are preserved unchanged and invalid UTF-8 is rejected with status `1`.
-- **Minimal dependencies**: Built around the POSIX shell and standard POSIX utilities (`od`, `awk`, `wc`, `tr`). Case mapping works over numeric code points with data generated at development time (Python is a development-only tool): the runtime needs no Unicode database, no extra tool, and no Unicode-aware `awk`.
+- **Minimal dependencies (POSIX-first)**: Built around the POSIX shell and standard POSIX utilities (`od`, `awk`, `wc`, `tr`) following the [Dependency Policy](#dependency-policy). Non-POSIX tools appear only as documented, explicit exceptions (`base64` in `encoding.sh`). Case mapping works over numeric code points with data generated at development time (Python is a development-only tool): the runtime needs no Unicode database, no extra tool, and no Unicode-aware `awk`.
 
 ---
 
@@ -223,6 +223,51 @@ A packaging-only change bumps only the revision (`1.1.0-2`) and leaves the upstr
 
 ---
 
+## Dependency Policy
+
+POSHLI follows a **POSIX-first** dependency policy:
+
+> Poshli prioritizes implementations based on POSIX shell and utilities specified by POSIX. Non-POSIX dependencies must be avoided whenever a reasonable, maintainable POSIX alternative exists.
+
+POSIX-first does **not** mean "pure shell". POSIX utilities such as `awk`, `sed`, `grep`, `tr`, `od`, `printf` or `wc` are part of the allowed model when they provide a clear advantage.
+
+### Dependency levels
+
+1. **POSIX shell / core**: small, clear operations implemented directly with POSIX shell when reasonable. Trivial operations must not spawn unnecessary external processes.
+2. **POSIX utilities**: tools specified by POSIX when they add robustness, clarity, or capabilities that would be unnecessarily complex in pure shell. Mature tools are not reinvented merely to avoid running an external process.
+3. **Optional improvements**: non-POSIX tools may be used only for a clearly justified improvement (performance, experience, or explicitly additional capabilities). They must never silently change the basic semantics of a function: the same call with the same arguments keeps the same semantics within its documented contract, whatever is installed.
+4. **Explicit exceptions**: when no reasonable, maintainable POSIX alternative exists, a non-POSIX dependency is allowed when it is documented, justified, limited in scope, never fails silently, and defines what happens if it is unavailable. An exception for one feature never becomes a global dependency of the library.
+
+### Determinism
+
+> Optional dependencies must not silently change the semantics of an existing function.
+
+An optional improvement may speed up an implementation, but the same input must not produce an incompatible result depending on the machine. If an additional capability requires another tool, it must be exposed or documented explicitly as such.
+
+### Priorities
+
+POSIX is not pursued at any cost. The architectural order of priorities is:
+
+```text
+correctness
+→ portability
+→ determinism
+→ maintainability
+→ simplicity
+```
+
+A huge, fragile, or hard-to-maintain POSIX implementation is not automatically better than a well-justified external exception.
+
+### Current dependency status
+
+- **Required at runtime**: a POSIX shell and the POSIX utilities `od`, `awk`, `wc` and `tr`. No Python, Perl or Node.js dependency is introduced at runtime.
+- **Documented exception (level 4)**: `base64` (not specified by POSIX) backs `encoding_base64_encode`/`encoding_base64_decode`. The functions return `1` when no usable `base64` backend is available; see [Encoding](#4-encoding-encodingsh).
+- **Development only**: Python 3 generates the case-mapping data (`tools/gen_case.py`); it is never a runtime dependency.
+
+Developers: [DEVELOPER.md](.github/DEVELOPER.md) documents the full criteria for introducing a dependency.
+
+---
+
 ## API Reference
 
 ### Library Metadata (`core.sh`)
@@ -274,9 +319,13 @@ POSHLI distinguishes boolean predicates from operational functions:
 | `fs_is_writable <path>` | Returns 0 if `<path>` exists and has write permissions (`[ -w ]`). |
 | `fs_is_exec <path>` | Returns 0 if `<path>` exists and has execute permissions (`[ -x ]`). |
 | `fs_is_empty_file <path>` | Returns 0 if `<path>` exists, is a regular file, and its size is 0 bytes (`[ -f ] && [ ! -s ]`). |
-| `fs_is_plain_text <path>` | Returns 0 if `<path>` is readable and `file` reports it as text. Returns 1 if it is a binary or non-text file, or if it does not exist or is unreadable; 2 if no argument is passed. |
+| `fs_is_plain_text <path>` | Returns 0 if `<path>` is a regular, readable file (symlinks are followed) and its first 4096 bytes are plain text: valid UTF-8, no NUL bytes, and no control characters other than TAB (`0x09`), LF (`0x0A`) and CR (`0x0D`) (an empty file is plain text). Returns 1 if the inspected content is not plain text, or if the file does not exist, is unreadable, is not a regular file or cannot be read; 2 if no argument is passed. |
 
 *Unlike the boolean predicates in `num.sh` and `str.sh`, the file-system predicates still return `2` when the path argument is missing.*
+
+> **`fs_is_plain_text` contract**: the file must be regular and readable. At most the first **4096 bytes** are inspected, and they must form a valid UTF-8 sequence (validated explicitly over bytes; overlong forms, surrogates and code points above `U+10FFFF` are rejected) with no NUL bytes and no control characters other than TAB (`0x09`), LF (`0x0A`) and CR (`0x0D`). The only control characters accepted are those three: DEL (`0x7F`) and the C1 controls (`U+0080`–`U+009F`) are rejected as well. An empty file is plain text. The result is deterministic and independent of the locale and of the installed tools: it is a documented byte heuristic implemented with the POSIX utilities `od` and `awk`; `file(1)` is **not** used.
+>
+> **Known limitation (intentional)**: only the first 4096 bytes are inspected. Binary content appearing after that limit can go unnoticed and the file is still classified as plain text. A UTF-8 character cut by the limit is assumed to continue beyond it. Reading whole files just to close this gap is deliberately avoided.
 
 ---
 
@@ -301,7 +350,7 @@ POSHLI distinguishes boolean predicates from operational functions:
 
 ### 4. Encoding (`encoding.sh`)
 
-`base64` is **not** part of POSIX, so it is treated as a documented external dependency. POSHLI detects a usable decode flag functionally at load time (`-d` or `-D`) and does not add fallbacks such as `openssl`, Python, or `uudecode`.
+`base64` is **not** part of POSIX, so it is treated as a documented external dependency (level 4 of the [Dependency Policy](#dependency-policy)). POSHLI detects a usable decode flag functionally at load time (`-d` or `-D`) and does not add fallbacks such as `openssl`, Python, or `uudecode`.
 
 | Function | Description |
 | :--- | :--- |
@@ -359,6 +408,8 @@ What is not applied (documented limitations):
 Invalid UTF-8 is rejected exactly like `str_len`: `str_lower`/`str_upper` print nothing, write a diagnostic to standard error, and return `1`. For arbitrary binary data, use `str_len_bytes`; case conversion is not defined for binary data.
 
 ### Dependencies
+
+These are the requirements of the Unicode helpers; see the [Dependency Policy](#dependency-policy) for the complete dependency picture of the library.
 
 - **Required**: a POSIX shell and the standard POSIX utilities `od`, `awk`, `wc` and `tr`. These are mandatory in POSIX environments and require no extra installation.
 - **Unicode case mapping**: the data is generated into `src/case_data.sh` at development time by `tools/gen_case.py` (Python 3, development only) and ships inside `poshli.sh`. The runtime does not need Python, an external Unicode database, or a Unicode-aware `awk`.
