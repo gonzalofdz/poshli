@@ -10,7 +10,7 @@ _POSHLI_LOADED=1
 if [ -z "${_POSHLI_CORE_LOADED+x}" ]; then
 _POSHLI_CORE_LOADED=1
 
-POSHLI_VERSION='1.0.0'
+POSHLI_VERSION='0.5.0'
 fi
 
 if [ -z "${_POSHLI_NUM_LOADED+x}" ]; then

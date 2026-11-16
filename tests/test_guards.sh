@@ -24,7 +24,7 @@ run_guard_test() {
 # ==============================================================================
 run_guard_test '
 	. ./src/core.sh
-	[ "$POSHLI_VERSION" = "1.0.0" ] && [ "$_POSHLI_CORE_LOADED" = "1" ] && ! command -v num_is_integer >/dev/null 2>&1
+	[ "$POSHLI_VERSION" = "0.5.0" ] && [ "$_POSHLI_CORE_LOADED" = "1" ] && ! command -v num_is_integer >/dev/null 2>&1
 '
 assert_true $? "Scenario 1: core.sh sets version and does not load other modules"
 
@@ -63,7 +63,7 @@ assert_true $? "Scenario 1: encoding.sh defines encoding_base64_encode and does 
 # ==============================================================================
 run_guard_test '
 	. ./poshli.sh
-	[ "$POSHLI_VERSION" = "1.0.0" ] &&
+	[ "$POSHLI_VERSION" = "0.5.0" ] &&
 	[ "$_POSHLI_LOADED" = "1" ] &&
 	command -v num_is_integer >/dev/null 2>&1 &&
 	command -v fs_is_file >/dev/null 2>&1 &&
@@ -78,7 +78,7 @@ assert_true $? "Scenario 2: poshli.sh loads all modules and defines all function
 run_guard_test '
 	. ./src/core.sh
 	. ./poshli.sh
-	[ "$POSHLI_VERSION" = "1.0.0" ] &&
+	[ "$POSHLI_VERSION" = "0.5.0" ] &&
 	command -v num_is_integer >/dev/null 2>&1 &&
 	command -v fs_is_file >/dev/null 2>&1 &&
 	command -v str_trim >/dev/null 2>&1
@@ -116,7 +116,7 @@ run_guard_test '
 	. ./src/core.sh
 	. ./src/num.sh
 	. ./poshli.sh
-	[ "$POSHLI_VERSION" = "1.0.0" ] &&
+	[ "$POSHLI_VERSION" = "0.5.0" ] &&
 	command -v num_is_integer >/dev/null 2>&1 &&
 	command -v fs_is_file >/dev/null 2>&1 &&
 	command -v str_trim >/dev/null 2>&1
@@ -129,7 +129,7 @@ assert_true $? "Scenario 3: multiple modules (core + num) then poshli.sh loads a
 run_guard_test '
 	. ./poshli.sh
 	. ./src/core.sh
-	[ "$POSHLI_VERSION" = "1.0.0" ] && command -v num_is_integer >/dev/null 2>&1
+	[ "$POSHLI_VERSION" = "0.5.0" ] && command -v num_is_integer >/dev/null 2>&1
 '
 assert_true $? "Scenario 4: poshli.sh then core.sh is safe and keeps all functions"
 
@@ -160,7 +160,7 @@ assert_true $? "Scenario 4: poshli.sh then str.sh is safe and keeps all function
 run_guard_test '
 	. ./src/core.sh
 	. ./src/core.sh
-	[ "$POSHLI_VERSION" = "1.0.0" ]
+	[ "$POSHLI_VERSION" = "0.5.0" ]
 '
 assert_true $? "Scenario 5: core.sh loaded repeatedly is idempotent"
 
@@ -195,7 +195,7 @@ assert_true $? "Scenario 5: str.sh loaded repeatedly is idempotent"
 run_guard_test '
 	. ./poshli.sh
 	. ./poshli.sh
-	[ "$POSHLI_VERSION" = "1.0.0" ] && command -v num_is_integer >/dev/null 2>&1
+	[ "$POSHLI_VERSION" = "0.5.0" ] && command -v num_is_integer >/dev/null 2>&1
 '
 assert_true $? "Scenario 5: poshli.sh loaded repeatedly is idempotent"
 
@@ -208,7 +208,7 @@ run_guard_test '
 	. ./src/fs.sh
 	. ./src/str.sh
 	. ./poshli.sh
-	[ "$POSHLI_VERSION" = "1.0.0" ] &&
+	[ "$POSHLI_VERSION" = "0.5.0" ] &&
 	command -v num_is_integer >/dev/null 2>&1 &&
 	command -v fs_is_file >/dev/null 2>&1 &&
 	command -v str_trim >/dev/null 2>&1

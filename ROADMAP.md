@@ -6,7 +6,7 @@ Practical, living record of Poshli development: what is done, what is active, an
 
 - [x] Public API standardized with module prefixes (`num_`, `str_`, `fs_`, `encoding_`); unprefixed legacy names removed.
 - [x] API naming policy documented (README *Naming Policy*, DEVELOPER.md conventions).
-- [x] Semantic Versioning policy documented (README *Versioning Policy*; `1.0.0` consolidation baseline).
+- [x] Semantic Versioning policy documented (README *Versioning Policy*; `0.5.0` consolidation baseline).
 - [x] Unicode case conversion (`str_lower`/`str_upper`) with development-time generated, embedded case data (Unicode 15.0.0, pinned; `tools/gen_case.py` is development-only).
 - [x] Automated test suite for sources and bundle (`make test`, `make test-bundle`, `make check-bundle`) across `dash`, `busybox sh` and `bash --posix` in CI.
 - [x] Initial audit of dependencies and external tools (runtime vs development, documentation claims vs real usage).

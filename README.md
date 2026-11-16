@@ -151,7 +151,7 @@ fs_is_file, fs_is_dir, fs_is_readable, fs_is_writable, fs_is_exec, fs_is_empty_f
 
 ### History
 
-The module-prefix convention replaced the earlier unprefixed names (`trim`, `lower`, `upper`, `is_file`, `randomize`, `base64_enc`, ...). This rename was technically a breaking change and no compatibility aliases are provided: update call sites to the prefixed names. It took place during the initial consolidation of the public API and intentionally did not trigger a major version bump (`POSHLI_VERSION` remains `1.0.0`); see [Versioning Policy](#versioning-policy).
+The module-prefix convention replaced the earlier unprefixed names (`trim`, `lower`, `upper`, `is_file`, `randomize`, `base64_enc`, ...). This rename was technically a breaking change and no compatibility aliases are provided: update call sites to the prefixed names. It took place during the initial consolidation of the public API, before `1.0.0`, and required no major version bump under the pre-1.0.0 policy (`POSHLI_VERSION` is `0.5.0`); see [Versioning Policy](#versioning-policy).
 
 ---
 
@@ -163,7 +163,13 @@ POSHLI follows Semantic Versioning using the format:
 MAJOR.MINOR.PATCH
 ```
 
-The current version is exposed as `POSHLI_VERSION` (see [Library Metadata](#library-metadata-coresh)) and is currently `1.0.0`.
+The current version is exposed as `POSHLI_VERSION` (see [Library Metadata](#library-metadata-coresh)) and is currently `0.5.0`.
+
+### Pre-1.0.0 development
+
+While `POSHLI_VERSION` is `0.y.z`, Poshli is in initial development. Under Semantic Versioning, anything MAY change at any time, and the public API is not considered stable. Incompatible changes are therefore permitted without a MAJOR version increment.
+
+Once Poshli reaches `1.0.0`, the compatibility rules described below apply.
 
 ### PATCH — compatible fixes
 
@@ -204,9 +210,9 @@ Expected progression:
       → 2.0.0  incompatible change
 ```
 
-### Historical exception: naming cleanup
+### Historical note: naming cleanup
 
-The module-prefix renaming (see [Naming Policy](#naming-policy)) was technically a breaking change relative to the earlier names. It happened while the public API was still being consolidated, so `POSHLI_VERSION` is intentionally kept at `1.0.0` and no retroactive `2.0.0` is created for it. This is a one-time decision for the consolidation baseline, **not** a reusable rule for future releases: from this consolidation onward, every change must follow the Semantic Versioning policy above strictly.
+The module-prefix renaming (see [Naming Policy](#naming-policy)) was technically a breaking change relative to the earlier names: the unprefixed names were removed and no compatibility aliases are provided, so call sites must use the prefixed names. It took place during the initial development of the public API, before `1.0.0` was reached, while `POSHLI_VERSION` was still `0.y.z`. Under the pre-1.0.0 policy described above, the change required no MAJOR increment: the API was still in development and no compatibility guarantee was in force. This is recorded as project history, **not** as an exception to Semantic Versioning. Compatibility guarantees begin at `1.0.0`: from that release onward, the increments described above define what each change must follow.
 
 ### Debian packaging (future)
 
@@ -274,7 +280,7 @@ Developers: [DEVELOPER.md](.github/DEVELOPER.md) documents the full criteria for
 
 | Variable | Description |
 | :--- | :--- |
-| `POSHLI_VERSION` | Constant string exposed by the loaded library containing the current POSHLI release version (e.g. `'1.0.0'`). |
+| `POSHLI_VERSION` | Constant string exposed by the loaded library containing the current POSHLI release version (e.g. `'0.5.0'`). |
 
 ---
 
