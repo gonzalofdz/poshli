@@ -11,7 +11,7 @@ Thank you for contributing to the **POSHLI** project. All contributions that ali
 - **Primary Target**: POSIX-compatible `/bin/sh` (DASH, BusyBox `sh`, `bash --posix`).
 - **Standard**: Strict conformance to the POSIX Shell Command Language (IEEE Std 1003.1).
 - **Test Platform**: Linux is the primary continuous-integration platform. macOS and the BSDs are supported targets where the required standard utilities behave portably, but they are not all continuously tested.
-- **Portability Principle**: Prefer POSIX syntax and widely available standard utilities. Avoid shell-specific extensions and undocumented tool behavior.
+- **Portability Principle**: Prefer POSIX syntax and widely available standard utilities. Avoid shell-specific extensions and undocumented tool behavior. Dependency decisions follow the POSIX-first policy in section 4.
 
 ---
 
@@ -33,7 +33,61 @@ Every POSHLI function must strictly follow one of two predictable behaviors:
 
 ---
 
-## 4. Use of Standard Tools & Built-ins
+## 4. Dependency Policy (POSIX-first)
+
+The architectural policy for dependencies, portability and external tools is **POSIX-first**:
+
+> Poshli prioritizes implementations based on POSIX shell and utilities specified by POSIX. Non-POSIX dependencies must be avoided whenever a reasonable, maintainable POSIX alternative exists.
+
+This does **not** mean "pure shell". POSIX utilities such as `awk`, `sed`, `grep`, `tr`, `od`, `printf` or `wc` are part of the allowed model when they provide a clear advantage. The public summary lives in the *Dependency Policy* section of `README.md`; this section is the working rulebook.
+
+### 4.1 Dependency levels
+
+1. **POSIX shell / core**: small, clear operations implemented directly with POSIX shell when reasonable. Do not create unnecessary external processes for trivial operations.
+2. **POSIX utilities**: tools specified by POSIX (`awk`, `sed`, `grep`, `tr`, `od`, `wc`, ...) when they provide greater robustness, greater clarity, or capabilities that would be unnecessarily complex in pure shell. Do not reinvent mature tools merely to avoid running an external process.
+3. **Optional improvements**: non-POSIX tools may be used only when they provide a clearly justified improvement: performance, experience, or explicitly additional capabilities. They must never silently change the basic semantics of a function according to the tools installed: the same function with the same arguments must have deterministic semantics within its documented contract.
+4. **Explicit exceptions**: when no reasonable, maintainable POSIX alternative exists, a non-POSIX dependency may exist when it is:
+   - explicitly documented;
+   - justified;
+   - limited in scope;
+   - never failing silently;
+   - explicit about what happens when the dependency is unavailable.
+
+   An exception must not automatically become a global dependency of the whole library when it only affects one feature. Current exceptions and pending corrections are listed in *Current dependency status* of the *Dependency Policy* section in `README.md`.
+
+### 4.2 Criteria for introducing a dependency
+
+Before introducing an external tool, evaluate:
+
+1. Can the operation be done simply and robustly with POSIX shell?
+2. Does an adequate POSIX utility exist?
+3. Would the POSIX alternative be reasonably maintainable?
+4. Does the external tool provide a real advantage in correctness, robustness, performance, or capability?
+5. Does it introduce an unnecessary runtime dependency?
+6. Can it affect determinism?
+7. How does the feature behave when the tool is unavailable?
+
+### 4.3 Priorities
+
+POSIX is not pursued at any cost. The architectural order of priorities is:
+
+```text
+correctness
+→ portability
+→ determinism
+→ maintainability
+→ simplicity
+```
+
+A huge, fragile, or hard-to-maintain POSIX implementation is not automatically better than a well-justified external exception.
+
+### 4.4 Determinism
+
+> Optional dependencies must not silently change the semantics of an existing function.
+
+An optional improvement may speed up an implementation, but the same input must not produce an incompatible result depending on the machine. If an additional capability requires another tool, it must be exposed or documented explicitly as such.
+
+### 4.5 Practical rules for standard tools
 
 - **Pragmatic POSIX**: Leverage standard POSIX utilities (`awk`, `sed`, `od`, `wc`, `tr`, `test`) when they provide a clean, tested, and reliable solution.
 - **Pure Shell When Practical**: Use standard shell built-in expansions (`case`, `${#var}`, `${var#pattern}`, `${var%pattern}`) for operations that are faster, simpler, and zero-fork.

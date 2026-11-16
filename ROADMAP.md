@@ -14,10 +14,11 @@ Practical, living record of Poshli development: what is done, what is active, an
 - [x] Dependency, determinism and POSIX compatibility analysis (`fs_is_plain_text`, `encoding.sh`, case mapping, return codes).
 - [x] Adopt the POSIX-first dependency policy formally (levels: shell/POSIX core, POSIX utilities, optional improvements, explicit exceptions; README *Dependency Policy*, DEVELOPER.md).
 - [x] Make `fs_is_plain_text` POSIX and deterministic (documented byte heuristic with POSIX utilities instead of `file(1)`; defined semantics and behavior).
+- [x] Replace the Base64 backend with a POSIX-only implementation (`od` + `wc` + `awk` + `printf`), using a single code path with no external fallback.
 
 ## Current
 
-- [ ] Document the dependency separation clearly (the policy levels are documented; the per-function classification completes once Base64 is corrected):
+- [ ] Document the dependency separation clearly (the policy levels and the library-wide dependency status are documented, and Base64 has no non-POSIX exception left; the per-function classification is still missing: `num_randomize` depends on POSIX `awk` and is not classified, `str_len_bytes` is documented as `wc -c` although it also normalizes the output with `awk`, and the pure POSIX shell functions are not identified as level 1):
 	- shell / pure POSIX;
 	- POSIX utilities;
 	- optional extensions or improvements;
@@ -25,7 +26,6 @@ Practical, living record of Poshli development: what is done, what is active, an
 
 ## Next
 
-- [ ] Replace the Base64 backend with a POSIX-only implementation (`od` + `awk` + `printf`), single code path with no external fallback, if it remains the approved architectural solution after implementation and review.
 - [ ] Review and normalize return-code semantics (0 true/success, 1 false/invalid input, 2 not evaluable) and align README, DEVELOPER.md, CONTRIBUTING.md and tests.
 - [ ] Update documentation and tests for the changes above (Dependencies section, per-function contracts).
 - [ ] Audit `src/num.sh` for generic utilities needed by future modules.

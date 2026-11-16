@@ -11,8 +11,8 @@
 - **Module-namespaced API**: Every public function carries its module prefix (`num_is_integer`, `str_trim`, `fs_is_file`, `encoding_base64_encode`), so names are predictable and collisions with user code are unlikely. See [Naming Policy](#naming-policy).
 - **Self-contained bundle**: Distributed as a single file (`poshli.sh`) ready for direct inclusion or project vendoring.
 - **Predictable return codes**: Boolean predicates return `0` (true) or `1` (false); an absent, empty, or invalid input is treated as false when the predicate can answer the question. Operational functions return `1` when the input is invalid or the operation cannot be performed correctly, and may return `2` for invalid usage, such as a missing mandatory argument.
-- **Unicode-aware helpers**: `str_len` counts Unicode code points in valid UTF-8 independently of the locale and rejects invalid UTF-8. `str_lower`/`str_upper` apply Unicode case mapping (Latin, Greek and Cyrillic guaranteed) with data generated into the library itself, so the result is identical in every locale, shell and `awk`; valid code points without a mapping (emoji, CJK, symbols) are preserved unchanged and invalid UTF-8 is rejected with status `1`.
-- **Minimal dependencies (POSIX-first)**: Built around the POSIX shell and standard POSIX utilities (`od`, `awk`, `wc`, `tr`) following the [Dependency Policy](#dependency-policy). Non-POSIX tools appear only as documented, explicit exceptions (`base64` in `encoding.sh`). Case mapping works over numeric code points with data generated at development time (Python is a development-only tool): the runtime needs no Unicode database, no extra tool, and no Unicode-aware `awk`.
+- **Unicode-aware helpers**: `str_len` counts Unicode code points in valid UTF-8 independently of the locale and rejects invalid UTF-8. `str_lower`/`str_upper` apply Unicode case mapping (Latin, Greek and Cyrillic guaranteed) with data generated into the library itself, so the result is identical in every locale and shell and cannot vary between conforming `awk` implementations (see [Testing](#testing) for the `awk` implementations actually verified); valid code points without a mapping (emoji, CJK, symbols) are preserved unchanged and invalid UTF-8 is rejected with status `1`.
+- **Minimal dependencies (POSIX-first)**: Built around the POSIX shell and standard POSIX utilities (`od`, `awk`, `wc`) following the [Dependency Policy](#dependency-policy). No non-POSIX tool is needed at runtime: Base64 encoding and decoding are implemented with `od`, `wc`, `awk` and the shell `printf`, without the external `base64` command. Case mapping works over numeric code points with data generated at development time (Python is a development-only tool): the runtime needs no Unicode database, no extra tool, and no Unicode-aware `awk`.
 
 ---
 
@@ -260,8 +260,8 @@ A huge, fragile, or hard-to-maintain POSIX implementation is not automatically b
 
 ### Current dependency status
 
-- **Required at runtime**: a POSIX shell and the POSIX utilities `od`, `awk`, `wc` and `tr`. No Python, Perl or Node.js dependency is introduced at runtime.
-- **Documented exception (level 4)**: `base64` (not specified by POSIX) backs `encoding_base64_encode`/`encoding_base64_decode`. The functions return `1` when no usable `base64` backend is available; see [Encoding](#4-encoding-encodingsh).
+- **Required at runtime**: a POSIX shell and the POSIX utilities `od`, `awk` and `wc` (the test suite additionally uses `tr` and other standard tools). No Python, Perl or Node.js dependency is introduced at runtime.
+- **Non-POSIX exceptions (level 4)**: none at runtime. `encoding_base64_encode`/`encoding_base64_decode` are implemented with `od`, `wc`, `awk` and the shell `printf`; the external `base64` command (not specified by POSIX) is not used; see [Encoding](#4-encoding-encodingsh).
 - **Development only**: Python 3 generates the case-mapping data (`tools/gen_case.py`); it is never a runtime dependency.
 
 Developers: [DEVELOPER.md](.github/DEVELOPER.md) documents the full criteria for introducing a dependency.
@@ -350,18 +350,22 @@ POSHLI distinguishes boolean predicates from operational functions:
 
 ### 4. Encoding (`encoding.sh`)
 
-`base64` is **not** part of POSIX, so it is treated as a documented external dependency (level 4 of the [Dependency Policy](#dependency-policy)). POSHLI detects a usable decode flag functionally at load time (`-d` or `-D`) and does not add fallbacks such as `openssl`, Python, or `uudecode`.
+The external `base64` command is **not** used: it is not specified by POSIX and its decode flag varies between implementations (`-d` or `-D`). Both functions are implemented with the POSIX utilities `od`, `wc` and `awk` and the shell `printf`, with a single code path and no fallbacks such as `openssl`, Python, or `uudecode`. Because a POSIX pipeline reports the status of its last command only, `encoding_base64_encode` validates what `od` actually produced (the expected byte count from `wc -c` and the field values seen by `awk`); the Base64 result is captured first and only printed on success, so no partial Base64 output is emitted on error.
 
 | Function | Description |
 | :--- | :--- |
-| `encoding_base64_encode <str>` | Prints `$1` encoded in standard Base64 as a single line. Extra arguments are ignored. Returns 1 if encoding fails or if no usable `base64` backend is available, or 2 if no argument is passed. |
-| `encoding_base64_decode <str>` | Decodes strict standard Base64 (RFC 4648) from `$1` and writes decoded bytes directly to stdout. The empty string is valid and produces no output. Extra arguments are ignored. Returns 1 if the input is invalid, decoding fails, or no usable `base64` backend is available; 2 if no argument is passed. |
+| `encoding_base64_encode <str>` | Prints `$1` encoded in standard Base64 as a single line. Extra arguments are ignored. Returns 0 on success; 1 if encoding fails, including `od` or `wc` unavailable or producing inconsistent output (no partial Base64 output is emitted on error), or a write error while printing the result; 2 if no argument is passed. |
+| `encoding_base64_decode <str>` | Decodes strict standard Base64 (RFC 4648) from `$1` and writes decoded bytes directly to stdout. The empty string is valid and produces no output. Extra arguments are ignored. Returns 1 if the input is invalid, decoding fails, or a write error occurs while writing the decoded bytes; 2 if no argument is passed. |
 
 `encoding_base64_decode` accepts only the standard alphabet (`A-Z a-z 0-9 + /`), correct `=` padding, and a length multiple of 4. It rejects whitespace, line breaks, base64url (`-`/`_`), missing padding, and malformed padding. When POSHLI's validation rejects the input, no output is produced.
 
 > Base64 is an encoding, not an encryption: it provides no confidentiality.
 >
 > Capturing output with `$(...)` is not suitable for binary/NUL data and removes trailing newlines. Redirect decoded binary output to a file instead.
+>
+> **Performance and size scope (indicative figures only)**: the measurements behind this contract cover inputs up to **5 MB**; larger inputs are neither excluded nor guaranteed. Times and peak memory were taken in the environment used for development (dash 0.5.12 with GNU awk 5.2.1): `encoding_base64_encode` took about 0.5 s for 1 MB and about 2.8 s for 5 MB, with an observed peak memory of about 10 MB and about 44 MB; with mawk 1.3.4 the 5 MB run took about 1.9 s and about 44 MB. `encoding_base64_decode` took about 2.4 s for 5 MB with an observed peak of about 109 MB. These are measurements of specific runs in one environment, **not** performance guarantees and **not** maximum input limits.
+>
+> **Memory**: the encoder's `awk` stage streams the input and uses constant memory; the peak is a small multiple of the input size because the result is captured before printing to keep the "no partial Base64 output is emitted on error" guarantee (the decoder's captured escape text is the same kind of buffer). As a reference for the improvement, the previous implementation buffered the whole input inside `awk` and reached about 127 MB for 1 MB and about 626 MB for 5 MB with GNU awk (about 332 MB for 5 MB with mawk 1.3.4).
 
 ---
 
@@ -388,7 +392,7 @@ POSHLI distinguishes three concepts that are often all called "length":
 
 ### Case mapping (`str_lower` / `str_upper`)
 
-`str_lower`/`str_upper` apply Unicode case mapping with POSHLI's own generated data. The result is identical in every shell, locale and `awk` implementation: the conversion never uses the locale, never uses `tolower()`/`toupper()` from `awk`, and never depends on any Unicode capability of the platform.
+`str_lower`/`str_upper` apply Unicode case mapping with POSHLI's own generated data. The result cannot vary with the shell, the locale or the `awk` implementation: the conversion never uses the locale, never uses `tolower()`/`toupper()` from `awk`, and never depends on any Unicode capability of the platform; the `awk` code uses only POSIX `awk` features. Which `awk` implementations the test suite has actually been verified against is stated in [Testing](#testing).
 
 The input is validated and decoded from UTF-8 exactly like `str_len`, converted per code point, and re-encoded to UTF-8. All intermediate processing happens over ASCII text and numbers (`od`, POSIX `awk`, `printf`); no tool ever interprets non-ASCII text. The mapping data (`src/case_data.sh`) is generated at development time by `tools/gen_case.py` from the Unicode Character Database (Unicode 15.0.0) and compiled into the `poshli.sh` bundle, so the runtime needs no external Unicode database and no Python.
 
@@ -411,7 +415,7 @@ Invalid UTF-8 is rejected exactly like `str_len`: `str_lower`/`str_upper` print 
 
 These are the requirements of the Unicode helpers; see the [Dependency Policy](#dependency-policy) for the complete dependency picture of the library.
 
-- **Required**: a POSIX shell and the standard POSIX utilities `od`, `awk`, `wc` and `tr`. These are mandatory in POSIX environments and require no extra installation.
+- **Required**: a POSIX shell and the standard POSIX utilities `od`, `awk` and `wc`. These are mandatory in POSIX environments and require no extra installation.
 - **Unicode case mapping**: the data is generated into `src/case_data.sh` at development time by `tools/gen_case.py` (Python 3, development only) and ships inside `poshli.sh`. The runtime does not need Python, an external Unicode database, or a Unicode-aware `awk`.
 - No Python, Perl or Node.js dependency is introduced **at runtime**.
 
@@ -453,7 +457,7 @@ fi
 
 ## Testing
 
-POSHLI includes a self-contained automated test suite that runs under standard POSIX shells and uses only standard utilities. The number of tests adapts to the environment: locale-dependent tests run only when a UTF-8 locale is available. The case-mapping tests are environment-independent, because `str_lower`/`str_upper` are guaranteed to behave identically with any `awk` and in any locale:
+POSHLI includes a self-contained automated test suite that runs under standard POSIX shells and uses only standard utilities. The number of tests adapts to the environment: locale-dependent tests run only when a UTF-8 locale is available. The case-mapping tests are environment-independent, because `str_lower`/`str_upper` never consult the locale or any Unicode behavior of the `awk` implementation and the expectations are fixed vectors:
 
 ```sh
 # Run test suite against modular sources (src/):
@@ -465,6 +469,8 @@ make test-bundle
 # Verify the committed bundle is synchronized with src/:
 make check-bundle
 ```
+
+> **`awk` implementation coverage (designed vs. verified)**: the library's `awk` code uses only POSIX `awk` features and never the locale, so its results are designed not to vary between conforming `awk` implementations. What the test suite has actually been verified against is narrower: the full suite (575 tests) passes with **GNU awk 5.2.1** under each of `dash`, BusyBox `sh` and `bash --posix`, against both the modular sources and the `poshli.sh` bundle. Runs under BusyBox `sh` use the system's GNU awk: the shell and the `awk` implementation are separate dimensions, and a `busybox sh` run is not a BusyBox `awk` run. The Base64 encoder and its failure paths have additionally been exercised with **mawk 1.3.4**, which was also used for some of the performance figures in [Encoding](#4-encoding-encodingsh). **BusyBox `awk`, macOS `awk` and BSD `awk` have not been verified by the test suite**: they are supported targets of the POSIX `awk` code, not tested platforms.
 
 ---
 
