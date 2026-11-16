@@ -116,11 +116,64 @@ fs_is_empty_file() {
 
 fs_is_plain_text() {
 	[ $# -ge 1 ] || return 2
-	[ -r "$1" ] || return 1
+	[ -f "$1" ] && [ -r "$1" ] || return 1
 
 	case $1 in -*) set -- "./$1" ;; esac
 
-	LC_ALL=C file -b -L "$1" | grep -q 'text'
+	if ! _pt_raw=$(LC_ALL=C od -A n -v -t u1 -N 4096 "$1" 2>/dev/null); then
+		unset _pt_raw
+		return 1
+	fi
+
+	if printf '%s\n' "$_pt_raw" | LC_ALL=C awk '
+		BEGIN {
+			ok = 1
+			need = 0
+			n = 0
+			nlo = 128
+			nhi = 191
+		}
+		{
+			for (i = 1; i <= NF; i++) {
+				if (!ok) continue
+				b = $i + 0
+				n++
+				if (need > 0) {
+					if (b < nlo || b > nhi) { ok = 0; continue }
+					cp = cp * 64 + (b - 128)
+					need--
+					if (need == 0) {
+						if (cp >= 128 && cp <= 159) ok = 0
+					} else { nlo = 128; nhi = 191 }
+					continue
+				}
+				if (b < 128) {
+					if (b == 9 || b == 10 || b == 13 || (b >= 32 && b <= 126)) continue
+					ok = 0
+					continue
+				}
+				if (b < 194) { ok = 0; continue }
+				if (b < 224) { cp = b - 192; need = 1; nlo = 128; nhi = 191; continue }
+				if (b == 224) { cp = 0; need = 2; nlo = 160; nhi = 191; continue }
+				if (b < 237) { cp = b - 224; need = 2; nlo = 128; nhi = 191; continue }
+				if (b == 237) { cp = 13; need = 2; nlo = 128; nhi = 159; continue }
+				if (b < 240) { cp = b - 224; need = 2; nlo = 128; nhi = 191; continue }
+				if (b == 240) { cp = 0; need = 3; nlo = 144; nhi = 191; continue }
+				if (b < 244) { cp = b - 240; need = 3; nlo = 128; nhi = 191; continue }
+				if (b == 244) { cp = 4; need = 3; nlo = 128; nhi = 143; continue }
+				ok = 0
+			}
+		}
+		END {
+			if (ok && (need == 0 || n == 4096)) exit 0
+			exit 1
+		}
+	'; then
+		unset _pt_raw
+		return 0
+	fi
+	unset _pt_raw
+	return 1
 }
 fi
 
