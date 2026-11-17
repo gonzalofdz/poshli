@@ -214,18 +214,18 @@ Expected progression:
 
 The module-prefix renaming (see [Naming Policy](#naming-policy)) was technically a breaking change relative to the earlier names: the unprefixed names were removed and no compatibility aliases are provided, so call sites must use the prefixed names. It took place during the initial development of the public API, before `1.0.0` was reached, while `POSHLI_VERSION` was still `0.y.z`. Under the pre-1.0.0 policy described above, the change required no MAJOR increment: the API was still in development and no compatibility guarantee was in force. This is recorded as project history, **not** as an exception to Semantic Versioning. Compatibility guarantees begin at `1.0.0`: from that release onward, the increments described above define what each change must follow.
 
-### Debian packaging (future)
+### Debian packaging
 
-When Debian packages are produced, the package version separates the upstream version from the Debian revision:
+The repository includes an initial `debian/` directory that builds the `poshli` package. The package version separates the upstream version from the Debian revision:
 
 ```text
-1.1.0-1
+0.5.0-1
 ```
 
-- `1.1.0` — upstream Poshli version (`POSHLI_VERSION`).
+- `0.5.0` — upstream Poshli version (`POSHLI_VERSION`).
 - `-1` — first revision of the Debian package.
 
-A packaging-only change bumps only the revision (`1.1.0-2`) and leaves the upstream version untouched. Poshli keeps a clean upstream version (`1.0.0`, `1.1.0`, `1.1.1`, ...). Debian packaging is not implemented; this is documented only as the policy for future releases.
+A packaging-only change bumps only the revision (`0.5.0-2`) and leaves the upstream version untouched. The package installs the bundle at `/usr/share/poshli/poshli.sh`. The package has not been uploaded to Debian yet; the directory documents the current packaging state.
 
 ---
 
@@ -266,9 +266,9 @@ A huge, fragile, or hard-to-maintain POSIX implementation is not automatically b
 
 ### Current dependency status
 
-- **Required at runtime**: a POSIX shell and the POSIX utilities `od`, `awk` and `wc` (the test suite additionally uses `tr` and other standard tools). No Python, Perl or Node.js dependency is introduced at runtime.
+- **Required at runtime**: a POSIX shell and the POSIX utilities `od`, `awk` and `wc` (the test suite additionally uses `tr` and other standard tools). `od` and `wc` are POSIX utilities; on a minimal Debian/Ubuntu system `awk` is a virtual package provided by `mawk`, `gawk` or `original-awk` and may need to be installed explicitly. The Debian package declares `awk` as a dependency. No Python, Perl or Node.js dependency is introduced at runtime.
 - **Non-POSIX exceptions (level 4)**: none at runtime. `encoding_base64_encode`/`encoding_base64_decode` are implemented with `od`, `wc`, `awk` and the shell `printf`; the external `base64` command (not specified by POSIX) is not used; see [Encoding](#4-encoding-encodingsh).
-- **Development only**: Python 3 generates the case-mapping data (`tools/gen_case.py`); it is never a runtime dependency.
+- **Development only**: Python 3 generates the case-mapping data (`tools/gen_case.py`); it is never a runtime dependency. The generated data is derived from the Unicode Character Database, Unicode 15.0.0, under the Unicode License V3.
 
 ### Per-function dependency classification
 
@@ -328,7 +328,7 @@ POSHLI distinguishes boolean predicates from operational functions:
 | `num_is_natural <val>` | Returns 0 if `<val>` is a non-negative integer without sign (`0`, `1`, `42`). Rejects negative or explicit signs (`-1`, `+1`). |
 | `num_is_hex <val>` | Returns 0 if `<val>` is hexadecimal (`0xFF`, `1a`, `DEADBEEF`), with optional `0x`/`0X` prefix. |
 | `num_is_bin <val>` | Returns 0 if `<val>` is binary (`10110`, `0b1010`), with optional `0b`/`0B` prefix. |
-| `num_is_bool <val>` | Returns 0 if `<val>` is strictly `0`, `1`, `true`, `false`, `TRUE`, or `FALSE`. |
+| `num_is_bool <val>` | Returns 0 if `<val>` is a case-insensitive boolean literal: `0`, `1`, `true` or `false`. Rejects any other value. |
 | `num_randomize <limit>` | Prints a random integer from `0` to one less than `<limit>` (`num_randomize 5` prints `0`–`4`). Returns 1 if `<limit>` is not a natural number greater than `0`, or 2 if no argument is passed. |
 
 *The numeric predicates return `1` when the argument is missing or invalid. `num_randomize` returns `2` when no argument is passed. The randomness of `num_randomize` comes from the `awk` pseudo-random generator (not cryptographic; see the note in [Dependency Policy](#dependency-policy)).*
@@ -361,13 +361,13 @@ POSHLI distinguishes boolean predicates from operational functions:
 | :--- | :--- |
 | `str_empty [str]` | Returns 0 if `[str]` is empty (`""`) or if no argument is given. Returns 1 if `[str]` contains at least one character. |
 | `str_trim [str]` | Prints `[str]` with leading and trailing spaces and tabs removed. If no argument is given, treats it as empty string. Preserves internal spacing. Returns 0 on success. |
-| `str_lower [str]` | Prints `[str]` converted to lowercase with Unicode case mapping (guaranteed for ASCII, Latin, Greek and Cyrillic; every other code point with a generated mapping is converted too). Code points without a mapping (emoji, CJK, symbols, punctuation, combining marks) are preserved unchanged. Invalid UTF-8 prints nothing, writes a diagnostic to standard error, and returns `1`. If no argument is given, treats it as empty string and prints ``. See [Unicode Support](#unicode-support). |
+| `str_lower [str]` | Prints `[str]` converted to lowercase with Unicode case mapping (guaranteed for ASCII, Latin, Greek and Cyrillic; every other code point with a generated mapping is converted too). Code points without a mapping (emoji, CJK, symbols, punctuation, combining marks) are preserved unchanged. Invalid UTF-8 prints nothing, writes a diagnostic to standard error, and returns `1`; the same happens if `od` cannot read the input bytes. If no argument is given, treats it as empty string and prints ``. See [Unicode Support](#unicode-support). |
 | `str_upper [str]` | Prints `[str]` converted to uppercase. Same behavior as `str_lower`, including the unconditional one-to-many mappings (`str_upper "grüße"` prints `GRÜSSE`). |
 | `str_starts_with <str> <prefix>` | Returns 0 if `<str>` begins with `<prefix>`, and 1 otherwise. Returns 1 if arguments are missing or insufficient. |
 | `str_ends_with <str> <suffix>` | Returns 0 if `<str>` ends with `<suffix>`, and 1 otherwise. Returns 1 if arguments are missing or insufficient. |
 | `str_contains <str> <substr>` | Returns 0 if `<str>` contains `<substr>`, and 1 otherwise. Returns 1 if arguments are missing or insufficient. |
-| `str_len [str]` | Prints the number of Unicode code points in `[str]` (valid UTF-8). If no argument is given, treats it as empty string and prints `0`. Independent of `${#str}`, the shell, and the active locale. Combining marks and emoji components count separately; grapheme clusters are not counted. For invalid UTF-8, prints nothing, writes a diagnostic to standard error, and returns `1`. |
-| `str_len_bytes [str]` | Prints the exact number of bytes in `[str]` using `wc -c`, with the count normalized through `awk` (some BSD and macOS `wc` implementations pad counts with leading blanks). If no argument is given, treats it as empty string and prints `0`. Always locale-independent. Returns 0 on success. |
+| `str_len [str]` | Prints the number of Unicode code points in `[str]` (valid UTF-8). If no argument is given, treats it as empty string and prints `0`. Independent of `${#str}`, the shell, and the active locale. Combining marks and emoji components count separately; grapheme clusters are not counted. For invalid UTF-8, prints nothing, writes a diagnostic to standard error, and returns `1`. If `od` cannot read the input bytes, prints nothing, writes a diagnostic to standard error, and returns `1`. |
+| `str_len_bytes [str]` | Prints the exact number of bytes in `[str]` using `wc -c`, with the count normalized through `awk` (some BSD and macOS `wc` implementations pad counts with leading blanks). If no argument is given, treats it as empty string and prints `0`. Always locale-independent. Returns 0 on success. If `wc` cannot count the bytes or `awk` cannot normalize the count, prints nothing, writes a diagnostic to standard error, and returns `1`. |
 | `str_replace <search> <replace> <str>` | Prints `<str>` with all literal occurrences of `<search>` replaced with `<replace>`. Handles special characters safely. Returns `2` when arguments are insufficient. |
 
 *The operational functions that require multiple mandatory arguments (`str_replace`) return `2` when arguments are missing.*
@@ -420,7 +420,7 @@ POSHLI distinguishes three concepts that are often all called "length":
 
 `str_lower`/`str_upper` apply Unicode case mapping with POSHLI's own generated data. The result cannot vary with the shell, the locale or the `awk` implementation: the conversion never uses the locale, never uses `tolower()`/`toupper()` from `awk`, and never depends on any Unicode capability of the platform; the `awk` code uses only POSIX `awk` features. Which `awk` implementations the test suite has actually been verified against is stated in [Testing](#testing).
 
-The input is validated and decoded from UTF-8 exactly like `str_len`, converted per code point, and re-encoded to UTF-8. All intermediate processing happens over ASCII text and numbers (`od`, POSIX `awk`, `printf`); no tool ever interprets non-ASCII text. The mapping data (`src/case_data.sh`) is generated at development time by `tools/gen_case.py` from the Unicode Character Database (Unicode 15.0.0) and compiled into the `poshli.sh` bundle, so the runtime needs no external Unicode database and no Python.
+The input is validated and decoded from UTF-8 exactly like `str_len`, converted per code point, and re-encoded to UTF-8. All intermediate processing happens over ASCII text and numbers (`od`, POSIX `awk`, `printf`); no tool ever interprets non-ASCII text. The mapping data (`src/case_data.sh`) is generated at development time by `tools/gen_case.py` from the Unicode Character Database (Unicode 15.0.0) and compiled into the `poshli.sh` bundle, so the runtime needs no external Unicode database and no Python. The Unicode data is used under the Unicode License V3.
 
 What is mapped:
 
@@ -435,14 +435,15 @@ What is not applied (documented limitations):
 - **Language-specific tailoring**. No Turkish/Azerbaijani dotted and dotless `i`, no Lithuanian rules, no locale tailoring at all: `str_upper "i"` returns `I` in every locale.
 - **Case folding**. This is case mapping, not full case folding, and there is no normalization or grapheme-aware processing.
 
-Invalid UTF-8 is rejected exactly like `str_len`: `str_lower`/`str_upper` print nothing, write a diagnostic to standard error, and return `1`. For arbitrary binary data, use `str_len_bytes`; case conversion is not defined for binary data.
+Invalid UTF-8 is rejected exactly like `str_len`: `str_lower`/`str_upper` print nothing, write a diagnostic to standard error, and return `1`. If `od` cannot read the input bytes, they fail in the same closed way. For arbitrary binary data, use `str_len_bytes`; case conversion is not defined for binary data.
 
 ### Dependencies
 
 These are the requirements of the Unicode helpers; see the [Dependency Policy](#dependency-policy) for the complete dependency picture of the library.
 
-- **Required**: a POSIX shell and the standard POSIX utilities `od`, `awk` and `wc`. These are mandatory in POSIX environments and require no extra installation.
+- **Required**: a POSIX shell and the standard POSIX utilities `od`, `awk` and `wc`. `od` and `wc` are part of the POSIX-specified utilities; on a minimal Debian/Ubuntu system `awk` is a virtual package provided by `mawk`, `gawk` or `original-awk` and may need to be installed explicitly. If you are installing POSHLI from a Debian package, the package declares `awk` as a dependency.
 - **Unicode case mapping**: the data is generated into `src/case_data.sh` at development time by `tools/gen_case.py` (Python 3, development only) and ships inside `poshli.sh`. The runtime does not need Python, an external Unicode database, or a Unicode-aware `awk`.
+- The case-mapping data embedded in `src/case_data.sh` and in the bundle is derived from the Unicode Character Database, Unicode 15.0.0, and is used under the Unicode License V3.
 - No Python, Perl or Node.js dependency is introduced **at runtime**.
 
 ---
@@ -496,7 +497,7 @@ make test-bundle
 make check-bundle
 ```
 
-> **`awk` implementation coverage (designed vs. verified)**: the library's `awk` code uses only POSIX `awk` features and never the locale, so its results are designed not to vary between conforming `awk` implementations. What the test suite has actually been verified against: the full suite (575 tests), against both the modular sources and the `poshli.sh` bundle, passes with **GNU awk 5.2.1** under `dash` and `bash --posix`, with **mawk 1.3.4** under `dash` and `bash --posix`, and with **BusyBox `awk` 1.36.1** under `dash`, BusyBox `sh` and `bash --posix`; mawk was also used for some of the performance figures in [Encoding](#4-encoding-encodingsh). The shell and the `awk` implementation are separate dimensions, but they are not always independently selectable: a BusyBox built with standalone applet execution (as in the development environment) runs the BusyBox `awk` applet from `busybox sh` regardless of `PATH`, so there a `busybox sh` run is a `BusyBox awk` run and the combination BusyBox `sh` + GNU `awk` cannot be exercised. **macOS `awk` and BSD `awk` have not been verified by the test suite**: they are supported targets of the POSIX `awk` code, not tested platforms.
+> **`awk` implementation coverage (designed vs. verified)**: the library's `awk` code uses only POSIX `awk` features and never the locale, so its results are designed not to vary between conforming `awk` implementations. What the test suite has actually been verified against: the full suite (583 tests), against both the modular sources and the `poshli.sh` bundle, passes with **GNU awk 5.2.1** under `dash` and `bash --posix`, with **mawk 1.3.4** under `dash` and `bash --posix`, and with **BusyBox `awk` 1.36.1** under `dash`, BusyBox `sh` and `bash --posix`; mawk was also used for some of the performance figures in [Encoding](#4-encoding-encodingsh). The shell and the `awk` implementation are separate dimensions, but they are not always independently selectable: a BusyBox built with standalone applet execution (as in the development environment) runs the BusyBox `awk` applet from `busybox sh` regardless of `PATH`, so there a `busybox sh` run is a `BusyBox awk` run and the combination BusyBox `sh` + GNU `awk` cannot be exercised. **macOS `awk` and BSD `awk` have not been verified by the test suite**: they are supported targets of the POSIX `awk` code, not tested platforms.
 
 ---
 
@@ -508,4 +509,14 @@ Contributions are welcome! Please refer to the [Contributing Guidelines](.github
 
 ## License
 
-GNU Lesser General Public License v3.0 ([LGPL-3.0](LICENSE)).
+SPDX-License-Identifier: `LGPL-3.0-only`
+
+POSHLI is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, version **3 of the License only**. See [LICENSE](LICENSE) for the full license text.
+
+### Using POSHLI in other programs
+
+POSHLI is a shell function library that a script loads with the POSIX dot (`.`) command, effectively combining the caller's script with the library at runtime. The GNU LGPL permits this kind of use in proprietary as well as free programs, provided you comply with the LGPL notice and source-provision requirements for the library itself.
+
+The LGPL's terminology ("Application", "Combined Work", "linking") was written primarily for compiled and dynamically-linked libraries. Loading a shell library with `.` / `source` is not exactly dynamic linking in the technical sense, but it is the idiomatic way to combine a shell script with a reusable library. If you distribute a program that incorporates POSHLI in this way, the LGPL requires you to give recipients the means to replace POSHLI with a modified version and to provide them with POSHLI's source code and license text. How best to satisfy the "relink" requirement for a shell script is not addressed explicitly in the LGPL text; if you need certainty for a specific distribution model, consult a lawyer or `debian-legal@lists.debian.org`.
+
+No additional restrictions are imposed on your own code beyond what the LGPL itself requires.

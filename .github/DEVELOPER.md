@@ -23,7 +23,7 @@ Every POSHLI function must strictly follow one of two predictable behaviors:
    - Silent: do not print anything to `stdout` or `stderr`.
    - Return `0` for true / condition met.
    - Return `1` for false / condition not met.
-   - Return `2` if required arguments are missing.
+   - Missing or empty/invalid input is treated as false (`1`) for predicates that can answer the question. The `fs_is_*` predicates currently return `2` when the path argument is missing; this is a documented exception, not a global rule.
 
 2. **Transformer / Producer Functions** (`str_trim`, `str_lower`, `str_upper`, `str_len`, `str_len_bytes`, `str_replace`):
    - Print the processed result to `stdout` using `printf '%s\n'`.
@@ -166,3 +166,9 @@ Every function added or modified must include unit tests in `tests/`:
   ```
 
   or a single shell: `dash tools/spike/roundtrip_spike.sh` (also `busybox sh ...` or `bash --posix ...`).
+
+---
+
+## 10. License
+
+All POSHLI source, test and tool files are licensed under `LGPL-3.0-only`. See `LICENSE` in the repository root for the full license text. The generated Unicode case-mapping data is additionally attributed to the Unicode Character Database under the Unicode License V3; see `src/case_data.sh`, `tools/gen_case.py` and `debian/copyright`.

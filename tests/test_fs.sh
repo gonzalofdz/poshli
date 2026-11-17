@@ -2,6 +2,10 @@
 #
 # POSHLI - Unit tests for fs.sh
 #
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+# This file is part of POSHLI. See LICENSE for the full license text.
+#
 
 TEST_DIR=$(cd "$(dirname "$0")" && pwd)
 . "$TEST_DIR/test_runner.sh"
@@ -23,10 +27,18 @@ fs_is_exec; assert_status 2 $? "fs_is_exec requires argument (status 2)"
 fs_is_empty_file; assert_status 2 $? "fs_is_empty_file requires argument (status 2)"
 fs_is_plain_text; assert_status 2 $? "fs_is_plain_text requires argument (status 2)"
 
-# Setup temporary test fixtures
+# Setup temporary test fixtures. Use a private directory under /tmp and make
+# sure it does not already exist (no mktemp on POSIX, so we loop on a PID-based
+# name if a collision is found).
 TMP_FIXTURE_DIR="/tmp/poshli_test_fs_$$"
+while [ -e "$TMP_FIXTURE_DIR" ]; do
+	TMP_FIXTURE_DIR="${TMP_FIXTURE_DIR}_x"
+done
+mkdir -p "$TMP_FIXTURE_DIR" || {
+	printf 'poshli test_fs: cannot create fixture directory %s\n' "$TMP_FIXTURE_DIR" >&2
+	exit 1
+}
 trap 'rm -rf "$TMP_FIXTURE_DIR"' 0 INT TERM HUP
-mkdir -p "$TMP_FIXTURE_DIR"
 
 REG_FILE="$TMP_FIXTURE_DIR/regular.txt"
 EMPTY_FILE="$TMP_FIXTURE_DIR/empty.txt"

@@ -1,6 +1,11 @@
 #!/bin/sh
+# shellcheck disable=SC2317  # od/wc shims are invoked indirectly by the str_* functions
 #
 # POSHLI - Unit tests for str.sh
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+# This file is part of POSHLI. See LICENSE for the full license text.
 #
 
 TEST_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -325,5 +330,59 @@ res=$(str_replace "*" "#" "star * and *"); assert_eq "star # and #" "$res" "str_
 res=$(str_replace "?" "!" "what? really?"); assert_eq "what! really!" "$res" "str_replace: question marks"
 res=$(str_replace "foo" "bar" "hello world"); assert_eq "hello world" "$res" "str_replace: pattern not found"
 res=$(str_replace "" "x" "hello"); assert_eq "hello" "$res" "str_replace: empty search"
+
+# POSIX pipelines only report the last command's status. Functions that rely
+# on od or wc must detect a tool failure and fail closed instead of returning
+# success with an empty or partial result. The checks run in subshells so the
+# shims do not leak into the rest of the suite; each subshell exit status is
+# asserted in the parent so the suite counters are updated.
+(
+	od() { return 127; }
+	res=$(str_len "hello" 2>/dev/null)
+	[ $? -eq 1 ]
+)
+assert_true $? "str_len fails closed when od is unavailable"
+(
+	od() { return 127; }
+	res=$(str_len "hello" 2>/dev/null)
+	[ -z "$res" ]
+)
+assert_true $? "str_len prints nothing when od is unavailable"
+(
+	od() { return 127; }
+	res=$(str_lower "HELLO" 2>/dev/null)
+	[ $? -eq 1 ]
+)
+assert_true $? "str_lower fails closed when od is unavailable"
+(
+	od() { return 127; }
+	res=$(str_lower "HELLO" 2>/dev/null)
+	[ -z "$res" ]
+)
+assert_true $? "str_lower prints nothing when od is unavailable"
+(
+	od() { return 127; }
+	res=$(str_upper "hello" 2>/dev/null)
+	[ $? -eq 1 ]
+)
+assert_true $? "str_upper fails closed when od is unavailable"
+(
+	od() { return 127; }
+	res=$(str_upper "hello" 2>/dev/null)
+	[ -z "$res" ]
+)
+assert_true $? "str_upper prints nothing when od is unavailable"
+(
+	wc() { return 127; }
+	res=$(str_len_bytes "hello" 2>/dev/null)
+	[ $? -eq 1 ]
+)
+assert_true $? "str_len_bytes fails closed when wc is unavailable"
+(
+	wc() { return 127; }
+	res=$(str_len_bytes "hello" 2>/dev/null)
+	[ -z "$res" ]
+)
+assert_true $? "str_len_bytes prints nothing when wc is unavailable"
 
 test_summary

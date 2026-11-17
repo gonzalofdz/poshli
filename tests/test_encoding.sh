@@ -2,6 +2,10 @@
 #
 # POSHLI - Unit tests for encoding.sh
 #
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+# This file is part of POSHLI. See LICENSE for the full license text.
+#
 
 TEST_DIR=$(cd "$(dirname "$0")" && pwd)
 . "$TEST_DIR/test_runner.sh"
@@ -28,7 +32,7 @@ encoding_base64_decode; assert_status 2 $? "encoding_base64_decode requires argu
 
 # The POSIX implementation must never invoke an external base64 utility:
 # a base64() shim would record every call in a marker file and fail.
-_b64_marker="${TMPDIR:-/tmp}/poshli_b64_probe.$$"
+_b64_marker="${TMPDIR:-/tmp}/poshli_b64_probe_$$"
 rm -f "$_b64_marker"
 
 (

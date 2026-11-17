@@ -2,8 +2,15 @@
 #
 # POSHLI
 #
-# GNU Lesser General Public License v3.0
-
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+# This file is part of POSHLI. See LICENSE for the full license text.
+#
+# This bundle contains Unicode case mapping data derived from the Unicode
+# Character Database, Unicode 15.0.0. Unicode data copyright (C) 1991-2022
+# Unicode, Inc.; licensed under the Unicode License V3
+# <https://www.unicode.org/license.txt>.
+#
 [ -n "${_POSHLI_LOADED+x}" ] && return 0
 _POSHLI_LOADED=1
 
@@ -1663,11 +1670,16 @@ _poshli_case_map() {
 		return 2
 		;;
 	esac
+	_poshli_case_od=$(printf '%s' "$2" | LC_ALL=C od -A n -v -t u1) || {
+		unset _poshli_case_table _poshli_case_od
+		printf '%s\n' "poshli: $1: could not read input bytes" >&2
+		return 1
+	}
 	_poshli_case_out=$(
 		{
 			printf '%s\n' "$_poshli_case_table"
 			printf '!\n'
-			printf '%s' "$2" | LC_ALL=C od -A n -v -t u1
+			printf '%s\n' "$_poshli_case_od"
 		} | LC_ALL=C awk '
 			function hex2dec(s,   i, n, c) {
 				n = 0
@@ -1774,12 +1786,12 @@ _poshli_case_map() {
 			}
 		'
 	) || {
-		unset _poshli_case_table _poshli_case_out
+		unset _poshli_case_table _poshli_case_out _poshli_case_od
 		printf '%s\n' "poshli: $1: input is not valid UTF-8" >&2
 		return 1
 	}
 	printf '%b\n' "$_poshli_case_out"
-	unset _poshli_case_table _poshli_case_out
+	unset _poshli_case_table _poshli_case_out _poshli_case_od
 }
 
 str_lower() {
@@ -1827,7 +1839,12 @@ str_len() {
 		printf '0\n'
 		return
 	fi
-	if ! printf '%s' "$1" | LC_ALL=C od -A n -v -t u1 | LC_ALL=C awk '
+	_poshli_str_len_od=$(printf '%s' "$1" | LC_ALL=C od -A n -v -t u1) || {
+		unset _poshli_str_len_od
+		printf '%s\n' "poshli: str_len: could not read input bytes" >&2
+		return 1
+	}
+	if ! printf '%s\n' "$_poshli_str_len_od" | LC_ALL=C awk '
 		BEGIN {
 			n = 0
 			need = 0
@@ -1911,9 +1928,11 @@ str_len() {
 				exit 1
 		}
 	'; then
+		unset _poshli_str_len_od
 		printf '%s\n' "poshli: str_len: input is not valid UTF-8" >&2
 		return 1
 	fi
+	unset _poshli_str_len_od
 	return 0
 }
 
@@ -1922,7 +1941,23 @@ str_len_bytes() {
 		printf '0\n'
 		return
 	fi
-	printf '%s' "$1" | wc -c | awk '{print $1}'
+	_poshli_str_len_bytes_count=$(printf '%s' "$1" | LC_ALL=C wc -c) || {
+		unset _poshli_str_len_bytes_count
+		printf '%s\n' "poshli: str_len_bytes: could not count bytes" >&2
+		return 1
+	}
+	if [ -z "$_poshli_str_len_bytes_count" ]; then
+		unset _poshli_str_len_bytes_count
+		printf '%s\n' "poshli: str_len_bytes: could not count bytes" >&2
+		return 1
+	fi
+	_poshli_str_len_bytes_result=$(printf '%s' "$_poshli_str_len_bytes_count" | LC_ALL=C awk '{print $1}') || {
+		unset _poshli_str_len_bytes_count _poshli_str_len_bytes_result
+		printf '%s\n' "poshli: str_len_bytes: could not normalize byte count" >&2
+		return 1
+	}
+	printf '%s\n' "$_poshli_str_len_bytes_result"
+	unset _poshli_str_len_bytes_count _poshli_str_len_bytes_result
 }
 
 str_replace() {
