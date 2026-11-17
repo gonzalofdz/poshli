@@ -2,6 +2,10 @@
 #
 # POSHLI - Unit tests for num.sh
 #
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+# This file is part of POSHLI. See LICENSE for the full license text.
+#
 
 # Locate test_runner.sh and num.sh
 TEST_DIR=$(cd "$(dirname "$0")" && pwd)

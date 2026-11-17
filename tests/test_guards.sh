@@ -1,7 +1,10 @@
 #!/bin/sh
 #
 # POSHLI - Unit tests for load guards and bundle integration
-# GNU Lesser General Public License v3.0
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+# This file is part of POSHLI. See LICENSE for the full license text.
 #
 
 TEST_DIR=$(cd "$(dirname "$0")" && pwd)

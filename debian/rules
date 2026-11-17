@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	@if [ ! -f poshli.sh ]; then \
+		$(MAKE) bundle; \
+	fi
+	$(MAKE) check-bundle
+
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+override_dh_auto_test:
+	$(MAKE) test
+	$(MAKE) test-bundle
+endif
+
+override_dh_auto_install:
+	@:

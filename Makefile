@@ -1,6 +1,10 @@
 #
 # POSHLI Makefile
 #
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+# This file is part of POSHLI. See LICENSE for the full license text.
+#
 
 PREFIX ?= $(HOME)/.local
 DESTDIR ?=
@@ -18,7 +22,7 @@ bundle: $(BUNDLE_OUTPUT)
 $(BUNDLE_OUTPUT): $(BUNDLE_SOURCES) Makefile
 	@printf 'Generating %s bundle...\n' "$@"
 	@rm -f "$@.tmp"
-	@printf '#!/bin/sh\n#\n# POSHLI\n#\n# GNU Lesser General Public License v3.0\n\n' > "$@.tmp"
+	@printf '#!/bin/sh\n#\n# POSHLI\n#\n# SPDX-License-Identifier: LGPL-3.0-only\n# Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>\n# This file is part of POSHLI. See LICENSE for the full license text.\n#\n# This bundle contains Unicode case mapping data derived from the Unicode\n# Character Database, Unicode 15.0.0. Unicode data copyright (C) 1991-2022\n# Unicode, Inc.; licensed under the Unicode License V3\n# <https://www.unicode.org/license.txt>.\n#\n' > "$@.tmp"
 	@printf '[ -n "$${_POSHLI_LOADED+x}" ] && return 0\n_POSHLI_LOADED=1\n' >> "$@.tmp"
 	@awk '/^[[:space:]]*#/ { next } { print }' $(BUNDLE_SOURCES) >> "$@.tmp"
 	@chmod 644 "$@.tmp"

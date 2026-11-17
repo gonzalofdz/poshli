@@ -2,6 +2,10 @@
 #
 # POSHLI - Master test runner executing all test suites
 #
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+# This file is part of POSHLI. See LICENSE for the full license text.
+#
 
 TEST_DIR=$(cd "$(dirname "$0")" && pwd)
 SH_CMD="${POSHLI_TEST_SHELL:-/bin/sh}"

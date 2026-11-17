@@ -2,7 +2,9 @@
 #
 #  POSHLI - Isolated technical spike: portable UTF-8 byte transport
 #
-#  GNU Lesser General Public License v3.0
+#  SPDX-License-Identifier: LGPL-3.0-only
+#  Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+#  This file is part of POSHLI. See LICENSE for the full license text.
 #
 #  PURPOSE
 #  -------

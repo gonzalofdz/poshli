@@ -2,6 +2,10 @@
 #
 # POSHLI Test Runner Framework (POSIX-compliant)
 #
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+# This file is part of POSHLI. See LICENSE for the full license text.
+#
 
 TESTS_TOTAL=0
 TESTS_PASSED=0

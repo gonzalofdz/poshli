@@ -1,0 +1,25 @@
+Source: poshli
+Section: shells
+Priority: optional
+Maintainer: Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.0
+Homepage: https://github.com/gonzalofdz/poshli
+Vcs-Browser: https://github.com/gonzalofdz/poshli
+Vcs-Git: https://github.com/gonzalofdz/poshli.git
+Rules-Requires-Root: no
+
+Package: poshli
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends},
+         awk
+Description: POSIX Shell function library
+ POSHLI is a lightweight, general-purpose shell function library built
+ around portable POSIX shell syntax and widely available standard
+ utilities. It provides reusable functions for automation, text
+ processing, validation and everyday scripting.
+ .
+ The library is distributed as a single generated file (poshli.sh)
+ ready for inclusion with the POSIX dot command. It has no runtime
+ dependency on Python, Perl, Node.js or the external base64 command.
