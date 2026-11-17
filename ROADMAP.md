@@ -15,14 +15,9 @@ Practical, living record of Poshli development: what is done, what is active, an
 - [x] Adopt the POSIX-first dependency policy formally (levels: shell/POSIX core, POSIX utilities, optional improvements, explicit exceptions; README *Dependency Policy*, DEVELOPER.md).
 - [x] Make `fs_is_plain_text` POSIX and deterministic (documented byte heuristic with POSIX utilities instead of `file(1)`; defined semantics and behavior).
 - [x] Replace the Base64 backend with a POSIX-only implementation (`od` + `wc` + `awk` + `printf`), using a single code path with no external fallback.
+- [x] Document the dependency separation clearly (per-function dependency classification in README *Dependency Policy*, mapping every public function to the policy levels: the pure POSIX shell functions are identified as level 1, `num_randomize` is classified as POSIX `awk`, and `str_len_bytes` is corrected to `wc` plus `awk` output normalization; there are no level 3 optional improvements and no level 4 exceptions at runtime).
 
 ## Current
-
-- [ ] Document the dependency separation clearly (the policy levels and the library-wide dependency status are documented, and Base64 has no non-POSIX exception left; the per-function classification is still missing: `num_randomize` depends on POSIX `awk` and is not classified, `str_len_bytes` is documented as `wc -c` although it also normalizes the output with `awk`, and the pure POSIX shell functions are not identified as level 1):
-	- shell / pure POSIX;
-	- POSIX utilities;
-	- optional extensions or improvements;
-	- explicit exceptions.
 
 ## Next
 

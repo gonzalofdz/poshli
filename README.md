@@ -270,6 +270,26 @@ A huge, fragile, or hard-to-maintain POSIX implementation is not automatically b
 - **Non-POSIX exceptions (level 4)**: none at runtime. `encoding_base64_encode`/`encoding_base64_decode` are implemented with `od`, `wc`, `awk` and the shell `printf`; the external `base64` command (not specified by POSIX) is not used; see [Encoding](#4-encoding-encodingsh).
 - **Development only**: Python 3 generates the case-mapping data (`tools/gen_case.py`); it is never a runtime dependency.
 
+### Per-function dependency classification
+
+Every public function is classified with the [dependency levels](#dependency-levels) above. Shell builtins and shell constructs (`test`/`[`, `printf`, `case`, parameter expansion, `unset`) count as **level 1** (POSIX shell / core); every POSIX utility executed as an external process counts as **level 2**. All runtime dependencies are level 1 or 2: there are **no level 3 optional improvements and no level 4 exceptions at runtime**. Which `awk` implementations the code has actually been verified against is stated in [Testing](#testing); unlisted implementations are covered by design only.
+
+| Function | Level | External dependencies | Notes |
+| :--- | :--- | :--- | :--- |
+| `POSHLI_VERSION` | 1 | none | Constant variable. |
+| `num_is_integer`, `num_is_natural`, `num_is_number`, `num_is_hex`, `num_is_bin`, `num_is_octal`, `num_is_bool` | 1 | none | Pure POSIX shell (`case`, `test`). |
+| `num_randomize <limit>` | 2 | `awk` (`srand`, `rand`, `int`) | Randomness comes from the `awk` implementation's PRNG (see the note below). Indirect: `num_is_natural` (level 1). |
+| `fs_is_file`, `fs_is_dir`, `fs_is_readable`, `fs_is_writable`, `fs_is_exec`, `fs_is_empty_file` | 1 | none | Pure POSIX shell (`test`). |
+| `fs_is_plain_text` | 2 | `od`, `awk` | Also `test` (level 1). Documented byte heuristic; see [Filesystem](#2-filesystem-fssh). |
+| `str_empty`, `str_trim`, `str_starts_with`, `str_ends_with`, `str_contains`, `str_replace` | 1 | none | Pure POSIX shell (`test`, `case`, parameter expansion). |
+| `str_lower`, `str_upper` | 2 | `od`, `awk`, shell `printf` | Via the internal `_poshli_case_map`; the mapping data (`src/case_data.sh`) is embedded in the library, not an external dependency. |
+| `str_len` | 2 | `od`, `awk` | UTF-8 validation and code-point counting over byte numbers. |
+| `str_len_bytes` | 2 | `wc`, `awk` | `awk` only normalizes the `wc` output (some BSD and macOS `wc` pad counts with leading blanks); the count itself comes from `wc -c`. |
+| `encoding_base64_encode` | 2 | `wc`, `od`, `awk`, shell `printf` | Also `test`, `case`, parameter expansion (level 1). |
+| `encoding_base64_decode` | 2 | `awk`, shell `printf '%b'` | Input validation is pure POSIX shell (`case`, parameter expansion). |
+
+> **`num_randomize` randomness**: POSIX leaves the `awk` random-number generator and its default seed implementation-defined. The values are **not cryptographic**, their quality depends on the installed `awk` implementation, and consecutive calls within the same second can return the same value with implementations whose default seed has one-second resolution (observed with GNU awk and BusyBox awk). The contract is only "a random integer in `[0, limit)`".
+
 Developers: [DEVELOPER.md](.github/DEVELOPER.md) documents the full criteria for introducing a dependency.
 
 ---
@@ -311,7 +331,7 @@ POSHLI distinguishes boolean predicates from operational functions:
 | `num_is_bool <val>` | Returns 0 if `<val>` is strictly `0`, `1`, `true`, `false`, `TRUE`, or `FALSE`. |
 | `num_randomize <limit>` | Prints a random integer from `0` to one less than `<limit>` (`num_randomize 5` prints `0`–`4`). Returns 1 if `<limit>` is not a natural number greater than `0`, or 2 if no argument is passed. |
 
-*The numeric predicates return `1` when the argument is missing or invalid. `num_randomize` returns `2` when no argument is passed.*
+*The numeric predicates return `1` when the argument is missing or invalid. `num_randomize` returns `2` when no argument is passed. The randomness of `num_randomize` comes from the `awk` pseudo-random generator (not cryptographic; see the note in [Dependency Policy](#dependency-policy)).*
 
 ---
 
@@ -347,7 +367,7 @@ POSHLI distinguishes boolean predicates from operational functions:
 | `str_ends_with <str> <suffix>` | Returns 0 if `<str>` ends with `<suffix>`, and 1 otherwise. Returns 1 if arguments are missing or insufficient. |
 | `str_contains <str> <substr>` | Returns 0 if `<str>` contains `<substr>`, and 1 otherwise. Returns 1 if arguments are missing or insufficient. |
 | `str_len [str]` | Prints the number of Unicode code points in `[str]` (valid UTF-8). If no argument is given, treats it as empty string and prints `0`. Independent of `${#str}`, the shell, and the active locale. Combining marks and emoji components count separately; grapheme clusters are not counted. For invalid UTF-8, prints nothing, writes a diagnostic to standard error, and returns `1`. |
-| `str_len_bytes [str]` | Prints the exact number of bytes in `[str]` using `wc -c`. If no argument is given, treats it as empty string and prints `0`. Always locale-independent. Returns 0 on success. |
+| `str_len_bytes [str]` | Prints the exact number of bytes in `[str]` using `wc -c`, with the count normalized through `awk` (some BSD and macOS `wc` implementations pad counts with leading blanks). If no argument is given, treats it as empty string and prints `0`. Always locale-independent. Returns 0 on success. |
 | `str_replace <search> <replace> <str>` | Prints `<str>` with all literal occurrences of `<search>` replaced with `<replace>`. Handles special characters safely. Returns `2` when arguments are insufficient. |
 
 *The operational functions that require multiple mandatory arguments (`str_replace`) return `2` when arguments are missing.*
@@ -392,7 +412,7 @@ POSHLI distinguishes three concepts that are often all called "length":
 ### Length semantics
 
 - `str_len` counts **Unicode code points** in valid UTF-8. It uses `od` and `awk` to count UTF-8 leading bytes and validate the sequence, so the result is consistent across `dash`, BusyBox `sh`, and `bash --posix`, and independent of the active locale.
-- `str_len_bytes` counts **bytes** exactly and is always locale-independent. The `wc -c` output is normalized, because some BSD and macOS `wc` implementations pad the count with leading blanks.
+- `str_len_bytes` counts **bytes** exactly and is always locale-independent. The `wc -c` output is normalized with `awk`, because some BSD and macOS `wc` implementations pad the count with leading blanks.
 - Neither function counts **grapheme clusters** (visual characters). A combining mark or the components of a ZWJ emoji are counted separately. POSHLI does not normalize text, so `é` (U+00E9) and `e` + U+0301 are different code-point sequences even when they render identically.
 - For invalid UTF-8, `str_len` prints nothing, writes a diagnostic to standard error, and returns `1`. Use `str_len_bytes` when the data is not known to be valid UTF-8.
 
@@ -476,7 +496,7 @@ make test-bundle
 make check-bundle
 ```
 
-> **`awk` implementation coverage (designed vs. verified)**: the library's `awk` code uses only POSIX `awk` features and never the locale, so its results are designed not to vary between conforming `awk` implementations. What the test suite has actually been verified against is narrower: the full suite (575 tests) passes with **GNU awk 5.2.1** under each of `dash`, BusyBox `sh` and `bash --posix`, against both the modular sources and the `poshli.sh` bundle. Runs under BusyBox `sh` use the system's GNU awk: the shell and the `awk` implementation are separate dimensions, and a `busybox sh` run is not a BusyBox `awk` run. The Base64 encoder and its failure paths have additionally been exercised with **mawk 1.3.4**, which was also used for some of the performance figures in [Encoding](#4-encoding-encodingsh). **BusyBox `awk`, macOS `awk` and BSD `awk` have not been verified by the test suite**: they are supported targets of the POSIX `awk` code, not tested platforms.
+> **`awk` implementation coverage (designed vs. verified)**: the library's `awk` code uses only POSIX `awk` features and never the locale, so its results are designed not to vary between conforming `awk` implementations. What the test suite has actually been verified against: the full suite (575 tests), against both the modular sources and the `poshli.sh` bundle, passes with **GNU awk 5.2.1** under `dash` and `bash --posix`, with **mawk 1.3.4** under `dash` and `bash --posix`, and with **BusyBox `awk` 1.36.1** under `dash`, BusyBox `sh` and `bash --posix`; mawk was also used for some of the performance figures in [Encoding](#4-encoding-encodingsh). The shell and the `awk` implementation are separate dimensions, but they are not always independently selectable: a BusyBox built with standalone applet execution (as in the development environment) runs the BusyBox `awk` applet from `busybox sh` regardless of `PATH`, so there a `busybox sh` run is a `BusyBox awk` run and the combination BusyBox `sh` + GNU `awk` cannot be exercised. **macOS `awk` and BSD `awk` have not been verified by the test suite**: they are supported targets of the POSIX `awk` code, not tested platforms.
 
 ---
 

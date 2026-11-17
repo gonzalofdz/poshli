@@ -395,6 +395,10 @@ str_len() {
 str_len_bytes() {
 #	Prints the exact number of bytes in the argument.
 #
+#	The count comes from wc -c and is normalized through awk,
+#	because some BSD and macOS wc implementations pad counts
+#	with leading blanks. Both are POSIX utilities.
+#
 #	Example of use:
 #	BYTES=$(str_len_bytes "España")
 #

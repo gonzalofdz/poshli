@@ -55,6 +55,8 @@ This does **not** mean "pure shell". POSIX utilities such as `awk`, `sed`, `grep
 
    An exception must not automatically become a global dependency of the whole library when it only affects one feature. Current exceptions and pending corrections are listed in *Current dependency status* of the *Dependency Policy* section in `README.md`.
 
+   Every public function must be classified in the *Per-function dependency classification* table of `README.md`; update that table whenever a function's external tool usage changes.
+
 ### 4.2 Criteria for introducing a dependency
 
 Before introducing an external tool, evaluate:
