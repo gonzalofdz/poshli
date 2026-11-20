@@ -18,13 +18,14 @@ fi
 
 printf '\n--- Running fs.sh tests ---\n'
 
-# Argument count validation (returns 2 if no argument)
-fs_is_file; assert_status 2 $? "fs_is_file requires argument (status 2)"
-fs_is_dir; assert_status 2 $? "fs_is_dir requires argument (status 2)"
-fs_is_readable; assert_status 2 $? "fs_is_readable requires argument (status 2)"
-fs_is_writable; assert_status 2 $? "fs_is_writable requires argument (status 2)"
-fs_is_exec; assert_status 2 $? "fs_is_exec requires argument (status 2)"
-fs_is_empty_file; assert_status 2 $? "fs_is_empty_file requires argument (status 2)"
+# Argument count validation: predicates treat a missing argument as false (status 1);
+# fs_is_plain_text is operational and reports a missing argument as invalid usage (status 2).
+fs_is_file; assert_status 1 $? "fs_is_file requires argument (status 1)"
+fs_is_dir; assert_status 1 $? "fs_is_dir requires argument (status 1)"
+fs_is_readable; assert_status 1 $? "fs_is_readable requires argument (status 1)"
+fs_is_writable; assert_status 1 $? "fs_is_writable requires argument (status 1)"
+fs_is_exec; assert_status 1 $? "fs_is_exec requires argument (status 1)"
+fs_is_empty_file; assert_status 1 $? "fs_is_empty_file requires argument (status 1)"
 fs_is_plain_text; assert_status 2 $? "fs_is_plain_text requires argument (status 2)"
 
 # Setup temporary test fixtures. Use a private directory under /tmp and make

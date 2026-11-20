@@ -13,61 +13,67 @@ _POSHLI_FS_LOADED=1
 
 fs_is_file() {
 #	Returns 0 if the path exists and is a regular file.
+#	Returns 1 otherwise, including when no argument is passed.
 #
 #	Example of use:
 #	fs_is_file "$HOME/.profile" && echo "File exists" || echo "File does not exist"
 #
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	[ -f "$1" ]
 }
 
 fs_is_dir() {
 #	Returns 0 if the path exists and is a directory.
+#	Returns 1 otherwise, including when no argument is passed.
 #
 #	Example of use:
 #	fs_is_dir "$HOME" && echo "Directory exists" || echo "Directory does not exist"
 #
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	[ -d "$1" ]
 }
 
 fs_is_readable() {
 #	Returns 0 if the path exists and is readable.
+#	Returns 1 otherwise, including when no argument is passed.
 #
 #	Example of use:
 #	fs_is_readable "$HOME/.profile" && echo "File is readable" || echo "File is not readable"
 #
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	[ -r "$1" ]
 }
 
 fs_is_writable() {
 #	Returns 0 if the path exists and is writable.
+#	Returns 1 otherwise, including when no argument is passed.
 #
 #	Example of use:
 #	fs_is_writable "/tmp" && echo "Directory is writable" || echo "Directory is not writable"
 #
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	[ -w "$1" ]
 }
 
 fs_is_exec() {
 #	Returns 0 if the path exists and is executable.
+#	Returns 1 otherwise, including when no argument is passed.
 #
 #	Example of use:
 #	fs_is_exec "/bin/sh" && echo "File is executable" || echo "File is not executable"
 #
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	[ -x "$1" ]
 }
 
 fs_is_empty_file() {
 #	Returns 0 if the path is an existing regular file of size 0.
+#	Returns 1 otherwise, including when no argument is passed.
 #
 #	Example of use:
 #	fs_is_empty_file "/tmp/empty" && echo "File is empty" || echo "File is not empty or does not exist"
 #
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	[ -f "$1" ] && [ ! -s "$1" ]
 }
 

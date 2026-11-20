@@ -92,32 +92,32 @@ if [ -z "${_POSHLI_FS_LOADED+x}" ]; then
 _POSHLI_FS_LOADED=1
 
 fs_is_file() {
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	[ -f "$1" ]
 }
 
 fs_is_dir() {
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	[ -d "$1" ]
 }
 
 fs_is_readable() {
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	[ -r "$1" ]
 }
 
 fs_is_writable() {
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	[ -w "$1" ]
 }
 
 fs_is_exec() {
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	[ -x "$1" ]
 }
 
 fs_is_empty_file() {
-	[ $# -ge 1 ] || return 2
+	[ $# -ge 1 ] || return 1
 	[ -f "$1" ] && [ ! -s "$1" ]
 }
 
