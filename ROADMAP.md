@@ -24,7 +24,7 @@ Practical, living record of Poshli development: what is done, what is active, an
 
 ## Current
 
-- [ ] Publish the two local commits `ae2f0a7` and `b0345be` and confirm GitHub Actions CI.
+- [ ] Publish the pending local commits and confirm GitHub Actions CI.
 
 ## Next
 
