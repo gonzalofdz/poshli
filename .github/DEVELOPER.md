@@ -19,17 +19,19 @@ Thank you for contributing to the **POSHLI** project. All contributions that ali
 
 Every POSHLI function must strictly follow one of two predictable behaviors:
 
-1. **Predicate Functions** (`num_is_*`, `fs_is_*`, `str_empty`, `str_contains`, `str_starts_with`, `str_ends_with`):
+1. **Predicate Functions** (`num_is_*`, `fs_is_*` except `fs_is_plain_text`, `str_empty`, `str_contains`, `str_starts_with`, `str_ends_with`):
    - Silent: do not print anything to `stdout` or `stderr`.
    - Return `0` for true / condition met.
    - Return `1` for false / condition not met.
-   - Missing or empty/invalid input is treated as false (`1`) for predicates that can answer the question. The `fs_is_*` predicates currently return `2` when the path argument is missing; this is a documented exception, not a global rule.
+   - They never return `2`. Missing or empty/invalid input is treated as false (`1`) when the predicate can answer the question.
 
 2. **Transformer / Producer Functions** (`str_trim`, `str_lower`, `str_upper`, `str_len`, `str_len_bytes`, `str_replace`):
    - Print the processed result to `stdout` using `printf '%s\n'`.
    - Return `0` on success.
    - Return `1` if the input is invalid or the operation cannot be performed correctly.
    - Return `2` if required arguments are missing.
+
+`fs_is_plain_text` is an **operational function** even though its name starts with `is_`: it reads and analyses a file, returns `1` when the content is not plain text or cannot be evaluated, and returns `2` when its mandatory path argument is missing.
 
 ---
 
@@ -136,7 +138,7 @@ An optional improvement may speed up an implementation, but the same input must 
 Every function added or modified must include unit tests in `tests/`:
 1. Normal valid cases.
 2. Edge cases (empty strings `""`, spaces, special characters, leading hyphens `-n`).
-3. Argument validation checks (verifying status `2` on missing arguments).
+3. Argument validation checks: predicates expect status `1` when a mandatory argument is missing; operational functions expect status `2` for invalid usage.
 4. Both `make test` (modular sources) and `make test-bundle` (bundled `poshli.sh`) must pass with 100% success.
 
 ---

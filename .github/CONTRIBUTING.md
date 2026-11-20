@@ -20,7 +20,7 @@ Thank you for your interest in contributing to **POSHLI**! We welcome bug report
 
 3. **Add Tests**:
    - Add unit tests for your function in the appropriate file under `tests/` (`test_num.sh`, `test_fs.sh`, or `test_str.sh`).
-   - Cover normal cases, edge cases (empty strings, leading hyphens, whitespace), and missing argument checks (status `2`).
+   - Cover normal cases, edge cases (empty strings, leading hyphens, whitespace), and missing argument checks: predicates return `1`; operational functions return `2` for invalid usage.
 
 4. **Verify All Tests**:
    ```sh
