@@ -16,8 +16,13 @@ Practical, living record of Poshli development: what is done, what is active, an
 - [x] Make `fs_is_plain_text` POSIX and deterministic (documented byte heuristic with POSIX utilities instead of `file(1)`; defined semantics and behavior).
 - [x] Replace the Base64 backend with a POSIX-only implementation (`od` + `wc` + `awk` + `printf`), using a single code path with no external fallback.
 - [x] Document the dependency separation clearly (per-function dependency classification in README *Dependency Policy*, mapping every public function to the policy levels: the pure POSIX shell functions are identified as level 1, `num_randomize` is classified as POSIX `awk`, and `str_len_bytes` is corrected to `wc` plus `awk` output normalization; there are no level 3 optional improvements and no level 4 exceptions at runtime).
+- [x] SPDX license headers and Unicode Character Database attribution (Unicode 15.0.0, Unicode License V3) across sources, tests, tools and documentation; added the license section to README and DEVELOPER.md (local commit `ae2f0a7`, pending push).
+- [x] Initial `debian/` packaging files added to the repository (local commit `ae2f0a7`, pending push); the package is not built, validated or published.
+- [x] Fail-closed behaviour in `str_len`, `str_lower` and `str_upper` when `od` cannot read the input bytes, with tests simulating `od`/`wc` failures (local commit `b0345be`, pending push).
 
 ## Current
+
+- [ ] Publish the two local commits `ae2f0a7` and `b0345be` and confirm GitHub Actions CI.
 
 ## Next
 
@@ -34,8 +39,7 @@ Practical, living record of Poshli development: what is done, what is active, an
 
 - [ ] Evaluate more advanced terminal functionality.
 - [ ] Evaluate whether a TUI layer makes sense.
-- [ ] Investigate and prepare Debian packaging.
-- [ ] Review distribution requirements, dependencies and metadata for Debian (Essential vs declared dependencies, `debian/copyright` attribution, LGPL-3.0-only vs -or-later).
+- [ ] Validate and build the Debian package, review distribution requirements and dependencies (Essential vs declared dependencies, `debian/copyright` attribution, LGPL-3.0-only vs -or-later) and upload it. The initial `debian/` files are already in the repository, but the package is not built, validated or published.
 
 ## Roadmap maintenance
 
