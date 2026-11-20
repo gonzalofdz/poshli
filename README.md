@@ -216,7 +216,7 @@ The module-prefix renaming (see [Naming Policy](#naming-policy)) was technically
 
 ### Debian packaging
 
-The repository includes an initial `debian/` directory that builds the `poshli` package. The package version separates the upstream version from the Debian revision:
+The repository includes an initial `debian/` directory with packaging files for the `poshli` package; the packaging is preliminary and has not been built or validated yet. The package version separates the upstream version from the Debian revision:
 
 ```text
 0.5.0-1
@@ -225,7 +225,7 @@ The repository includes an initial `debian/` directory that builds the `poshli` 
 - `0.5.0` — upstream Poshli version (`POSHLI_VERSION`).
 - `-1` — first revision of the Debian package.
 
-A packaging-only change bumps only the revision (`0.5.0-2`) and leaves the upstream version untouched. The package installs the bundle at `/usr/share/poshli/poshli.sh`. The package has not been uploaded to Debian yet; the directory documents the current packaging state.
+A packaging-only change bumps only the revision (`0.5.0-2`) and leaves the upstream version untouched. The packaging files specify `/usr/share/poshli/poshli.sh` as the install location. The package has not been built, validated or uploaded to Debian yet; the directory documents the current packaging state.
 
 ---
 

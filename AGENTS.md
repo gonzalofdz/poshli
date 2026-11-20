@@ -75,5 +75,5 @@ End every task with: what changed and why; tests run and their real results; she
 
 ## Current coverage (snapshot as of 0.5.0; update when it changes)
 
-- The full suite (sources and bundle) has been run with GNU awk 5.2.1 and `mawk` 1.3.4 under `dash` and `bash --posix`, and with BusyBox `awk` 1.36.1 under `dash`, BusyBox `sh` and `bash --posix`. macOS and BSD `awk` are not covered by tests.
+- The full suite (sources and bundle) has been run with GNU awk 5.2.1 under `dash` and `bash --posix`, with `mawk` 1.3.4 under `dash`, and with BusyBox `awk` 1.36.1 under `dash` and BusyBox `sh`. The combinations `mawk` + `bash --posix` and BusyBox `awk` + `bash --posix` have not been verified. macOS and BSD `awk` are not covered by tests.
 - The authoritative statement is the *Testing* section of `README.md`; keep both in sync.
