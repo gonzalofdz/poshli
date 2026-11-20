@@ -19,6 +19,8 @@ Practical, living record of Poshli development: what is done, what is active, an
 - [x] SPDX license headers and Unicode Character Database attribution (Unicode 15.0.0, Unicode License V3) across sources, tests, tools and documentation; added the license section to README and DEVELOPER.md (local commit `ae2f0a7`, pending push).
 - [x] Initial `debian/` packaging files added to the repository (local commit `ae2f0a7`, pending push); the package is not built, validated or published.
 - [x] Fail-closed behaviour in `str_len`, `str_lower` and `str_upper` when `od` cannot read the input bytes, with tests simulating `od`/`wc` failures (local commit `b0345be`, pending push).
+- [x] Return-code audit (PLAN.md Fase 0) executed against the bundle in `dash`, `bash --posix` and `busybox sh`; baseline saved in `docs/return-codes-baseline.md`.
+- [x] Return-code normalization (PLAN.md Fases 1–4): the six `fs_is_*` predicates return `1` when the path argument is missing (D2); README, DEVELOPER.md, CONTRIBUTING.md and tests are aligned; `fs_is_plain_text` remains operational and keeps `2`. Verification re-ran the 136-case Fase 0 audit in the five original configurations, with 11 justified differences (6 from D2, 5 from `b0345be`). Caveat: 17 cells of the reduced baseline have no direct case in the recovered audit script, so its 118-cell coverage is not complete.
 
 ## Current
 
@@ -26,8 +28,6 @@ Practical, living record of Poshli development: what is done, what is active, an
 
 ## Next
 
-- [ ] Review and normalize return-code semantics (0 true/success, 1 false/invalid input, 2 not evaluable) and align README, DEVELOPER.md, CONTRIBUTING.md and tests.
-- [ ] Update documentation and tests for the changes above (Dependencies section, per-function contracts).
 - [ ] Audit `src/num.sh` for generic utilities needed by future modules.
 - [ ] Audit `src/str.sh` for generic utilities needed by future modules.
 - [ ] Implement only the approved new utilities for `num.sh` and `str.sh`.
