@@ -33,3 +33,62 @@ jobs:
 
       - name: Run test suite against bundle
         run: make test-bundle POSHLI_TEST_SHELL="${{ matrix.shell }}"
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install ShellCheck 0.9.0
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/shellcheck.tar.xz" \
+            https://github.com/koalaman/shellcheck/releases/download/v0.9.0/shellcheck-v0.9.0.linux.x86_64.tar.xz
+          tar -xJf "$RUNNER_TEMP/shellcheck.tar.xz" -C "$RUNNER_TEMP"
+          sudo install -m 0755 "$RUNNER_TEMP/shellcheck-v0.9.0/shellcheck" /usr/local/bin/shellcheck
+          shellcheck --version
+
+      - name: Check ShellCheck baseline
+        run: sh tools/ci/shellcheck.sh
+
+  awk-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        awk:
+          - gawk
+          - mawk
+          - busybox
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install shells and awk implementations
+        run: sudo apt-get update && sudo apt-get install -y dash gawk mawk busybox
+
+      - name: Select the awk implementation
+        run: |
+          mkdir -p "$RUNNER_TEMP/awk-bin"
+          case "${{ matrix.awk }}" in
+            gawk) ln -s "$(command -v gawk)" "$RUNNER_TEMP/awk-bin/awk" ;;
+            mawk) ln -s "$(command -v mawk)" "$RUNNER_TEMP/awk-bin/awk" ;;
+            busybox) ln -s "$(command -v busybox)" "$RUNNER_TEMP/awk-bin/awk" ;;
+          esac
+          echo "$RUNNER_TEMP/awk-bin" >> "$GITHUB_PATH"
+
+      - name: Verify the selected awk
+        run: |
+          command -v awk
+          case "${{ matrix.awk }}" in
+            gawk) awk --version | head -n 1 | grep -q 'GNU Awk' ;;
+            mawk) awk -W version 2>&1 | head -n 1 | grep -q 'mawk' ;;
+            busybox) test "$(readlink -f "$(command -v awk)")" = "$(readlink -f "$(command -v busybox)")" ;;
+          esac
+
+      - name: Verify bundle is synchronized with src/
+        run: make check-bundle
+
+      - name: Run test suite (sources)
+        run: make test POSHLI_TEST_SHELL=dash
+
+      - name: Run test suite (bundle)
+        run: make test-bundle POSHLI_TEST_SHELL=dash

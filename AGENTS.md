@@ -46,7 +46,7 @@ Check the `Makefile` for the current targets (`bundle`, `check-bundle`, `test`, 
 ## Validation tools and packaging
 
 - ShellCheck, `checkbashisms` and `posh` are development and validation tools, never runtime or build dependencies of the library. `checkbashisms` and `posh` are optional pre-publication checks.
-- CI runs the test suite with `dash`, BusyBox `sh` and `bash --posix`; sources and bundle are distinct artifacts and both are tested. ShellCheck (blocking) and the `awk` matrix (independent job) are approved additions still pending implementation in CI; see `ROADMAP.md`. Do not describe them as already running. The 2026-11-21 `awk` matrix was executed manually and is not CI coverage.
+- CI runs the shell matrix (`dash`, BusyBox `sh`, `bash --posix`) over sources and bundle, a blocking `shellcheck -s sh` job against the checked-in baseline (`tools/ci/shellcheck.sh`, `tools/ci/shellcheck-baseline.txt`), and an independent `awk` matrix job covering GNU awk, `mawk` and BusyBox `awk` under `dash`, over sources and bundle. The `awk` job verifies that the selected implementation is real before running the suite. The 2026-11-21 matrix was manual evidence; CI now also exercises that dimension.
 - Do not run the full shell and `awk` matrix inside `debian/rules`, and do not add ShellCheck or `checkbashisms` to `Build-Depends`. Package validation (`dpkg-checkbuilddeps`, `dpkg-buildpackage`, `lintian`, `uscan`) is a pre-publication step.
 - Keep the three installation paths distinct: user installation, local system installation and the Debian package.
 
