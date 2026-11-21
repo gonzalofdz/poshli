@@ -15,6 +15,7 @@ These are deliberate design choices to keep unless new evidence and tests justif
 - Fail-closed behavior and a documented return-code contract for predicates and operational functions.
 - A formal dependency policy with every public function classified by level.
 - Security review scope: no `eval` in the sources examined, no runtime temporary files, and leading-hyphen handling in `fs_is_plain_text` via `./`.
+- Three deliberately distinct installation paths: user installation (`~/.local/lib/poshli`), local system installation (`/usr/local/lib/poshli`) and the Debian package (`/usr/share/poshli`).
 
 ## Completed
 
@@ -37,25 +38,25 @@ These are deliberate design choices to keep unless new evidence and tests justif
 - [x] Return-code normalization (PLAN.md Fases 1–4): the six `fs_is_*` predicates return `1` when the path argument is missing (D2); README, DEVELOPER.md, CONTRIBUTING.md and tests are aligned; `fs_is_plain_text` remains operational and keeps `2`. Verification re-ran the 136-case Fase 0 audit in the five original configurations, with 11 justified differences (6 from D2, 5 from `b0345be`). Caveat: 17 cells of the reduced baseline have no direct case in the recovered audit script, so its 118-cell coverage is not complete.
 - [x] Publish the pending local commits and confirm GitHub Actions CI: `ae2f0a7` and `b0345be` are ancestors of `a957564`, `origin/master` is at `a957564`, and run #28 on that commit succeeded.
 - [x] Full technical audit (2026-11-20, GLM 5.3, PLAN mode) against `0.5.0` at `a957564`: no critical defects, sound architecture, 583/583 tests passing in each of 10 documented configurations, 55/55 spike tests per configuration, and a synchronized bundle. Historical evidence for that commit, not a permanent certification. Pending findings are recorded in `PLAN.md` (A1, M1–M5, H1–H7).
+- [x] Quality and distribution validation review (2026-11-21): adopted `shellcheck -s sh` as the routine static check, `# shellcheck shell=sh` in shell files without a shebang, and localized justified suppressions only (for example the intentional `SC2086` word splitting in the test runners); no global exclusions and no blanket optional checks. `SC2034` on `POSHLI_VERSION` is a known, justified warning, and static checks complement but do not replace the real portability matrix. `checkbashisms` and `posh` are optional pre-publication tools, never build dependencies. The return-code contract and the documented `fs_is_plain_text` `2` are kept as they are. Decisions recorded in `AGENTS.md` and `.opencode/commands/verify.md`; the CI implementation of ShellCheck and of the `awk` matrix is still pending (see *Next*).
+- [x] Reproducibility check of the compatibility matrix (2026-11-21, Ubuntu 24.04): the full suite was re-run manually against sources and bundle with `dash` 0.5.12, `bash` 5.2.21 `--posix`, GNU awk 5.2.1, `mawk` 1.3.4.20240123 and BusyBox 1.36.1; **583/583 tests per configuration, no failures or skips**. This verifies `bash --posix` + `mawk` and `bash --posix` + BusyBox `awk`, closes D-1, and aligns `README.md` and `AGENTS.md`. Manual evidence, not CI coverage; CI still runs only the shell matrix.
 
 ## Current
 
-- [ ] Maintainer review of the audit documentation in `PLAN.md` and of the provisional priority order (A1 → M1/M2 → M3 → M4 → M5 → hygiene → portability).
-- [ ] Decide whether to align `README.md` and `AGENTS.md` test-coverage claims with the 2026-11-20 audit evidence, or to require a new execution before changing those claims.
+- [ ] Maintainer review of the audit documentation in `PLAN.md` and of the provisional priority order (A1 → M1/M2 → M3 → M4 → M5 → hygiene → portability). D-1 is closed (2026-11-21); the remaining coverage question is CI, not manual verification.
 
 ## Next
 
-Ordered by provisional priority; each item is an investigation and validation task, not an approved implementation.
+Ordered by provisional priority. Unless listed under *Approved, pending implementation*, each item is an investigation and validation task, not an approved implementation.
 
 - [ ] A1: reproduce and confirm the stdout write-error behavior of `str_trim`, `_poshli_case_map` (`str_lower`/`str_upper`), `str_len`, `str_len_bytes` and `str_replace`; confirm severity before choosing a fix.
 - [ ] M1: reproduce `num_randomize` failures with a simulated missing or failing `awk`; define a documented return status and closed failure behavior.
 - [ ] M2: determine the portable numeric range of `num_randomize` and decide whether out-of-range values are rejected explicitly or documented as environment-dependent.
 - [ ] M3: separate invalid UTF-8 from tool failures in `str_len` diagnostics, preserving its return contract.
 - [ ] M4: add failure-injection tests for `fs_is_plain_text` and `num_randomize`, matching the existing `od`/`wc` shim style.
-- [ ] M5: evaluate CI expansion with `mawk`, BusyBox `awk` and ShellCheck, reusing `tools/spike/run_spike.sh` shims and weighing runtime cost.
 - [ ] Review ShellCheck suppression coherence (`SC2317` and the informational test warnings) without adding or removing suppressions by default.
 - [ ] Resolve hygiene items H1–H5 and H7: temporary-variable naming consistency, `_poshli_case_map` diagnostic prefixes, `opencode.jsonc.bak`, `.editorconfig` final newline, `check-bundle` temporary cleanup and stale document statuses.
-- [ ] Validate portability areas not covered by the audit: macOS/BSD `awk`, `ksh`/`mksh`, a real BusyBox installation, and capture the exact `dash`/`bash`/`mawk` versions used.
+- [ ] Validate portability areas not covered by the 2026-11-21 matrix: macOS/BSD `awk`, `ksh`/`mksh`, and non-static or other BusyBox variants.
 - [ ] Audit `src/num.sh` for generic utilities needed by future modules.
 - [ ] Audit `src/str.sh` for generic utilities needed by future modules.
 - [ ] Implement only the approved new utilities for `num.sh` and `str.sh`.
@@ -63,9 +64,21 @@ Ordered by provisional priority; each item is an investigation and validation ta
 - [ ] Implement `term.sh`.
 - [ ] Add simple CLI feedback components: spinners, animated indicators, progress, line updates, basic success/error/warning states.
 
+### Approved, pending implementation
+
+These decisions are closed. They are not yet implemented; do not mark them complete until the change is executed and verified.
+
+- [ ] Add ShellCheck to CI as a blocking check over the source modules (`shellcheck -s sh`), handling the known warnings explicitly (`SC2034` on `POSHLI_VERSION`; the intentional informational warnings in the tests) without global exclusions. `.github/workflows/tests.yml` still runs only the shell matrix.
+- [ ] Add the `awk` implementation matrix (GNU awk, `mawk`, BusyBox `awk`) to CI as an independent job, reusing the `tools/spike/run_spike.sh` selection style and weighing runtime cost. The manual matrix of 2026-11-21 does not satisfy this item; CI integration is still pending.
+- [ ] Optional pre-publication portability checks: `checkbashisms` and `posh`, never as build dependencies.
+
 ## Later
 
-- [ ] Validate and build the Debian package, review distribution requirements and dependencies (Essential vs declared dependencies, `debian/copyright` attribution, LGPL-3.0-only vs -or-later) and upload it. The initial `debian/` files are already in the repository, but the package is not built, validated or published.
+- [ ] Debian packaging, before publishing: replace the Unicode License stanza in `debian/copyright` with the full applicable license text and the correct attribution and year; first verify which license version corresponds to the Unicode data used.
+- [ ] Debian packaging, before publishing: review `Standards-Version` and update it only after checking the requirements of the target version.
+- [ ] Debian packaging, before publishing: run `dpkg-checkbuilddeps`, build with `dpkg-buildpackage`, validate with `lintian`, and run `uscan` when applicable. The initial `debian/` files are in the repository, but the package is not built, validated or published.
+- [ ] Keep the review of distribution requirements and dependencies (Essential vs declared dependencies, LGPL-3.0-only vs -or-later) part of the packaging review.
+- [ ] Keep `debian/rules` limited to bundle synchronization plus `make test`/`test-bundle`: do not run the full shell and `awk` matrix there, and do not add ShellCheck or `checkbashisms` to `Build-Depends`. Package validation stays a pre-publication step.
 - [ ] Refresh performance and memory figures with new measurements, stating the environment and `awk` implementation; current figures are indicative only.
 - [ ] Evaluate more advanced terminal functionality.
 - [ ] Evaluate whether a TUI layer makes sense.

@@ -497,7 +497,15 @@ make test-bundle
 make check-bundle
 ```
 
-> **`awk` implementation coverage (designed vs. verified)**: the library's `awk` code uses only POSIX `awk` features and never the locale, so its results are designed not to vary between conforming `awk` implementations. The matrices actually executed and documented cover the full suite (583 tests), against both the modular sources and the `poshli.sh` bundle, with **GNU awk 5.2.1** under `dash` and `bash --posix`, with **mawk 1.3.4** under `dash`, and with **BusyBox `awk` 1.36.1** under `dash` and BusyBox `sh`; mawk was also used for some of the performance figures in [Encoding](#4-encoding-encodingsh). The shell and the `awk` implementation are separate dimensions, but they are not always independently selectable: a BusyBox built with standalone applet execution (as in the development environment) runs the BusyBox `awk` applet from `busybox sh` regardless of `PATH`, so there a `busybox sh` run is a `BusyBox awk` run and the combination BusyBox `sh` + GNU `awk` cannot be exercised. The combinations `mawk` + `bash --posix` and `BusyBox awk` + `bash --posix` have **not** been verified. **macOS `awk` and BSD `awk` have not been verified by the test suite**: they are supported targets of the POSIX `awk` code, not tested platforms.
+> **`awk` implementation coverage (designed vs. verified)**: the library's `awk` code uses only POSIX `awk` features and never the locale, so its results are designed not to vary between conforming `awk` implementations. The matrix was re-executed **manually on 2026-11-21** in Ubuntu 24.04 with `dash` 0.5.12-6ubuntu5, `bash` 5.2.21-2ubuntu4 (`--posix`), GNU awk 5.2.1-2ubuntu0.1, `mawk` 1.3.4.20240123-1build1 and BusyBox 1.36.1-6ubuntu3.1. Every run executed the full suite (583 tests) with **583/583 passing and no skips**:
+>
+> - GNU awk 5.2.1: `dash` (sources and bundle) and `bash --posix` (bundle).
+> - `mawk` 1.3.4.20240123: `dash` and `bash --posix` (sources and bundle).
+> - BusyBox `awk` 1.36.1: `dash` and `bash --posix` (sources and bundle).
+> - BusyBox `sh` with BusyBox `awk`, `od` and `wc` (sources and bundle), plus the full-BusyBox configuration with `tr`, `cmp`, `head` and `id`.
+> - `dash` with BusyBox `od` and `wc` (sources and bundle).
+>
+> This is **manual verification, not CI coverage**. CI currently runs only `dash`, BusyBox `sh` and `bash --posix` with the default `awk`; the independent `awk` job is approved but not implemented. The shell and `awk` dimensions are not always independently selectable: this BusyBox build uses its own `awk` applet from `busybox sh` regardless of `PATH`, so **BusyBox `sh` + GNU `awk` was not reproducible** and is not claimed; the verified BusyBox `sh` configuration is BusyBox `sh` + BusyBox `awk` + BusyBox `od`/`wc`. **macOS `awk`, BSD `awk` and `ksh`/`mksh` remain unverified**: they are supported targets of the POSIX code, not tested platforms. `mawk` was also used for some of the performance figures in [Encoding](#4-encoding-encodingsh).
 
 ---
 

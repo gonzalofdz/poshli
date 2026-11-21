@@ -21,7 +21,7 @@ Check the `Makefile` for the current targets (`bundle`, `check-bundle`, `test`, 
 4. **Never fail silently. Fail closed.** On error, return non-zero and emit **no partial output**, unless the documented contract explicitly specifies otherwise. Capture results first and print only on success.
 5. **POSIX pipelines report only the last command's status.** Do not rely on `pipefail` or change global shell options. Validate the result instead (for example, compare byte counts against an independent `wc -c`).
 6. **Temporaries:** do not introduce temporary variables where plain expansions suffice. When one is necessary, name it `_poshli_<function>_<name>` and `unset` it on **every** path (success, error, write failure).
-7. **Return codes:** the documented convention is that predicates return 0/1 and operational functions return 1 for invalid input or failure, and 2 for invalid usage (such as a missing mandatory argument). Do not assume every function already follows it: preserve the documented and current behavior of each function. A global normalization of return codes is a pending roadmap item: do not change the policy as a side effect.
+7. **Return codes:** predicates return `0` (true) or `1` (false); operational functions return `0` on success, `1` for invalid input or failure, and `2` for invalid usage (such as a missing mandatory argument). Preserve the documented and current behavior of each function; a missing argument follows its documented contract (for example `str_empty` treats it as true, and `fs_is_plain_text` keeps `2`). Do not rename or renumber functions for cosmetic uniformity, and do not change return codes without a demonstrated defect and explicit approval.
 8. **Shell string limits are real limits:** arguments and variables cannot hold NUL, and `$(...)` strips trailing newlines. Document these limits; never promise what the API cannot deliver.
 9. **Locale independence:** results must not depend on the locale (`LC_ALL=C` for `od`, `awk`, `wc` where relevant).
 
@@ -38,8 +38,17 @@ Check the `Makefile` for the current targets (`bundle`, `check-bundle`, `test`, 
 - Simulate tool failures with shell functions inside a subshell `( ... )`, calling the real tool through `command <tool> "$@"`. For each failure assert both the exact status and an empty stdout.
 - Compare binary data through hex (`od`), not through `$(...)`.
 - New failure tests must fail against the old code (negative control). A test that cannot fail proves nothing.
-- Run the suite on every installed shell (`dash`, `busybox sh`, `bash --posix`), for both sources and bundle. Treat the `awk` implementation as a second, independent matrix: when more than one is installed (GNU awk, `mawk`, `busybox awk`), repeat at least the tests of the awk-based modules with each one. Report the shell matrix and the `awk` matrix separately.
-- Run `shellcheck -s sh` if available.
+- Run the suite on every installed shell (`dash`, `busybox sh`, `bash --posix`), for both sources and bundle. Treat the `awk` implementation as a second, independent matrix: when more than one is installed (GNU awk, `mawk`, `busybox awk`), repeat at least the tests of the awk-based modules with each one. Report the shell matrix and the `awk` matrix separately. Do not drop one artifact because the other passes: sources and bundle are distinct deliverables.
+- When a test must pin an exact status, use `assert_status N`; `assert_false` only proves a result different from zero, so do not use it where the contract requires exactly `1`.
+- Run `shellcheck -s sh` on the source modules and the bundle when it is available. Keep `# shellcheck shell=sh` in shell files without a shebang. Use only localized, justified suppressions (for example `SC2086` where word splitting is intentional); never use global exclusions or ranges, and do not enable optional checks by default. `SC2034` on `POSHLI_VERSION` is a known, justified warning; do not silence it with a global exclusion. Never edit the generated bundle to preserve a directive: comment lines are stripped during generation.
+- Static analysis complements, but does not replace, the real portability matrix. A clean ShellCheck run is not proof of portability.
+
+## Validation tools and packaging
+
+- ShellCheck, `checkbashisms` and `posh` are development and validation tools, never runtime or build dependencies of the library. `checkbashisms` and `posh` are optional pre-publication checks.
+- CI runs the test suite with `dash`, BusyBox `sh` and `bash --posix`; sources and bundle are distinct artifacts and both are tested. ShellCheck (blocking) and the `awk` matrix (independent job) are approved additions still pending implementation in CI; see `ROADMAP.md`. Do not describe them as already running. The 2026-11-21 `awk` matrix was executed manually and is not CI coverage.
+- Do not run the full shell and `awk` matrix inside `debian/rules`, and do not add ShellCheck or `checkbashisms` to `Build-Depends`. Package validation (`dpkg-checkbuilddeps`, `dpkg-buildpackage`, `lintian`, `uscan`) is a pre-publication step.
+- Keep the three installation paths distinct: user installation, local system installation and the Debian package.
 
 ## Documentation
 
@@ -75,5 +84,5 @@ End every task with: what changed and why; tests run and their real results; she
 
 ## Current coverage (snapshot as of 0.5.0; update when it changes)
 
-- The full suite (sources and bundle) has been run with GNU awk 5.2.1 under `dash` and `bash --posix`, with `mawk` 1.3.4 under `dash`, and with BusyBox `awk` 1.36.1 under `dash` and BusyBox `sh`. The combinations `mawk` + `bash --posix` and BusyBox `awk` + `bash --posix` have not been verified. macOS and BSD `awk` are not covered by tests.
+- The full suite (sources and bundle) was re-run **manually on 2026-11-21** in Ubuntu 24.04 with `dash` 0.5.12, `bash` 5.2.21 `--posix`, GNU awk 5.2.1, `mawk` 1.3.4.20240123 and BusyBox 1.36.1: **583/583 tests per configuration, no failures or skips**. GNU awk was verified under `dash` (sources and bundle) and `bash --posix` (bundle); `mawk` and BusyBox `awk` under `dash` and `bash --posix` (sources and bundle); BusyBox `sh` with BusyBox `awk`, `od` and `wc` (sources and bundle); and the full-BusyBox configuration. The verified BusyBox `sh` configuration is BusyBox `sh` + BusyBox `awk` + BusyBox `od`/`wc`; BusyBox `sh` + GNU `awk` was not reproducible because `busybox sh` uses its own `awk` applet. macOS/BSD `awk` and `ksh`/`mksh` remain unverified. This is manual verification, not CI coverage.
 - The authoritative statement is the *Testing* section of `README.md`; keep both in sync.
