@@ -39,7 +39,10 @@ str_trim() {
 	_trim_str=$1
 	_trim_str=${_trim_str#"${_trim_str%%[! 	]*}"}
 	_trim_str=${_trim_str%"${_trim_str##*[! 	]}"}
-	printf '%s\n' "$_trim_str"
+	printf '%s\n' "$_trim_str" || {
+		unset _trim_str
+		return 1
+	}
 	unset _trim_str
 }
 
@@ -212,7 +215,10 @@ _poshli_case_map() {
 		printf '%s\n' "poshli: $1: input is not valid UTF-8" >&2
 		return 1
 	}
-	printf '%b\n' "$_poshli_case_out"
+	printf '%b\n' "$_poshli_case_out" || {
+		unset _poshli_case_table _poshli_case_out _poshli_case_od
+		return 1
+	}
 	unset _poshli_case_table _poshli_case_out _poshli_case_od
 }
 
@@ -305,7 +311,8 @@ str_len() {
 #
 #	The argument must be valid UTF-8. Invalid input produces no count, a
 #	diagnostic on standard error, and status 1. If od cannot read the
-#	input bytes, the same closed failure occurs.
+#	input bytes or awk cannot complete the count, the same closed failure
+#	occurs with the corresponding diagnostic.
 #
 #	Example of use:
 #	LEN=$(str_len "España")
@@ -319,7 +326,7 @@ str_len() {
 		printf '%s\n' "poshli: str_len: could not read input bytes" >&2
 		return 1
 	}
-	if ! printf '%s\n' "$_poshli_str_len_od" | LC_ALL=C awk '
+	_poshli_str_len_out=$(printf '%s\n' "$_poshli_str_len_od" | LC_ALL=C awk '
 		BEGIN {
 			n = 0
 			need = 0
@@ -333,7 +340,7 @@ str_len() {
 				if (need > 0) {
 					if (b < lo || b > hi) {
 						ok = 0
-						exit 1
+						exit
 					}
 					need--
 					lo = 128
@@ -393,21 +400,32 @@ str_len() {
 					continue
 				}
 				ok = 0
-				exit 1
+				exit
 			}
 		}
 		END {
 			if (ok && need == 0)
 				print n
 			else
-				exit 1
+				print "INVALID"
 		}
-	'; then
-		unset _poshli_str_len_od
+	') || {
+		unset _poshli_str_len_od _poshli_str_len_out
+		printf '%s\n' "poshli: str_len: could not count code points" >&2
+		return 1
+	}
+	case "$_poshli_str_len_out" in
+	INVALID)
+		unset _poshli_str_len_od _poshli_str_len_out
 		printf '%s\n' "poshli: str_len: input is not valid UTF-8" >&2
 		return 1
-	fi
-	unset _poshli_str_len_od
+		;;
+	esac
+	printf '%s\n' "$_poshli_str_len_out" || {
+		unset _poshli_str_len_od _poshli_str_len_out
+		return 1
+	}
+	unset _poshli_str_len_od _poshli_str_len_out
 	return 0
 }
 
@@ -442,7 +460,10 @@ str_len_bytes() {
 		printf '%s\n' "poshli: str_len_bytes: could not normalize byte count" >&2
 		return 1
 	}
-	printf '%s\n' "$_poshli_str_len_bytes_result"
+	printf '%s\n' "$_poshli_str_len_bytes_result" || {
+		unset _poshli_str_len_bytes_count _poshli_str_len_bytes_result
+		return 1
+	}
 	unset _poshli_str_len_bytes_count _poshli_str_len_bytes_result
 }
 
@@ -453,7 +474,10 @@ str_replace() {
 #	RESULT=$(str_replace "foo" "bar" "foo baz")
 #
 	[ $# -ge 3 ] || return 2
-	[ -n "$1" ] || { printf '%s\n' "$3"; return 0; }
+	[ -n "$1" ] || {
+		printf '%s\n' "$3" || return 1
+		return 0
+	}
 	_sr_search="$1"
 	_sr_replace="$2"
 	_sr_str="$3"
@@ -466,7 +490,10 @@ str_replace() {
 		_sr_str="$_sr_rest"
 	done
 	_sr_out="${_sr_out}${_sr_str}"
-	printf '%s\n' "$_sr_out"
+	printf '%s\n' "$_sr_out" || {
+		unset _sr_search _sr_replace _sr_str _sr_out _sr_prefix _sr_rest
+		return 1
+	}
 	unset _sr_search _sr_replace _sr_str _sr_out _sr_prefix _sr_rest
 }
 fi

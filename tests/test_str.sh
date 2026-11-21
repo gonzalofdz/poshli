@@ -385,4 +385,180 @@ assert_true $? "str_len_bytes fails closed when wc is unavailable"
 )
 assert_true $? "str_len_bytes prints nothing when wc is unavailable"
 
+# A1: failures while writing the final result to stdout must not be hidden by
+# the cleanup unset. stdout is closed for the call; the status and the
+# temporary-variable cleanup are checked in the same subshell, so a leaked
+# temporary turns the reported status into the sentinel 9.
+_str_wfail=$( (
+	str_trim "  a  " >&- 2>/dev/null
+	_st=$?
+	[ -z "${_trim_str+x}" ] || _st=9
+	printf '%s' "$_st"
+) )
+assert_status 1 "$_str_wfail" "str_trim: write failure returns 1 and cleans temporaries"
+
+_str_wfail=$( (
+	str_lower A >&- 2>/dev/null
+	_st=$?
+	[ -z "${_poshli_case_out+x}${_poshli_case_table+x}${_poshli_case_od+x}" ] || _st=9
+	printf '%s' "$_st"
+) )
+assert_status 1 "$_str_wfail" "str_lower: write failure returns 1 and cleans temporaries"
+
+_str_wfail=$( (
+	str_len abc >&- 2>/dev/null
+	_st=$?
+	[ -z "${_poshli_str_len_od+x}${_poshli_str_len_out+x}" ] || _st=9
+	printf '%s' "$_st"
+) )
+assert_status 1 "$_str_wfail" "str_len: write failure returns 1 and cleans temporaries"
+
+_str_wfail=$( (
+	str_len_bytes abc >&- 2>/dev/null
+	_st=$?
+	[ -z "${_poshli_str_len_bytes_count+x}${_poshli_str_len_bytes_result+x}" ] || _st=9
+	printf '%s' "$_st"
+) )
+assert_status 1 "$_str_wfail" "str_len_bytes: write failure returns 1 and cleans temporaries"
+
+_str_wfail=$( (
+	str_replace a b a >&- 2>/dev/null
+	_st=$?
+	[ -z "${_sr_search+x}${_sr_replace+x}${_sr_str+x}${_sr_out+x}${_sr_prefix+x}${_sr_rest+x}" ] || _st=9
+	printf '%s' "$_st"
+) )
+assert_status 1 "$_str_wfail" "str_replace: write failure returns 1 and cleans temporaries"
+
+# A failing awk that writes to stdout before exiting must not leak that
+# partial result: str_len buffers the awk output and publishes it only on
+# success.
+_str_wfail=$( (
+	awk() { printf 'PARTIAL'; return 1; }
+	_out=$(str_len hello 2>/dev/null)
+	_st=$?
+	[ -z "$_out" ] || _st=9
+	printf '%s' "$_st"
+) )
+assert_status 1 "$_str_wfail" "str_len: failing awk leaks no partial stdout and returns 1"
+
+(
+	awk() { return 1; }
+	_out=$(str_len hello 2>/dev/null)
+	[ "$?" -eq 1 ] && [ -z "$_out" ]
+)
+assert_true $? "str_len: failing awk returns 1 with empty stdout"
+
+(
+	awk() { return 1; }
+	_out=$(str_len_bytes hello 2>/dev/null)
+	[ "$?" -eq 1 ] && [ -z "$_out" ]
+)
+assert_true $? "str_len_bytes: failing awk returns 1 with empty stdout"
+
+# _poshli_case_map: missing data and invalid selector must keep stdout clean.
+(
+	unset _POSHLI_CASE_LOADED
+	_out=$(_poshli_case_map lower A 2>/dev/null)
+	_st=$?
+	_err=$(_poshli_case_map lower A 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ -n "$_err" ]
+)
+assert_true $? "_poshli_case_map: missing data returns 1, empty stdout and stderr diagnostic"
+
+(
+	_out=$(_poshli_case_map bogus A 2>/dev/null)
+	_st=$?
+	_err=$(_poshli_case_map bogus A 2>&1 >/dev/null)
+	[ "$_st" -eq 2 ] && [ -z "$_out" ] && [ -z "$_err" ]
+)
+assert_true $? "_poshli_case_map: invalid selector returns 2 silently"
+
+# str_replace: insufficient arguments and the empty-search branch.
+(
+	_out=$(str_replace a b 2>/dev/null)
+	_st=$?
+	_err=$(str_replace a b 2>&1 >/dev/null)
+	[ "$_st" -eq 2 ] && [ -z "$_out" ] && [ -z "$_err" ]
+)
+assert_true $? "str_replace: two arguments returns 2 silently"
+
+_str_wfail=$( (
+	str_replace "" x hello >&- 2>/dev/null
+	_st=$?
+	printf '%s' "$_st"
+) )
+assert_status 1 "$_str_wfail" "str_replace: empty-search write failure returns 1"
+
+# The no-argument paths already propagate the final printf status through
+# return; keep that behavior covered.
+_str_wfail=$( ( str_trim >&- 2>/dev/null; printf '%s' "$?" ) )
+assert_status 1 "$_str_wfail" "str_trim: no-argument write failure returns 1"
+_str_wfail=$( ( str_lower >&- 2>/dev/null; printf '%s' "$?" ) )
+assert_status 1 "$_str_wfail" "str_lower: no-argument write failure returns 1"
+_str_wfail=$( ( str_upper >&- 2>/dev/null; printf '%s' "$?" ) )
+assert_status 1 "$_str_wfail" "str_upper: no-argument write failure returns 1"
+_str_wfail=$( ( str_len >&- 2>/dev/null; printf '%s' "$?" ) )
+assert_status 1 "$_str_wfail" "str_len: no-argument write failure returns 1"
+_str_wfail=$( ( str_len_bytes >&- 2>/dev/null; printf '%s' "$?" ) )
+assert_status 1 "$_str_wfail" "str_len_bytes: no-argument write failure returns 1"
+
+# Successful calls keep stderr empty.
+_err=$(str_trim "  a  " 2>&1 >/dev/null)
+assert_eq "" "$_err" "str_trim: success writes nothing to stderr"
+_err=$(str_lower A 2>&1 >/dev/null)
+assert_eq "" "$_err" "str_lower: success writes nothing to stderr"
+_err=$(str_upper a 2>&1 >/dev/null)
+assert_eq "" "$_err" "str_upper: success writes nothing to stderr"
+_err=$(str_len abc 2>&1 >/dev/null)
+assert_eq "" "$_err" "str_len: success writes nothing to stderr"
+_err=$(str_len_bytes abc 2>&1 >/dev/null)
+assert_eq "" "$_err" "str_len_bytes: success writes nothing to stderr"
+_err=$(str_replace a b a 2>&1 >/dev/null)
+assert_eq "" "$_err" "str_replace: success writes nothing to stderr"
+
+# M3: str_len must distinguish invalid UTF-8 from an awk execution failure.
+(
+	_out=$(str_len "España" 2>/dev/null)
+	_st=$?
+	_err=$(str_len "España" 2>&1 >/dev/null)
+	[ "$_st" -eq 0 ] && [ "$_out" = "6" ] && [ -z "$_err" ]
+)
+assert_true $? "str_len: valid UTF-8 returns the count with empty stderr"
+
+(
+	_out=$(str_len "$_str_invalid_truncated" 2>/dev/null)
+	_st=$?
+	_err=$(str_len "$_str_invalid_truncated" 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ "$_err" = "poshli: str_len: input is not valid UTF-8" ]
+)
+assert_true $? "str_len: invalid UTF-8 uses the UTF-8 diagnostic"
+
+(
+	awk() { return 1; }
+	_out=$(str_len hello 2>/dev/null)
+	_st=$?
+	_err=$(str_len hello 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ "$_err" = "poshli: str_len: could not count code points" ]
+)
+assert_true $? "str_len: awk failure uses the awk diagnostic"
+
+(
+	awk() { return 1; }
+	_err=$(str_len hello 2>&1 >/dev/null)
+	case "$_err" in
+		*"input is not valid UTF-8"*) exit 1 ;;
+		*) exit 0 ;;
+	esac
+)
+assert_true $? "str_len: awk failure does not use the UTF-8 diagnostic"
+
+(
+	awk() { printf 'PARTIAL'; return 1; }
+	_err=$(str_len hello 2>&1 >/dev/null)
+	[ "$_err" = "poshli: str_len: could not count code points" ]
+)
+assert_true $? "str_len: failing awk with partial output uses the awk diagnostic"
+
+unset _str_wfail _out _st _err
+
 test_summary
