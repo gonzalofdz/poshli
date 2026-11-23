@@ -1,4 +1,4 @@
-poshli.sh:20:1: warning: POSHLI_VERSION appears unused. Verify use (or export if used externally). [SC2034]
+poshli.sh:21:1: warning: POSHLI_VERSION appears unused. Verify use (or export if used externally). [SC2034]
 src/core.sh:14:1: warning: POSHLI_VERSION appears unused. Verify use (or export if used externally). [SC2034]
 tests/test_encoding.sh:11:3: note: Not following: ./test_runner.sh was not specified as input (see shellcheck -x). [SC1091]
 tests/test_encoding.sh:162:12: note: Command appears to be unreachable. Check usage (or ignore if invoked indirectly). [SC2317]

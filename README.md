@@ -216,7 +216,7 @@ The module-prefix renaming (see [Naming Policy](#naming-policy)) was technically
 
 ### Debian packaging
 
-The repository includes an initial `debian/` directory with packaging files for the `poshli` package; the packaging is preliminary and has not been built or validated yet. The package version separates the upstream version from the Debian revision:
+The repository includes an initial `debian/` directory with packaging files for the `poshli` package. A package was built and validated locally on 2026-11-21 (`dpkg-buildpackage`, `dpkg-checkbuilddeps`, `lintian`) from an earlier revision; validation of the current tree against the final release tag is still pending. The package version separates the upstream version from the Debian revision:
 
 ```text
 0.5.0-1
@@ -225,7 +225,7 @@ The repository includes an initial `debian/` directory with packaging files for 
 - `0.5.0` — upstream Poshli version (`POSHLI_VERSION`).
 - `-1` — first revision of the Debian package.
 
-A packaging-only change bumps only the revision (`0.5.0-2`) and leaves the upstream version untouched. The packaging files specify `/usr/share/poshli/poshli.sh` as the install location. The package has not been built, validated or uploaded to Debian yet; the directory documents the current packaging state.
+A packaging-only change bumps only the revision (`0.5.0-2`) and leaves the upstream version untouched. The packaging files specify `/usr/share/poshli/poshli.sh` as the install location. The package has not been uploaded to Debian yet; the local build corresponds to an earlier revision, and final validation against the release tag remains pending.
 
 ---
 
@@ -266,9 +266,9 @@ A huge, fragile, or hard-to-maintain POSIX implementation is not automatically b
 
 ### Current dependency status
 
-- **Required at runtime**: a POSIX shell and the POSIX utilities `od`, `awk` and `wc` (the test suite additionally uses `tr` and other standard tools). `od` and `wc` are POSIX utilities; on a minimal Debian/Ubuntu system `awk` is a virtual package provided by `mawk`, `gawk` or `original-awk` and may need to be installed explicitly. The Debian package declares `awk` as a dependency. No Python, Perl or Node.js dependency is introduced at runtime.
+- **Required at runtime**: a POSIX shell and the POSIX utilities `od`, `awk` and `wc` (the test suite additionally uses `tr` and other standard tools). `od` and `wc` are POSIX utilities; `awk` is a virtual package provided by `mawk`, `gawk` or `original-awk`, and every standard Debian and Ubuntu installation provides one (`mawk` has `Priority: required` and `ubuntu-minimal` depends on it), so the Debian package does not declare a dependency on the `awk` virtual package. No Python, Perl or Node.js dependency is introduced at runtime.
 - **Non-POSIX exceptions (level 4)**: none at runtime. `encoding_base64_encode`/`encoding_base64_decode` are implemented with `od`, `wc`, `awk` and the shell `printf`; the external `base64` command (not specified by POSIX) is not used; see [Encoding](#4-encoding-encodingsh).
-- **Development only**: Python 3 generates the case-mapping data (`tools/gen_case.py`); it is never a runtime dependency. The generated data is derived from the Unicode Character Database, Unicode 15.0.0, under the Unicode License V3.
+- **Development only**: Python 3 generates the case-mapping data (`tools/gen_case.py`); it is never a runtime dependency. The generated data is derived from the Unicode Character Database, Unicode 15.0.0, under the Unicode License Agreement - Data Files and Software (2016) (`Unicode-DFS-2016`).
 
 ### Per-function dependency classification
 
@@ -420,7 +420,7 @@ POSHLI distinguishes three concepts that are often all called "length":
 
 `str_lower`/`str_upper` apply Unicode case mapping with POSHLI's own generated data. The result cannot vary with the shell, the locale or the `awk` implementation: the conversion never uses the locale, never uses `tolower()`/`toupper()` from `awk`, and never depends on any Unicode capability of the platform; the `awk` code uses only POSIX `awk` features. Which `awk` implementations the test suite has actually been verified against is stated in [Testing](#testing).
 
-The input is validated and decoded from UTF-8 exactly like `str_len`, converted per code point, and re-encoded to UTF-8. All intermediate processing happens over ASCII text and numbers (`od`, POSIX `awk`, `printf`); no tool ever interprets non-ASCII text. The mapping data (`src/case_data.sh`) is generated at development time by `tools/gen_case.py` from the Unicode Character Database (Unicode 15.0.0) and compiled into the `poshli.sh` bundle, so the runtime needs no external Unicode database and no Python. The Unicode data is used under the Unicode License V3.
+The input is validated and decoded from UTF-8 exactly like `str_len`, converted per code point, and re-encoded to UTF-8. All intermediate processing happens over ASCII text and numbers (`od`, POSIX `awk`, `printf`); no tool ever interprets non-ASCII text. The mapping data (`src/case_data.sh`) is generated at development time by `tools/gen_case.py` from the Unicode Character Database (Unicode 15.0.0) and compiled into the `poshli.sh` bundle, so the runtime needs no external Unicode database and no Python. The Unicode data is used under the Unicode License Agreement - Data Files and Software (2016) (`Unicode-DFS-2016`).
 
 What is mapped:
 
@@ -441,9 +441,9 @@ Invalid UTF-8 is rejected exactly like `str_len`: `str_lower`/`str_upper` print 
 
 These are the requirements of the Unicode helpers; see the [Dependency Policy](#dependency-policy) for the complete dependency picture of the library.
 
-- **Required**: a POSIX shell and the standard POSIX utilities `od`, `awk` and `wc`. `od` and `wc` are part of the POSIX-specified utilities; on a minimal Debian/Ubuntu system `awk` is a virtual package provided by `mawk`, `gawk` or `original-awk` and may need to be installed explicitly. If you are installing POSHLI from a Debian package, the package declares `awk` as a dependency.
+- **Required**: a POSIX shell and the standard POSIX utilities `od`, `awk` and `wc`. `od` and `wc` are part of the POSIX-specified utilities; `awk` is a virtual package provided by `mawk`, `gawk` or `original-awk`, and every standard Debian and Ubuntu installation provides one, so the Debian package does not declare a dependency on it.
 - **Unicode case mapping**: the data is generated into `src/case_data.sh` at development time by `tools/gen_case.py` (Python 3, development only) and ships inside `poshli.sh`. The runtime does not need Python, an external Unicode database, or a Unicode-aware `awk`.
-- The case-mapping data embedded in `src/case_data.sh` and in the bundle is derived from the Unicode Character Database, Unicode 15.0.0, and is used under the Unicode License V3.
+- The case-mapping data embedded in `src/case_data.sh` and in the bundle is derived from the Unicode Character Database, Unicode 15.0.0, and is used under the Unicode License Agreement - Data Files and Software (2016) (`Unicode-DFS-2016`).
 - No Python, Perl or Node.js dependency is introduced **at runtime**.
 
 ---
@@ -497,9 +497,9 @@ make test-bundle
 make check-bundle
 ```
 
-> **`awk` implementation coverage (designed vs. verified)**: the library's `awk` code uses only POSIX `awk` features and never the locale, so its results are designed not to vary between conforming `awk` implementations. The matrix was re-executed **manually on 2026-11-21** in Ubuntu 24.04 with `dash` 0.5.12-6ubuntu5, `bash` 5.2.21-2ubuntu4 (`--posix`), GNU awk 5.2.1-2ubuntu0.1, `mawk` 1.3.4.20240123-1build1 and BusyBox 1.36.1-6ubuntu3.1. Every run executed the full suite (583 tests) with **583/583 passing and no skips**:
+> **`awk` implementation coverage (designed vs. verified)**: the library's `awk` code uses only POSIX `awk` features and never the locale, so its results are designed not to vary between conforming `awk` implementations. The matrix was re-executed **manually on 2026-11-21** in Ubuntu 24.04 with `dash` 0.5.12-6ubuntu5, `bash` 5.2.21-2ubuntu4 (`--posix`), GNU awk 5.2.1-2ubuntu0.1, `mawk` 1.3.4.20240123-1build1 and BusyBox 1.36.1-6ubuntu3.1. Every run executed the full suite (611 tests) with **611/611 passing and no skips**:
 >
-> - GNU awk 5.2.1: `dash` (sources and bundle) and `bash --posix` (bundle).
+> - GNU awk 5.2.1: `dash` and `bash --posix` (sources and bundle).
 > - `mawk` 1.3.4.20240123: `dash` and `bash --posix` (sources and bundle).
 > - BusyBox `awk` 1.36.1: `dash` and `bash --posix` (sources and bundle).
 > - BusyBox `sh` with BusyBox `awk`, `od` and `wc` (sources and bundle), plus the full-BusyBox configuration with `tr`, `cmp`, `head` and `id`.
@@ -520,6 +520,61 @@ Contributions are welcome! Please refer to the [Contributing Guidelines](.github
 SPDX-License-Identifier: `LGPL-3.0-only`
 
 POSHLI is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, version **3 of the License only**. See [LICENSE](LICENSE) for the full license text.
+
+### Unicode Character Database
+
+The case-mapping data embedded in `src/case_data.sh` and in the generated `poshli.sh` bundle is derived from the Unicode Character Database, Unicode 15.0.0. It is distributed under `Unicode-DFS-2016` (Unicode License Agreement - Data Files and Software, 2016). Unicode 15.0.0 was published on 2022-09-13, when that was the license in force; the later Unicode License v3 (2023) is not retroactive and does not replace it for these data.
+
+The full copyright and permission notice is reproduced below:
+
+```text
+UNICODE, INC. LICENSE AGREEMENT - DATA FILES AND SOFTWARE
+
+See Terms of Use <https://www.unicode.org/copyright.html>
+for definitions of Unicode Inc.’s Data Files and Software.
+
+NOTICE TO USER: Carefully read the following legal agreement.
+BY DOWNLOADING, INSTALLING, COPYING OR OTHERWISE USING UNICODE INC.'S
+DATA FILES ("DATA FILES"), AND/OR SOFTWARE ("SOFTWARE"),
+YOU UNEQUIVOCALLY ACCEPT, AND AGREE TO BE BOUND BY, ALL OF THE
+TERMS AND CONDITIONS OF THIS AGREEMENT.
+IF YOU DO NOT AGREE, DO NOT DOWNLOAD, INSTALL, COPY, DISTRIBUTE OR USE
+THE DATA FILES OR SOFTWARE.
+
+COPYRIGHT AND PERMISSION NOTICE
+
+Copyright © 1991-2022 Unicode, Inc. All rights reserved.
+Distributed under the Terms of Use in https://www.unicode.org/copyright.html.
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the Unicode data files and any associated documentation
+(the "Data Files") or Unicode software and any associated documentation
+(the "Software") to deal in the Data Files or Software
+without restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, and/or sell copies of
+the Data Files or Software, and to permit persons to whom the Data Files
+or Software are furnished to do so, provided that either
+(a) this copyright and permission notice appear with all copies
+of the Data Files or Software, or
+(b) this copyright and permission notice appear in associated
+Documentation.
+
+THE DATA FILES AND SOFTWARE ARE PROVIDED "AS IS", WITHOUT WARRANTY OF
+ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT OF THIRD PARTY RIGHTS.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN THIS
+NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR CONSEQUENTIAL
+DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THE DATA FILES OR SOFTWARE.
+
+Except as contained in this notice, the name of a copyright holder
+shall not be used in advertising or otherwise to promote the sale,
+use or other dealings in these Data Files or Software without prior
+written authorization of the copyright holder.
+```
 
 ### Using POSHLI in other programs
 

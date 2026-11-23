@@ -1,5 +1,10 @@
 poshli (0.5.0-1) unstable; urgency=medium
 
   * Initial release.
+  * Install the generated single-file bundle as /usr/share/poshli/poshli.sh.
+  * Run the upstream test suite against both sources and bundle during the
+    build.
+  * Package the library under LGPL-3.0-only; the embedded Unicode 15.0.0
+    case-mapping data is distributed under Unicode-DFS-2016.
 
- -- Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>  Tue, 17 Nov 2026 10:00:00 +0100
+ -- Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>  Mon, 23 Nov 2026 06:54:02 +0100

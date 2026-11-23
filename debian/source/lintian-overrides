@@ -1,0 +1,6 @@
+# POSHLI is both developed upstream and packaged for Debian by the same
+# maintainer. The debian/ directory is deliberately versioned in the upstream
+# repository and shipped in upstream releases, so the Debian source package
+# makes no changes to upstream files outside debian/. Format 3.0 (quilt)
+# purges the upstream debian/ directory automatically during unpacking.
+poshli source: no-debian-changes

@@ -173,4 +173,4 @@ Every function added or modified must include unit tests in `tests/`:
 
 ## 10. License
 
-All POSHLI source, test and tool files are licensed under `LGPL-3.0-only`. See `LICENSE` in the repository root for the full license text. The generated Unicode case-mapping data is additionally attributed to the Unicode Character Database under the Unicode License V3; see `src/case_data.sh`, `tools/gen_case.py` and `debian/copyright`.
+All POSHLI source, test and tool files are licensed under `LGPL-3.0-only`. See `LICENSE` in the repository root for the full license text. The generated Unicode case-mapping data is additionally attributed to the Unicode Character Database under `Unicode-DFS-2016` (Unicode License Agreement - Data Files and Software, 2016); see `src/case_data.sh`, `tools/gen_case.py` and `debian/copyright`.

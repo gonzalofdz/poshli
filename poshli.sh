@@ -2,14 +2,15 @@
 #
 # POSHLI
 #
-# SPDX-License-Identifier: LGPL-3.0-only
+# SPDX-License-Identifier: LGPL-3.0-only AND Unicode-DFS-2016
 # Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
 # This file is part of POSHLI. See LICENSE for the full license text.
 #
 # This bundle contains Unicode case mapping data derived from the Unicode
 # Character Database, Unicode 15.0.0. Unicode data copyright (C) 1991-2022
-# Unicode, Inc.; licensed under the Unicode License V3
-# <https://www.unicode.org/license.txt>.
+# Unicode, Inc.; licensed under the Unicode License Agreement - Data Files and
+# Software (2016) (SPDX: Unicode-DFS-2016)
+# <https://spdx.org/licenses/Unicode-DFS-2016.html>.
 #
 [ -n "${_POSHLI_LOADED+x}" ] && return 0
 _POSHLI_LOADED=1

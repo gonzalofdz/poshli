@@ -1,0 +1,3 @@
+# poshli.sh is a shell function library designed to be sourced with the POSIX
+# dot command, not executed directly. The executable bit is intentionally unset.
+poshli binary: script-not-executable [usr/share/poshli/poshli.sh]

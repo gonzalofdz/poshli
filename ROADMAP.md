@@ -31,27 +31,30 @@ These are deliberate design choices to keep unless new evidence and tests justif
 - [x] Make `fs_is_plain_text` POSIX and deterministic (documented byte heuristic with POSIX utilities instead of `file(1)`; defined semantics and behavior).
 - [x] Replace the Base64 backend with a POSIX-only implementation (`od` + `wc` + `awk` + `printf`), using a single code path with no external fallback.
 - [x] Document the dependency separation clearly (per-function dependency classification in README *Dependency Policy*, mapping every public function to the policy levels: the pure POSIX shell functions are identified as level 1, `num_randomize` is classified as POSIX `awk`, and `str_len_bytes` is corrected to `wc` plus `awk` output normalization; there are no level 3 optional improvements and no level 4 exceptions at runtime).
-- [x] SPDX license headers and Unicode Character Database attribution (Unicode 15.0.0, Unicode License V3) across sources, tests, tools and documentation; added the license section to README and DEVELOPER.md.
-- [x] Initial `debian/` packaging files added to the repository; the package is not built, validated or published.
+- [x] SPDX license headers and Unicode Character Database attribution (Unicode 15.0.0, Unicode-DFS-2016) across sources, tests, tools and documentation; added the license section to README and DEVELOPER.md.
+- [x] Initial `debian/` packaging files added to the repository; package built and validated (`dpkg-buildpackage`, `dpkg-checkbuilddeps`, `lintian`), with final tag validation and publication pending.
 - [x] Fail-closed behaviour in `str_len`, `str_lower` and `str_upper` when `od` cannot read the input bytes, with tests simulating `od`/`wc` failures.
 - [x] Return-code audit (PLAN.md Fase 0) executed against the bundle in `dash`, `bash --posix` and `busybox sh`; baseline saved in `docs/return-codes-baseline.md`.
 - [x] Return-code normalization (PLAN.md Fases 1–4): the six `fs_is_*` predicates return `1` when the path argument is missing (D2); README, DEVELOPER.md, CONTRIBUTING.md and tests are aligned; `fs_is_plain_text` remains operational and keeps `2`. Verification re-ran the 136-case Fase 0 audit in the five original configurations, with 11 justified differences (6 from D2, 5 from `b0345be`). Caveat: 17 cells of the reduced baseline have no direct case in the recovered audit script, so its 118-cell coverage is not complete.
 - [x] Publish the pending local commits and confirm GitHub Actions CI: `ae2f0a7` and `b0345be` are ancestors of `a957564`, `origin/master` is at `a957564`, and run #28 on that commit succeeded.
-- [x] Full technical audit (2026-11-20, GLM 5.3, PLAN mode) against `0.5.0` at `a957564`: no critical defects, sound architecture, 583/583 tests passing in each of 10 documented configurations, 55/55 spike tests per configuration, and a synchronized bundle. Historical evidence for that commit, not a permanent certification. Pending findings are recorded in `PLAN.md` (A1, M1–M5, H1–H7).
+- [x] Full technical audit (2026-11-20, GLM 5.3, PLAN mode) against `0.5.0` at `a957564`: no critical defects, sound architecture, 583/583 tests passing in each of 10 documented configurations (the suite size at that commit), 55/55 spike tests per configuration, and a synchronized bundle. Historical evidence for that commit, not a permanent certification. Pending findings are recorded in `PLAN.md` (A1, M1–M5, H1–H7).
 - [x] Quality and distribution validation review (2026-11-21): adopted `shellcheck -s sh` as the routine static check, `# shellcheck shell=sh` in shell files without a shebang, and localized justified suppressions only (for example the intentional `SC2086` word splitting in the test runners); no global exclusions and no blanket optional checks. `SC2034` on `POSHLI_VERSION` is a known, justified warning, and static checks complement but do not replace the real portability matrix. `checkbashisms` and `posh` are optional pre-publication tools, never build dependencies. The return-code contract and the documented `fs_is_plain_text` `2` are kept as they are. Decisions recorded in `AGENTS.md` and `.opencode/commands/verify.md`; the CI integration of both checks is recorded in the CI entry below.
-- [x] Reproducibility check of the compatibility matrix (2026-11-21, Ubuntu 24.04): the full suite was re-run manually against sources and bundle with `dash` 0.5.12, `bash` 5.2.21 `--posix`, GNU awk 5.2.1, `mawk` 1.3.4.20240123 and BusyBox 1.36.1; **583/583 tests per configuration, no failures or skips**. This verifies `bash --posix` + `mawk` and `bash --posix` + BusyBox `awk`, closes D-1, and aligns `README.md` and `AGENTS.md`. Manual evidence from 2026-11-21; the `awk` dimension is now also covered by CI (see the CI integration entry below).
+- [x] Reproducibility check of the compatibility matrix (2026-11-21, Ubuntu 24.04): the full suite was re-run manually against sources and bundle with `dash` 0.5.12, `bash` 5.2.21 `--posix`, GNU awk 5.2.1, `mawk` 1.3.4.20240123 and BusyBox 1.36.1; **611/611 tests per configuration, no failures or skips**. This verifies GNU awk, `mawk` and BusyBox `awk` under both `dash` and `bash --posix` (sources and bundle), closes D-1, and aligns `README.md` and `AGENTS.md`. The suite grew from 583 to 611 tests with the regression tests added in `dce826d`. Manual evidence from 2026-11-21; the `awk` dimension is now also covered by CI (see the CI integration entry below).
 - [x] CI integration (2026-11-21): added a blocking `shellcheck -s sh` job with a checked-in baseline (`tools/ci/shellcheck.sh`, `tools/ci/shellcheck-baseline.txt`, ShellCheck 0.9.0 pinned in the workflow) and an independent `awk` matrix job (GNU awk, `mawk`, BusyBox `awk` under `dash`, sources and bundle) that verifies the selected implementation before running the suite. Verified in GitHub Actions run #30 (all jobs green).
 - [x] M3: separate invalid UTF-8 from tool failures in `str_len` diagnostics, preserving its return contract. Implemented with the reserved `INVALID` sentinel and a distinct `awk` failure diagnostic (`could not count code points`), with regression tests across the shell and `awk` matrix; the bundle was regenerated and synchronized.
+- [x] A1: handle stdout write failures in `str_trim`, `_poshli_case_map` (`str_lower`/`str_upper`), `str_len`, `str_len_bytes` and `str_replace`. Functions fail closed when stdout write fails (status 1, no partial output, temporary variables cleaned up); verified with regression tests in `tests/test_str.sh` across the matrix.
+- [x] Added `make check-bashisms` (optional pre-publication check): `checkbashisms -f -p` over `src/*.sh`, `poshli.sh` and `tests/*.sh`, skipping with exit 0 when the tool is absent. First run (checkbashisms 2.23.7ubuntu0.2): 0 real bashisms, 2 distinct false positives documented in `AGENTS.md` (the `source` word inside a diagnostic string, and the `.` case pattern, each reported in the source and again in the bundle), plus expected no-shebang advisories for the `src/` modules.
+- [x] Evaluated `posh` 0.14.1 as an additional validation shell and **discarded it**: it runs the `num`/`fs` suites correctly but hangs (infinite loop) on `str_replace` with glob metacharacters (`.`, `[a]`, `?`, `*`) because `posh` mishandles quoted wildcards in `case`/`%%`/`#` patterns — a `posh` non-conformance, not a Poshli defect. No actionable value over the existing shells plus ShellCheck/checkbashisms.
+- [x] Debian packaging: `Standards-Version` reviewed and updated to 4.7.4.1, according to `debian/control`.
 
 ## Current
 
-- [ ] Maintainer review of the audit documentation in `PLAN.md` and of the provisional priority order (A1 → M1/M2 → M3 → M4 → M5 → hygiene → portability). D-1 is closed (2026-11-21); CI now includes the shell matrix, ShellCheck and the `awk` matrix.
+- [ ] Maintainer review of the audit documentation in `PLAN.md` and of the provisional priority order (M1/M2 → M4 → hygiene → portability). D-1, A1, M3, M5 and D-4 are closed (2026-11-21); CI now includes the shell matrix, ShellCheck and the `awk` matrix.
 
 ## Next
 
-Ordered by provisional priority. Unless listed under *Approved, pending implementation*, each item is an investigation and validation task, not an approved implementation.
+Ordered by provisional priority; each item is an investigation and validation task, not an approved implementation.
 
-- [ ] A1: reproduce and confirm the stdout write-error behavior of `str_trim`, `_poshli_case_map` (`str_lower`/`str_upper`), `str_len`, `str_len_bytes` and `str_replace`; confirm severity before choosing a fix.
 - [ ] M1: reproduce `num_randomize` failures with a simulated missing or failing `awk`; define a documented return status and closed failure behavior.
 - [ ] M2: determine the portable numeric range of `num_randomize` and decide whether out-of-range values are rejected explicitly or documented as environment-dependent.
 - [ ] M4: add failure-injection tests for `fs_is_plain_text` and `num_randomize`, matching the existing `od`/`wc` shim style.
@@ -65,17 +68,13 @@ Ordered by provisional priority. Unless listed under *Approved, pending implemen
 - [ ] Implement `term.sh`.
 - [ ] Add simple CLI feedback components: spinners, animated indicators, progress, line updates, basic success/error/warning states.
 
-### Approved, pending implementation
-
-These decisions are closed. They are not yet implemented; do not mark them complete until the change is executed and verified.
-
-- [ ] Optional pre-publication portability checks: `checkbashisms` and `posh`, never as build dependencies.
-
 ## Later
 
-- [ ] Debian packaging, before publishing: replace the Unicode License stanza in `debian/copyright` with the full applicable license text and the correct attribution and year; first verify which license version corresponds to the Unicode data used.
-- [ ] Debian packaging, before publishing: review `Standards-Version` and update it only after checking the requirements of the target version.
-- [ ] Debian packaging, before publishing: run `dpkg-checkbuilddeps`, build with `dpkg-buildpackage`, validate with `lintian`, and run `uscan` when applicable. The initial `debian/` files are in the repository, but the package is not built, validated or published.
+- [x] Debian packaging: `debian/copyright` includes the `Unicode-DFS-2016` copyright and permission notice with the correct attribution (© 1991-2022 Unicode, Inc.); it points to the Unicode Terms of Use for the definitions of Data Files and Software. Verified that Unicode 15.0.0 was published on 2022-09-13 under DFS-2016; the later Unicode License v3 (2023) is not retroactive and does not replace it for these data.
+- [ ] Debian packaging, before publishing: validation on the definitive release tag and publication.
+
+> **Note (0.5.0 packaging):** `initial-upload-closes-no-bugs` is expected because Poshli 0.5.0 is not intended for the official Debian archive. Do not open an ITP or add an override for this tag.
+
 - [ ] Keep the review of distribution requirements and dependencies (Essential vs declared dependencies, LGPL-3.0-only vs -or-later) part of the packaging review.
 - [ ] Keep `debian/rules` limited to bundle synchronization plus `make test`/`test-bundle`: do not run the full shell and `awk` matrix there, and do not add ShellCheck or `checkbashisms` to `Build-Depends`. Package validation stays a pre-publication step.
 - [ ] Refresh performance and memory figures with new measurements, stating the environment and `awk` implementation; current figures are indicative only.
