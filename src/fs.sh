@@ -94,9 +94,10 @@ fs_is_plain_text() {
 #	surrogates and code points above U+10FFFF are rejected).
 #
 #	Returns 1 if the inspected content is not plain text (invalid UTF-8,
-#	NUL byte, forbidden control character) and also when the file cannot
-#	be evaluated (missing, unreadable, not a regular file, or read
-#	error); 2 if no argument is passed.
+#	NUL byte, forbidden control character), silently, and also when the
+#	file cannot be evaluated (missing, unreadable, not a regular file,
+#	read error or validation error). Tool failures print a diagnostic on
+#	stderr and never produce stdout. Returns 2 if no argument is passed.
 #
 #	Example of use:
 #	fs_is_plain_text "$HOME/.profile" && echo "Plain text file" || echo "Not a plain text file"
@@ -111,16 +112,30 @@ fs_is_plain_text() {
 
 	#	od reports the first 4096 bytes as decimal byte numbers, so
 	#	the validator below only ever sees ASCII digits and spaces.
-	#	The command substitution keeps od's exit status visible: a
-	#	failed read must return 1, never look like empty text.
-	if ! _pt_raw=$(LC_ALL=C od -A n -v -t u1 -N 4096 "$1" 2>/dev/null); then
-		unset _pt_raw
+	#	Capture and check od's status first: a failed read must return
+	#	1, never look like empty text.
+	_poshli_fs_is_plain_text_raw=$(LC_ALL=C od -A n -v -t u1 -N 4096 "$1" 2>/dev/null)
+	_poshli_fs_is_plain_text_status=$?
+	if [ "$_poshli_fs_is_plain_text_status" -ne 0 ]; then
+		printf 'poshli: fs_is_plain_text: could not read file\n' >&2
+		unset _poshli_fs_is_plain_text_raw _poshli_fs_is_plain_text_status
+		return 1
+	fi
+
+	#	A successful od on a non-empty file must produce at least one
+	#	byte number; otherwise fail closed instead of treating the
+	#	empty capture as plain text.
+	if [ -s "$1" ] && [ -z "$_poshli_fs_is_plain_text_raw" ]; then
+		printf 'poshli: fs_is_plain_text: could not read file\n' >&2
+		unset _poshli_fs_is_plain_text_raw _poshli_fs_is_plain_text_status
 		return 1
 	fi
 
 	#	awk consumes all of its input (no early exit) so the writing
 	#	builtin never hits a closed pipe; the input is bounded anyway.
-	if printf '%s\n' "$_pt_raw" | LC_ALL=C awk '
+	#	It prints exactly VALID or INVALID and exits 0 only after a
+	#	complete evaluation. Capture it so no output can leak.
+	_poshli_fs_is_plain_text_result=$(printf '%s\n' "$_poshli_fs_is_plain_text_raw" | LC_ALL=C awk '
 		BEGIN {
 			ok = 1
 			need = 0
@@ -166,14 +181,33 @@ fs_is_plain_text() {
 		END {
 			# an incomplete sequence at the 4096-byte window
 			# edge is tolerated: it may continue beyond it
-			if (ok && (need == 0 || n == 4096)) exit 0
-			exit 1
+			if (ok && (need == 0 || n == 4096)) print "VALID"
+			else print "INVALID"
+			exit 0
 		}
-	'; then
-		unset _pt_raw
-		return 0
+	' 2>/dev/null)
+	_poshli_fs_is_plain_text_status=$?
+
+	if [ "$_poshli_fs_is_plain_text_status" -ne 0 ]; then
+		printf 'poshli: fs_is_plain_text: could not validate content\n' >&2
+		unset _poshli_fs_is_plain_text_raw _poshli_fs_is_plain_text_status _poshli_fs_is_plain_text_result
+		return 1
 	fi
-	unset _pt_raw
-	return 1
+
+	case $_poshli_fs_is_plain_text_result in
+		VALID)
+			unset _poshli_fs_is_plain_text_raw _poshli_fs_is_plain_text_status _poshli_fs_is_plain_text_result
+			return 0
+			;;
+		INVALID)
+			unset _poshli_fs_is_plain_text_raw _poshli_fs_is_plain_text_status _poshli_fs_is_plain_text_result
+			return 1
+			;;
+		*)
+			printf 'poshli: fs_is_plain_text: could not validate content\n' >&2
+			unset _poshli_fs_is_plain_text_raw _poshli_fs_is_plain_text_status _poshli_fs_is_plain_text_result
+			return 1
+			;;
+	esac
 }
 fi

@@ -31,7 +31,7 @@ $(BUNDLE_OUTPUT): $(BUNDLE_SOURCES) Makefile
 
 check-bundle:
 	@tmp="poshli.sh.check.$$$$"; \
-	trap 'rm -f "$$tmp"' 0 1 2 15; \
+	trap 'rm -f "$$tmp"' 0 1 2 3 6 15; \
 	rm -f "$$tmp"; \
 	$(MAKE) --no-print-directory bundle BUNDLE_OUTPUT="$$tmp" >/dev/null || exit 1; \
 	if cmp -s "$$tmp" poshli.sh; then \
@@ -74,4 +74,4 @@ uninstall:
 	@printf 'Successfully uninstalled poshli.\n'
 
 clean:
-	@rm -f poshli.sh.tmp
+	@rm -f poshli.sh.tmp poshli.sh.check.*

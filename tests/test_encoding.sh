@@ -37,6 +37,7 @@ rm -f "$_b64_marker"
 
 (
 	unset _POSHLI_LOADED _POSHLI_ENCODING_LOADED
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	base64() { printf x >> "$_b64_marker"; return 1; }
 	. "$_poshli_encoding_test_lib"
 	[ ! -f "$_b64_marker" ] &&
@@ -48,6 +49,7 @@ assert_true $? "encoding.sh: no external base64 is used at load time or at run t
 
 (
 	unset _POSHLI_LOADED _POSHLI_ENCODING_LOADED
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	base64() { printf x >> "$_b64_marker"; return 1; }
 	. "$_poshli_encoding_test_lib"
 	encoding_base64_decode "!!!bad!!!" 2>/dev/null
@@ -159,6 +161,7 @@ unset _m200 _exp _i
 _poshli_b64_scen_out="${TMPDIR:-/tmp}/poshli_b64_scen_out.$$"
 _poshli_b64_scen_marker="${TMPDIR:-/tmp}/poshli_b64_scen_probe.$$"
 rm -f "$_poshli_b64_scen_out" "$_poshli_b64_scen_marker"
+# shellcheck disable=SC2317  # shim is invoked indirectly
 base64() { printf x >> "$_poshli_b64_scen_marker"; return 1; }
 
 # 100-byte input: large enough that "head -n 2" below keeps only 32 of its
@@ -167,6 +170,7 @@ _poshli_b64_in100="0123456789012345678901234567890123456789012345678901234567890
 
 # 1) od fails producing no output at all.
 _poshli_b64_st=$( (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	od() { return 1; }
 	encoding_base64_encode "$_poshli_b64_in100" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
@@ -176,6 +180,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: od failing with no ou
 
 # 2) od fails after emitting partial output.
 _poshli_b64_st=$( (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	od() { command od "$@" | head -n 2; return 1; }
 	encoding_base64_encode "$_poshli_b64_in100" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
@@ -185,6 +190,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: od failing after part
 
 # 3) od emits truncated output but reports success.
 _poshli_b64_st=$( (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	od() { command od "$@" | head -n 2; return 0; }
 	encoding_base64_encode "$_poshli_b64_in100" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
@@ -198,6 +204,7 @@ _poshli_b64_m200=""
 _poshli_b64_i=0
 while [ "$_poshli_b64_i" -lt 200 ]; do _poshli_b64_m200="${_poshli_b64_m200}m"; _poshli_b64_i=$((_poshli_b64_i + 1)); done
 _poshli_b64_st=$( (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	od() { command od -A n -t u1; }
 	encoding_base64_encode "$_poshli_b64_m200" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
@@ -208,6 +215,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: od ignoring -v (elide
 # 5a) od emits a value outside the byte range. The field count matches the 3
 # expected bytes on purpose: only the value check can catch this case.
 _poshli_b64_st=$( (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	od() { printf ' 97 98 300\n'; }
 	encoding_base64_encode "abc" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
@@ -217,6 +225,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: od value above 255 re
 
 # 5b) od emits a non-numeric field. Again the count matches on purpose.
 _poshli_b64_st=$( (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	od() { printf ' 97 98 x\n'; }
 	encoding_base64_encode "abc" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
@@ -226,6 +235,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: od non-numeric field 
 
 # 5c) od emits more bytes than the input has.
 _poshli_b64_st=$( (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	od() { printf ' 97 98 99 100\n'; }
 	encoding_base64_encode "abc" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
@@ -235,6 +245,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: od extra bytes return
 
 # 6) wc is not available.
 _poshli_b64_st=$( (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	wc() { return 127; }
 	encoding_base64_encode "$_poshli_b64_in100" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
@@ -244,6 +255,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: missing wc returns 1"
 
 # 7) wc reports a byte count that contradicts od.
 _poshli_b64_st=$( (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	wc() { printf '3\n'; }
 	encoding_base64_encode "$_poshli_b64_in100" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
@@ -291,6 +303,7 @@ assert_true $? "encoding.sh: temporaries are cleaned on success"
 # Temporaries are also cleaned when the awk stage fails (invalid or
 # unavailable awk output paths), not only when the final printf fails.
 _poshli_b64_wfail_st=$( (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	awk() { return 1; }
 	encoding_base64_encode "abc" > /dev/null 2>&1
 	_st=$?
@@ -300,6 +313,7 @@ _poshli_b64_wfail_st=$( (
 assert_status 1 "$_poshli_b64_wfail_st" "encoding_base64_encode: awk failure returns 1 and cleans temporaries"
 
 _poshli_b64_wfail_st=$( (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	awk() { return 1; }
 	encoding_base64_decode "YWJj" > /dev/null 2>&1
 	_st=$?

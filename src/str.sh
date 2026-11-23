@@ -36,14 +36,14 @@ str_trim() {
 		printf '%s\n' ""
 		return
 	fi
-	_trim_str=$1
-	_trim_str=${_trim_str#"${_trim_str%%[! 	]*}"}
-	_trim_str=${_trim_str%"${_trim_str##*[! 	]}"}
-	printf '%s\n' "$_trim_str" || {
-		unset _trim_str
+	_poshli_str_trim_value=$1
+	_poshli_str_trim_value=${_poshli_str_trim_value#"${_poshli_str_trim_value%%[! 	]*}"}
+	_poshli_str_trim_value=${_poshli_str_trim_value%"${_poshli_str_trim_value##*[! 	]}"}
+	printf '%s\n' "$_poshli_str_trim_value" || {
+		unset _poshli_str_trim_value
 		return 1
 	}
-	unset _trim_str
+	unset _poshli_str_trim_value
 }
 
 _poshli_case_map() {
@@ -71,14 +71,14 @@ _poshli_case_map() {
 #	LOWER=$(_poshli_case_map lower "HELLO")
 #
 	if [ -z "${_POSHLI_CASE_LOADED+x}" ]; then
-		printf '%s\n' "poshli: $1: case mapping data not loaded (source src/case_data.sh)" >&2
+		printf '%s\n' "poshli: str_$1: case mapping data not loaded (source src/case_data.sh)" >&2
 		return 1
 	fi
 	case "$1" in
-	lower) _poshli_case_table="$_POSHLI_CASE_LOWER" ;;
-	upper) _poshli_case_table="$_POSHLI_CASE_UPPER" ;;
+	lower) _poshli_case_map_table="$_POSHLI_CASE_LOWER" ;;
+	upper) _poshli_case_map_table="$_POSHLI_CASE_UPPER" ;;
 	*)
-		unset _poshli_case_table
+		unset _poshli_case_map_table
 		return 2
 		;;
 	esac
@@ -88,16 +88,16 @@ _poshli_case_map() {
 	#	ASCII: numbers, table records and octal escape text. The
 	#	whole result is buffered and printed only on success, so a
 	#	failed call prints nothing.
-	_poshli_case_od=$(printf '%s' "$2" | LC_ALL=C od -A n -v -t u1) || {
-		unset _poshli_case_table _poshli_case_od
-		printf '%s\n' "poshli: $1: could not read input bytes" >&2
+	_poshli_case_map_od=$(printf '%s' "$2" | LC_ALL=C od -A n -v -t u1) || {
+		unset _poshli_case_map_table _poshli_case_map_od
+		printf '%s\n' "poshli: str_$1: could not read input bytes" >&2
 		return 1
 	}
-	_poshli_case_out=$(
+	_poshli_case_map_out=$(
 		{
-			printf '%s\n' "$_poshli_case_table"
+			printf '%s\n' "$_poshli_case_map_table"
 			printf '!\n'
-			printf '%s\n' "$_poshli_case_od"
+			printf '%s\n' "$_poshli_case_map_od"
 		} | LC_ALL=C awk '
 			function hex2dec(s,   i, n, c) {
 				n = 0
@@ -211,15 +211,15 @@ _poshli_case_map() {
 			}
 		'
 	) || {
-		unset _poshli_case_table _poshli_case_out _poshli_case_od
-		printf '%s\n' "poshli: $1: input is not valid UTF-8" >&2
+		unset _poshli_case_map_table _poshli_case_map_out _poshli_case_map_od
+		printf '%s\n' "poshli: str_$1: input is not valid UTF-8" >&2
 		return 1
 	}
-	printf '%b\n' "$_poshli_case_out" || {
-		unset _poshli_case_table _poshli_case_out _poshli_case_od
+	printf '%b\n' "$_poshli_case_map_out" || {
+		unset _poshli_case_map_table _poshli_case_map_out _poshli_case_map_od
 		return 1
 	}
-	unset _poshli_case_table _poshli_case_out _poshli_case_od
+	unset _poshli_case_map_table _poshli_case_map_out _poshli_case_map_od
 }
 
 str_lower() {
@@ -478,22 +478,22 @@ str_replace() {
 		printf '%s\n' "$3" || return 1
 		return 0
 	}
-	_sr_search="$1"
-	_sr_replace="$2"
-	_sr_str="$3"
-	_sr_out=""
+	_poshli_str_replace_search="$1"
+	_poshli_str_replace_replacement="$2"
+	_poshli_str_replace_str="$3"
+	_poshli_str_replace_out=""
 
-	while case "$_sr_str" in *"${_sr_search}"*) true ;; *) false ;; esac; do
-		_sr_prefix="${_sr_str%%"${_sr_search}"*}"
-		_sr_out="${_sr_out}${_sr_prefix}${_sr_replace}"
-		_sr_rest="${_sr_str#"${_sr_prefix}""${_sr_search}"}"
-		_sr_str="$_sr_rest"
+	while case "$_poshli_str_replace_str" in *"${_poshli_str_replace_search}"*) true ;; *) false ;; esac; do
+		_poshli_str_replace_prefix="${_poshli_str_replace_str%%"${_poshli_str_replace_search}"*}"
+		_poshli_str_replace_out="${_poshli_str_replace_out}${_poshli_str_replace_prefix}${_poshli_str_replace_replacement}"
+		_poshli_str_replace_rest="${_poshli_str_replace_str#"${_poshli_str_replace_prefix}""${_poshli_str_replace_search}"}"
+		_poshli_str_replace_str="$_poshli_str_replace_rest"
 	done
-	_sr_out="${_sr_out}${_sr_str}"
-	printf '%s\n' "$_sr_out" || {
-		unset _sr_search _sr_replace _sr_str _sr_out _sr_prefix _sr_rest
+	_poshli_str_replace_out="${_poshli_str_replace_out}${_poshli_str_replace_str}"
+	printf '%s\n' "$_poshli_str_replace_out" || {
+		unset _poshli_str_replace_search _poshli_str_replace_replacement _poshli_str_replace_str _poshli_str_replace_out _poshli_str_replace_prefix _poshli_str_replace_rest
 		return 1
 	}
-	unset _sr_search _sr_replace _sr_str _sr_out _sr_prefix _sr_rest
+	unset _poshli_str_replace_search _poshli_str_replace_replacement _poshli_str_replace_str _poshli_str_replace_out _poshli_str_replace_prefix _poshli_str_replace_rest
 }
 fi

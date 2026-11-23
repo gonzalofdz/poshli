@@ -79,12 +79,39 @@ num_is_bool() {
 num_randomize() {
 	[ $# -ge 1 ] || return 2
 	num_is_natural "$1" || return 1
-	[ "$1" -gt 0 ] || return 1
 
-	awk -v limit="$1" 'BEGIN {
-		srand()
-		printf "%d\n", int(rand() * limit)
-	}'
+	case "$1" in
+		*[1-9]*) ;;
+		*) return 1 ;;
+	esac
+
+	_poshli_num_randomize_out=$(LC_ALL=C awk -v limit="$1" '
+		BEGIN {
+			if (limit + 0 > 2147483647) exit 3
+			srand()
+			r = int(rand() * limit)
+			if (r >= limit || r < 0) r = limit - 1
+			printf "%d\n", r
+		}' 2>/dev/null)
+	_poshli_num_randomize_status=$?
+
+	if [ "$_poshli_num_randomize_status" -eq 3 ]; then
+		printf 'poshli: num_randomize: limit out of range (1..2147483647)\n' >&2
+		unset _poshli_num_randomize_out _poshli_num_randomize_status
+		return 1
+	fi
+	if [ "$_poshli_num_randomize_status" -ne 0 ] || ! num_is_natural "$_poshli_num_randomize_out"; then
+		printf 'poshli: num_randomize: could not generate a random number\n' >&2
+		unset _poshli_num_randomize_out _poshli_num_randomize_status
+		return 1
+	fi
+
+	printf '%s\n' "$_poshli_num_randomize_out" || {
+		unset _poshli_num_randomize_out _poshli_num_randomize_status
+		return 1
+	}
+	unset _poshli_num_randomize_out _poshli_num_randomize_status
+	return 0
 }
 
 fi
@@ -128,12 +155,21 @@ fs_is_plain_text() {
 
 	case $1 in -*) set -- "./$1" ;; esac
 
-	if ! _pt_raw=$(LC_ALL=C od -A n -v -t u1 -N 4096 "$1" 2>/dev/null); then
-		unset _pt_raw
+	_poshli_fs_is_plain_text_raw=$(LC_ALL=C od -A n -v -t u1 -N 4096 "$1" 2>/dev/null)
+	_poshli_fs_is_plain_text_status=$?
+	if [ "$_poshli_fs_is_plain_text_status" -ne 0 ]; then
+		printf 'poshli: fs_is_plain_text: could not read file\n' >&2
+		unset _poshli_fs_is_plain_text_raw _poshli_fs_is_plain_text_status
 		return 1
 	fi
 
-	if printf '%s\n' "$_pt_raw" | LC_ALL=C awk '
+	if [ -s "$1" ] && [ -z "$_poshli_fs_is_plain_text_raw" ]; then
+		printf 'poshli: fs_is_plain_text: could not read file\n' >&2
+		unset _poshli_fs_is_plain_text_raw _poshli_fs_is_plain_text_status
+		return 1
+	fi
+
+	_poshli_fs_is_plain_text_result=$(printf '%s\n' "$_poshli_fs_is_plain_text_raw" | LC_ALL=C awk '
 		BEGIN {
 			ok = 1
 			need = 0
@@ -173,15 +209,34 @@ fs_is_plain_text() {
 			}
 		}
 		END {
-			if (ok && (need == 0 || n == 4096)) exit 0
-			exit 1
+			if (ok && (need == 0 || n == 4096)) print "VALID"
+			else print "INVALID"
+			exit 0
 		}
-	'; then
-		unset _pt_raw
-		return 0
+	' 2>/dev/null)
+	_poshli_fs_is_plain_text_status=$?
+
+	if [ "$_poshli_fs_is_plain_text_status" -ne 0 ]; then
+		printf 'poshli: fs_is_plain_text: could not validate content\n' >&2
+		unset _poshli_fs_is_plain_text_raw _poshli_fs_is_plain_text_status _poshli_fs_is_plain_text_result
+		return 1
 	fi
-	unset _pt_raw
-	return 1
+
+	case $_poshli_fs_is_plain_text_result in
+		VALID)
+			unset _poshli_fs_is_plain_text_raw _poshli_fs_is_plain_text_status _poshli_fs_is_plain_text_result
+			return 0
+			;;
+		INVALID)
+			unset _poshli_fs_is_plain_text_raw _poshli_fs_is_plain_text_status _poshli_fs_is_plain_text_result
+			return 1
+			;;
+		*)
+			printf 'poshli: fs_is_plain_text: could not validate content\n' >&2
+			unset _poshli_fs_is_plain_text_raw _poshli_fs_is_plain_text_status _poshli_fs_is_plain_text_result
+			return 1
+			;;
+	esac
 }
 fi
 
@@ -1651,39 +1706,39 @@ str_trim() {
 		printf '%s\n' ""
 		return
 	fi
-	_trim_str=$1
-	_trim_str=${_trim_str#"${_trim_str%%[! 	]*}"}
-	_trim_str=${_trim_str%"${_trim_str##*[! 	]}"}
-	printf '%s\n' "$_trim_str" || {
-		unset _trim_str
+	_poshli_str_trim_value=$1
+	_poshli_str_trim_value=${_poshli_str_trim_value#"${_poshli_str_trim_value%%[! 	]*}"}
+	_poshli_str_trim_value=${_poshli_str_trim_value%"${_poshli_str_trim_value##*[! 	]}"}
+	printf '%s\n' "$_poshli_str_trim_value" || {
+		unset _poshli_str_trim_value
 		return 1
 	}
-	unset _trim_str
+	unset _poshli_str_trim_value
 }
 
 _poshli_case_map() {
 	if [ -z "${_POSHLI_CASE_LOADED+x}" ]; then
-		printf '%s\n' "poshli: $1: case mapping data not loaded (source src/case_data.sh)" >&2
+		printf '%s\n' "poshli: str_$1: case mapping data not loaded (source src/case_data.sh)" >&2
 		return 1
 	fi
 	case "$1" in
-	lower) _poshli_case_table="$_POSHLI_CASE_LOWER" ;;
-	upper) _poshli_case_table="$_POSHLI_CASE_UPPER" ;;
+	lower) _poshli_case_map_table="$_POSHLI_CASE_LOWER" ;;
+	upper) _poshli_case_map_table="$_POSHLI_CASE_UPPER" ;;
 	*)
-		unset _poshli_case_table
+		unset _poshli_case_map_table
 		return 2
 		;;
 	esac
-	_poshli_case_od=$(printf '%s' "$2" | LC_ALL=C od -A n -v -t u1) || {
-		unset _poshli_case_table _poshli_case_od
-		printf '%s\n' "poshli: $1: could not read input bytes" >&2
+	_poshli_case_map_od=$(printf '%s' "$2" | LC_ALL=C od -A n -v -t u1) || {
+		unset _poshli_case_map_table _poshli_case_map_od
+		printf '%s\n' "poshli: str_$1: could not read input bytes" >&2
 		return 1
 	}
-	_poshli_case_out=$(
+	_poshli_case_map_out=$(
 		{
-			printf '%s\n' "$_poshli_case_table"
+			printf '%s\n' "$_poshli_case_map_table"
 			printf '!\n'
-			printf '%s\n' "$_poshli_case_od"
+			printf '%s\n' "$_poshli_case_map_od"
 		} | LC_ALL=C awk '
 			function hex2dec(s,   i, n, c) {
 				n = 0
@@ -1790,15 +1845,15 @@ _poshli_case_map() {
 			}
 		'
 	) || {
-		unset _poshli_case_table _poshli_case_out _poshli_case_od
-		printf '%s\n' "poshli: $1: input is not valid UTF-8" >&2
+		unset _poshli_case_map_table _poshli_case_map_out _poshli_case_map_od
+		printf '%s\n' "poshli: str_$1: input is not valid UTF-8" >&2
 		return 1
 	}
-	printf '%b\n' "$_poshli_case_out" || {
-		unset _poshli_case_table _poshli_case_out _poshli_case_od
+	printf '%b\n' "$_poshli_case_map_out" || {
+		unset _poshli_case_map_table _poshli_case_map_out _poshli_case_map_od
 		return 1
 	}
-	unset _poshli_case_table _poshli_case_out _poshli_case_od
+	unset _poshli_case_map_table _poshli_case_map_out _poshli_case_map_od
 }
 
 str_lower() {
@@ -1987,23 +2042,23 @@ str_replace() {
 		printf '%s\n' "$3" || return 1
 		return 0
 	}
-	_sr_search="$1"
-	_sr_replace="$2"
-	_sr_str="$3"
-	_sr_out=""
+	_poshli_str_replace_search="$1"
+	_poshli_str_replace_replacement="$2"
+	_poshli_str_replace_str="$3"
+	_poshli_str_replace_out=""
 
-	while case "$_sr_str" in *"${_sr_search}"*) true ;; *) false ;; esac; do
-		_sr_prefix="${_sr_str%%"${_sr_search}"*}"
-		_sr_out="${_sr_out}${_sr_prefix}${_sr_replace}"
-		_sr_rest="${_sr_str#"${_sr_prefix}""${_sr_search}"}"
-		_sr_str="$_sr_rest"
+	while case "$_poshli_str_replace_str" in *"${_poshli_str_replace_search}"*) true ;; *) false ;; esac; do
+		_poshli_str_replace_prefix="${_poshli_str_replace_str%%"${_poshli_str_replace_search}"*}"
+		_poshli_str_replace_out="${_poshli_str_replace_out}${_poshli_str_replace_prefix}${_poshli_str_replace_replacement}"
+		_poshli_str_replace_rest="${_poshli_str_replace_str#"${_poshli_str_replace_prefix}""${_poshli_str_replace_search}"}"
+		_poshli_str_replace_str="$_poshli_str_replace_rest"
 	done
-	_sr_out="${_sr_out}${_sr_str}"
-	printf '%s\n' "$_sr_out" || {
-		unset _sr_search _sr_replace _sr_str _sr_out _sr_prefix _sr_rest
+	_poshli_str_replace_out="${_poshli_str_replace_out}${_poshli_str_replace_str}"
+	printf '%s\n' "$_poshli_str_replace_out" || {
+		unset _poshli_str_replace_search _poshli_str_replace_replacement _poshli_str_replace_str _poshli_str_replace_out _poshli_str_replace_prefix _poshli_str_replace_rest
 		return 1
 	}
-	unset _sr_search _sr_replace _sr_str _sr_out _sr_prefix _sr_rest
+	unset _poshli_str_replace_search _poshli_str_replace_replacement _poshli_str_replace_str _poshli_str_replace_out _poshli_str_replace_prefix _poshli_str_replace_rest
 }
 fi
 
@@ -2014,12 +2069,12 @@ encoding_base64_encode() {
 	[ $# -ge 1 ] || return 2
 	[ -n "$1" ] || return 0
 
-	_poshli_b64_want=$(printf '%s' "$1" | LC_ALL=C wc -c) || {
-		unset _poshli_b64_want
+	_poshli_encoding_base64_encode_want=$(printf '%s' "$1" | LC_ALL=C wc -c) || {
+		unset _poshli_encoding_base64_encode_want
 		return 1
 	}
 
-	_poshli_base64_out=$(printf '%s' "$1" | LC_ALL=C od -A n -v -t u1 | LC_ALL=C awk -v want="$_poshli_b64_want" '
+	_poshli_encoding_base64_encode_out=$(printf '%s' "$1" | LC_ALL=C od -A n -v -t u1 | LC_ALL=C awk -v want="$_poshli_encoding_base64_encode_want" '
 		BEGIN {
 			alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 			seen = 0
@@ -2046,15 +2101,15 @@ encoding_base64_encode() {
 			}
 		}
 	') || {
-		unset _poshli_b64_want _poshli_base64_out
+		unset _poshli_encoding_base64_encode_want _poshli_encoding_base64_encode_out
 		return 1
 	}
-	unset _poshli_b64_want
-	printf '%s' "$_poshli_base64_out" || {
-		unset _poshli_base64_out
+	unset _poshli_encoding_base64_encode_want
+	printf '%s' "$_poshli_encoding_base64_encode_out" || {
+		unset _poshli_encoding_base64_encode_out
 		return 1
 	}
-	unset _poshli_base64_out
+	unset _poshli_encoding_base64_encode_out
 	return 0
 }
 
@@ -2072,25 +2127,25 @@ encoding_base64_decode() {
 	case $1 in
 		*[!AQgw]==) return 1 ;;
 		*==)
-			_poshli_b64_prefix=${1%??}
+			_poshli_encoding_base64_decode_prefix=${1%??}
 			;;
 		*[!AEIMQUYcgkosw048]=) return 1 ;;
 		*=)
-			_poshli_b64_prefix=${1%?}
+			_poshli_encoding_base64_decode_prefix=${1%?}
 			;;
 		*)
-			_poshli_b64_prefix=$1
+			_poshli_encoding_base64_decode_prefix=$1
 			;;
 	esac
-	case $_poshli_b64_prefix in
+	case $_poshli_encoding_base64_decode_prefix in
 		*=*)
-			unset _poshli_b64_prefix
+			unset _poshli_encoding_base64_decode_prefix
 			return 1
 			;;
 	esac
-	unset _poshli_b64_prefix
+	unset _poshli_encoding_base64_decode_prefix
 
-	_poshli_b64_esc=$(printf '%s' "$1" | LC_ALL=C awk '
+	_poshli_encoding_base64_decode_esc=$(printf '%s' "$1" | LC_ALL=C awk '
 		BEGIN {
 			alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 			for (i = 0; i < 256; i++)
@@ -2117,14 +2172,14 @@ encoding_base64_decode() {
 			}
 		}
 	') || {
-		unset _poshli_b64_esc
+		unset _poshli_encoding_base64_decode_esc
 		return 1
 	}
-	printf '%b' "$_poshli_b64_esc" || {
-		unset _poshli_b64_esc
+	printf '%b' "$_poshli_encoding_base64_decode_esc" || {
+		unset _poshli_encoding_base64_decode_esc
 		return 1
 	}
-	unset _poshli_b64_esc
+	unset _poshli_encoding_base64_decode_esc
 	return 0
 }
 fi

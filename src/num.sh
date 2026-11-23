@@ -102,18 +102,56 @@ num_is_bool() {
 
 num_randomize() {
 #	Prints a random integer from 0 to one less than the given limit.
+#	The limit must be a natural number in the portable range
+#	1..2147483647.
+#
+#	Returns 1 if the limit is zero, out of range, or if awk cannot
+#	generate the number; 2 if no argument is passed. Fails closed:
+#	no partial output is printed when awk fails.
 #
 #	Example of use:
 #	RANDNUM=$(num_randomize 5)
 #
 	[ $# -ge 1 ] || return 2
 	num_is_natural "$1" || return 1
-	[ "$1" -gt 0 ] || return 1
 
-	awk -v limit="$1" 'BEGIN {
-		srand()
-		printf "%d\n", int(rand() * limit)
-	}'
+	#	Reject zero without a numeric comparison: [ ] can overflow
+	#	on large values in some shells (M2).
+	case "$1" in
+		*[1-9]*) ;;
+		*) return 1 ;;
+	esac
+
+	#	awk validates the portable upper bound and keeps the result
+	#	strictly below the limit. Capture stdout first so a failing
+	#	awk cannot leak partial output (M1).
+	_poshli_num_randomize_out=$(LC_ALL=C awk -v limit="$1" '
+		BEGIN {
+			if (limit + 0 > 2147483647) exit 3
+			srand()
+			r = int(rand() * limit)
+			if (r >= limit || r < 0) r = limit - 1
+			printf "%d\n", r
+		}' 2>/dev/null)
+	_poshli_num_randomize_status=$?
+
+	if [ "$_poshli_num_randomize_status" -eq 3 ]; then
+		printf 'poshli: num_randomize: limit out of range (1..2147483647)\n' >&2
+		unset _poshli_num_randomize_out _poshli_num_randomize_status
+		return 1
+	fi
+	if [ "$_poshli_num_randomize_status" -ne 0 ] || ! num_is_natural "$_poshli_num_randomize_out"; then
+		printf 'poshli: num_randomize: could not generate a random number\n' >&2
+		unset _poshli_num_randomize_out _poshli_num_randomize_status
+		return 1
+	fi
+
+	printf '%s\n' "$_poshli_num_randomize_out" || {
+		unset _poshli_num_randomize_out _poshli_num_randomize_status
+		return 1
+	}
+	unset _poshli_num_randomize_out _poshli_num_randomize_status
+	return 0
 }
 
 fi

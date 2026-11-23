@@ -1,5 +1,4 @@
 #!/bin/sh
-# shellcheck disable=SC2317  # od/wc shims are invoked indirectly by the str_* functions
 #
 # POSHLI - Unit tests for str.sh
 #
@@ -175,6 +174,21 @@ case "$err" in *"input is not valid UTF-8"*) _str_diag="invalid-utf8" ;; esac
 assert_eq "invalid-utf8" "$_str_diag" "str_lower: diagnostic reports invalid UTF-8"
 unset err _str_diag
 
+# str_lower/str_upper: diagnostics use the public function names (H2).
+err=$(str_upper "$_str_invalid_truncated" 2>&1 >/dev/null)
+assert_eq "poshli: str_upper: input is not valid UTF-8" "$err" "str_upper: diagnostic uses the public name"
+unset err
+
+(
+	# shellcheck disable=SC2317  # shim is invoked indirectly
+	od() { return 127; }
+	_out=$(str_lower A 2>/dev/null)
+	_st=$?
+	_err=$(str_lower A 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ "$_err" = "poshli: str_lower: could not read input bytes" ]
+)
+assert_true $? "str_lower: od failure diagnostic uses the public name"
+
 # str_starts_with
 str_starts_with "http://example.com" "http://"; assert_true $? "str_starts_with: URL protocol"
 str_starts_with "foobar" "foo"; assert_true $? "str_starts_with: prefix"
@@ -337,48 +351,56 @@ res=$(str_replace "" "x" "hello"); assert_eq "hello" "$res" "str_replace: empty 
 # shims do not leak into the rest of the suite; each subshell exit status is
 # asserted in the parent so the suite counters are updated.
 (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	od() { return 127; }
 	res=$(str_len "hello" 2>/dev/null)
 	[ $? -eq 1 ]
 )
 assert_true $? "str_len fails closed when od is unavailable"
 (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	od() { return 127; }
 	res=$(str_len "hello" 2>/dev/null)
 	[ -z "$res" ]
 )
 assert_true $? "str_len prints nothing when od is unavailable"
 (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	od() { return 127; }
 	res=$(str_lower "HELLO" 2>/dev/null)
 	[ $? -eq 1 ]
 )
 assert_true $? "str_lower fails closed when od is unavailable"
 (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	od() { return 127; }
 	res=$(str_lower "HELLO" 2>/dev/null)
 	[ -z "$res" ]
 )
 assert_true $? "str_lower prints nothing when od is unavailable"
 (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	od() { return 127; }
 	res=$(str_upper "hello" 2>/dev/null)
 	[ $? -eq 1 ]
 )
 assert_true $? "str_upper fails closed when od is unavailable"
 (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	od() { return 127; }
 	res=$(str_upper "hello" 2>/dev/null)
 	[ -z "$res" ]
 )
 assert_true $? "str_upper prints nothing when od is unavailable"
 (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	wc() { return 127; }
 	res=$(str_len_bytes "hello" 2>/dev/null)
 	[ $? -eq 1 ]
 )
 assert_true $? "str_len_bytes fails closed when wc is unavailable"
 (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	wc() { return 127; }
 	res=$(str_len_bytes "hello" 2>/dev/null)
 	[ -z "$res" ]
@@ -433,6 +455,7 @@ assert_status 1 "$_str_wfail" "str_replace: write failure returns 1 and cleans t
 # partial result: str_len buffers the awk output and publishes it only on
 # success.
 _str_wfail=$( (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	awk() { printf 'PARTIAL'; return 1; }
 	_out=$(str_len hello 2>/dev/null)
 	_st=$?
@@ -442,6 +465,7 @@ _str_wfail=$( (
 assert_status 1 "$_str_wfail" "str_len: failing awk leaks no partial stdout and returns 1"
 
 (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	awk() { return 1; }
 	_out=$(str_len hello 2>/dev/null)
 	[ "$?" -eq 1 ] && [ -z "$_out" ]
@@ -449,6 +473,7 @@ assert_status 1 "$_str_wfail" "str_len: failing awk leaks no partial stdout and 
 assert_true $? "str_len: failing awk returns 1 with empty stdout"
 
 (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	awk() { return 1; }
 	_out=$(str_len_bytes hello 2>/dev/null)
 	[ "$?" -eq 1 ] && [ -z "$_out" ]
@@ -534,6 +559,7 @@ assert_true $? "str_len: valid UTF-8 returns the count with empty stderr"
 assert_true $? "str_len: invalid UTF-8 uses the UTF-8 diagnostic"
 
 (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	awk() { return 1; }
 	_out=$(str_len hello 2>/dev/null)
 	_st=$?
@@ -543,6 +569,7 @@ assert_true $? "str_len: invalid UTF-8 uses the UTF-8 diagnostic"
 assert_true $? "str_len: awk failure uses the awk diagnostic"
 
 (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	awk() { return 1; }
 	_err=$(str_len hello 2>&1 >/dev/null)
 	case "$_err" in
@@ -553,6 +580,7 @@ assert_true $? "str_len: awk failure uses the awk diagnostic"
 assert_true $? "str_len: awk failure does not use the UTF-8 diagnostic"
 
 (
+	# shellcheck disable=SC2317  # shim is invoked indirectly
 	awk() { printf 'PARTIAL'; return 1; }
 	_err=$(str_len hello 2>&1 >/dev/null)
 	[ "$_err" = "poshli: str_len: could not count code points" ]

@@ -36,6 +36,18 @@ To install system-wide under `/usr/local/lib/poshli/`:
 sudo make install PREFIX=/usr/local
 ```
 
+### Debian Package (Optional)
+
+The repository also provides a Debian binary package. It is not part of the Debian archive; install the local file explicitly:
+
+```sh
+sudo apt install ./poshli_0.5.0-2_all.deb
+# or:
+sudo dpkg -i poshli_0.5.0-2_all.deb
+```
+
+The package installs the bundle at `/usr/share/poshli/poshli.sh`.
+
 ### Uninstallation
 
 To remove POSHLI from your system:
@@ -70,6 +82,9 @@ In any standard POSIX shell script, source the library using the dot (`.`) comma
 
 # Or loading from global installation:
 # . "/usr/local/lib/poshli/poshli.sh"
+
+# Or loading from the Debian package:
+# . "/usr/share/poshli/poshli.sh"
 
 # Or relative loading when vendored:
 # . "./lib/poshli.sh"
@@ -216,16 +231,16 @@ The module-prefix renaming (see [Naming Policy](#naming-policy)) was technically
 
 ### Debian packaging
 
-The repository includes an initial `debian/` directory with packaging files for the `poshli` package. A package was built and validated locally on 2026-11-21 (`dpkg-buildpackage`, `dpkg-checkbuilddeps`, `lintian`) from an earlier revision; validation of the current tree against the final release tag is still pending. The package version separates the upstream version from the Debian revision:
+The repository includes a `debian/` directory with packaging files for the `poshli` package. Revision `0.5.0-2` was built and validated locally on 2026-11-24 against the current tree with `dpkg-buildpackage`, `dpkg-checkbuilddeps` and `lintian`. The published GitHub Release `v0.5.0` carries the earlier `0.5.0-1` binary. The package version separates the upstream version from the Debian revision:
 
 ```text
-0.5.0-1
+0.5.0-2
 ```
 
 - `0.5.0` — upstream Poshli version (`POSHLI_VERSION`).
-- `-1` — first revision of the Debian package.
+- `-2` — second Debian packaging revision; it declares `awk` in `Build-Depends` and a real `awk` provider in `Depends`.
 
-A packaging-only change bumps only the revision (`0.5.0-2`) and leaves the upstream version untouched. The packaging files specify `/usr/share/poshli/poshli.sh` as the install location. The package has not been uploaded to Debian yet; the local build corresponds to an earlier revision, and final validation against the release tag remains pending.
+The packaging files specify `/usr/share/poshli/poshli.sh` as the install location. The package has **not** been uploaded to the Debian archive; it is distributed as a local/GitHub artifact.
 
 ---
 
@@ -266,7 +281,7 @@ A huge, fragile, or hard-to-maintain POSIX implementation is not automatically b
 
 ### Current dependency status
 
-- **Required at runtime**: a POSIX shell and the POSIX utilities `od`, `awk` and `wc` (the test suite additionally uses `tr` and other standard tools). `od` and `wc` are POSIX utilities; `awk` is a virtual package provided by `mawk`, `gawk` or `original-awk`, and every standard Debian and Ubuntu installation provides one (`mawk` has `Priority: required` and `ubuntu-minimal` depends on it), so the Debian package does not declare a dependency on the `awk` virtual package. No Python, Perl or Node.js dependency is introduced at runtime.
+- **Required at runtime**: a POSIX shell and the POSIX utilities `od`, `awk` and `wc` (the test suite additionally uses `tr` and other standard tools). `od` and `wc` come from `coreutils` (Essential); `awk` is a virtual package provided by `mawk`, `gawk` or `original-awk`. The Debian package declares `Build-Depends: awk` and `Depends: mawk | gawk | original-awk`, so a provider is declared explicitly rather than assumed. No Python, Perl or Node.js dependency is introduced at runtime.
 - **Non-POSIX exceptions (level 4)**: none at runtime. `encoding_base64_encode`/`encoding_base64_decode` are implemented with `od`, `wc`, `awk` and the shell `printf`; the external `base64` command (not specified by POSIX) is not used; see [Encoding](#4-encoding-encodingsh).
 - **Development only**: Python 3 generates the case-mapping data (`tools/gen_case.py`); it is never a runtime dependency. The generated data is derived from the Unicode Character Database, Unicode 15.0.0, under the Unicode License Agreement - Data Files and Software (2016) (`Unicode-DFS-2016`).
 
@@ -288,7 +303,7 @@ Every public function is classified with the [dependency levels](#dependency-lev
 | `encoding_base64_encode` | 2 | `wc`, `od`, `awk`, shell `printf` | Also `test`, `case`, parameter expansion (level 1). |
 | `encoding_base64_decode` | 2 | `awk`, shell `printf '%b'` | Input validation is pure POSIX shell (`case`, parameter expansion). |
 
-> **`num_randomize` randomness**: POSIX leaves the `awk` random-number generator and its default seed implementation-defined. The values are **not cryptographic**, their quality depends on the installed `awk` implementation, and consecutive calls within the same second can return the same value with implementations whose default seed has one-second resolution (observed with GNU awk and BusyBox awk). The contract is only "a random integer in `[0, limit)`".
+> **`num_randomize` randomness**: POSIX leaves the `awk` random-number generator and its default seed implementation-defined. The values are **not cryptographic**, their quality depends on the installed `awk` implementation, and consecutive calls within the same second can return the same value with implementations whose default seed has one-second resolution (observed with GNU awk and BusyBox awk). The contract is only "a random integer in `[0, limit)`" for `limit` between `1` and `2147483647`.
 
 Developers: [DEVELOPER.md](.github/DEVELOPER.md) documents the full criteria for introducing a dependency.
 
@@ -329,7 +344,7 @@ POSHLI distinguishes boolean predicates from operational functions:
 | `num_is_hex <val>` | Returns 0 if `<val>` is hexadecimal (`0xFF`, `1a`, `DEADBEEF`), with optional `0x`/`0X` prefix. |
 | `num_is_bin <val>` | Returns 0 if `<val>` is binary (`10110`, `0b1010`), with optional `0b`/`0B` prefix. |
 | `num_is_bool <val>` | Returns 0 if `<val>` is a case-insensitive boolean literal: `0`, `1`, `true` or `false`. Rejects any other value. |
-| `num_randomize <limit>` | Prints a random integer from `0` to one less than `<limit>` (`num_randomize 5` prints `0`–`4`). Returns 1 if `<limit>` is not a natural number greater than `0`, or 2 if no argument is passed. |
+| `num_randomize <limit>` | Prints a random integer from `0` to one less than `<limit>` (`num_randomize 5` prints `0`–`4`). Returns 1 if `<limit>` is not a natural number in `1..2147483647`, or if `awk` fails (diagnostic on stderr, no stdout); returns 2 if no argument is passed. |
 
 *The numeric predicates return `1` when the argument is missing or invalid. `num_randomize` returns `2` when no argument is passed. The randomness of `num_randomize` comes from the `awk` pseudo-random generator (not cryptographic; see the note in [Dependency Policy](#dependency-policy)).*
 
@@ -345,11 +360,11 @@ POSHLI distinguishes boolean predicates from operational functions:
 | `fs_is_writable <path>` | Returns 0 if `<path>` exists and has write permissions (`[ -w ]`). |
 | `fs_is_exec <path>` | Returns 0 if `<path>` exists and has execute permissions (`[ -x ]`). |
 | `fs_is_empty_file <path>` | Returns 0 if `<path>` exists, is a regular file, and its size is 0 bytes (`[ -f ] && [ ! -s ]`). |
-| `fs_is_plain_text <path>` | Returns 0 if `<path>` is a regular, readable file (symlinks are followed) and its first 4096 bytes are plain text: valid UTF-8, no NUL bytes, and no control characters other than TAB (`0x09`), LF (`0x0A`) and CR (`0x0D`) (an empty file is plain text). Returns 1 if the inspected content is not plain text, or if the file does not exist, is unreadable, is not a regular file or cannot be read; 2 if no argument is passed. |
+| `fs_is_plain_text <path>` | Returns 0 if `<path>` is a regular, readable file (symlinks are followed) and its first 4096 bytes are plain text: valid UTF-8, no NUL bytes, and no control characters other than TAB (`0x09`), LF (`0x0A`) and CR (`0x0D`) (an empty file is plain text). Returns 1 if the inspected content is not plain text (silently), or if the file does not exist, is unreadable, is not a regular file or its content cannot be read or validated (diagnostic on stderr, stdout empty); 2 if no argument is passed. |
 
 *The six file-system predicates (`fs_is_file`, `fs_is_dir`, `fs_is_readable`, `fs_is_writable`, `fs_is_exec` and `fs_is_empty_file`) return `1` when the path argument is missing. `fs_is_plain_text` is an operational function, not a predicate: it returns `2` when its mandatory path argument is missing, and `1` when the content is not plain text or the file cannot be evaluated.*
 
-> **`fs_is_plain_text` contract**: the file must be regular and readable. At most the first **4096 bytes** are inspected, and they must form a valid UTF-8 sequence (validated explicitly over bytes; overlong forms, surrogates and code points above `U+10FFFF` are rejected) with no NUL bytes and no control characters other than TAB (`0x09`), LF (`0x0A`) and CR (`0x0D`). The only control characters accepted are those three: DEL (`0x7F`) and the C1 controls (`U+0080`–`U+009F`) are rejected as well. An empty file is plain text. The result is deterministic and independent of the locale and of the installed tools: it is a documented byte heuristic implemented with the POSIX utilities `od` and `awk`; `file(1)` is **not** used.
+> **`fs_is_plain_text` contract**: the file must be regular and readable. At most the first **4096 bytes** are inspected, and they must form a valid UTF-8 sequence (validated explicitly over bytes; overlong forms, surrogates and code points above `U+10FFFF` are rejected) with no NUL bytes and no control characters other than TAB (`0x09`), LF (`0x0A`) and CR (`0x0D`). The only control characters accepted are those three: DEL (`0x7F`) and the C1 controls (`U+0080`–`U+009F`) are rejected as well. An empty file is plain text. The result is deterministic and independent of the locale and of the installed tools: it is a documented byte heuristic implemented with the POSIX utilities `od` and `awk`; `file(1)` is **not** used. Content that is not plain text returns `1` silently; failures to read or validate the content also return `1`, but print a diagnostic on stderr and never write to stdout. Tool failures are therefore distinguishable from a negative result without changing the return-code contract.
 >
 > **Known limitation (intentional)**: only the first 4096 bytes are inspected. Binary content appearing after that limit can go unnoticed and the file is still classified as plain text. A UTF-8 character cut by the limit is assumed to continue beyond it. Reading whole files just to close this gap is deliberately avoided.
 
@@ -505,7 +520,15 @@ make check-bundle
 > - BusyBox `sh` with BusyBox `awk`, `od` and `wc` (sources and bundle), plus the full-BusyBox configuration with `tr`, `cmp`, `head` and `id`.
 > - `dash` with BusyBox `od` and `wc` (sources and bundle).
 >
-> This is **manual evidence from 2026-11-21**, and CI now also covers the `awk` dimension: an independent job runs the full suite under `dash` with GNU awk, `mawk` and BusyBox `awk` (sources and bundle), verifying the selected implementation before testing; a blocking ShellCheck job checks sources, tests and bundle against a checked-in baseline. The shell and `awk` dimensions are not always independently selectable: this BusyBox build uses its own `awk` applet from `busybox sh` regardless of `PATH`, so **BusyBox `sh` + GNU `awk` was not reproducible** and is not claimed; the verified BusyBox `sh` configuration is BusyBox `sh` + BusyBox `awk` + BusyBox `od`/`wc`. **macOS `awk`, BSD `awk` and `ksh`/`mksh` remain unverified**: they are supported targets of the POSIX code, not tested platforms. `mawk` was also used for some of the performance figures in [Encoding](#4-encoding-encodingsh).
+> This is **manual evidence from 2026-11-21**, and CI now also covers the `awk` dimension: an independent job runs the full suite under `dash` with GNU awk, `mawk` and BusyBox `awk` (sources and bundle), verifying the selected implementation before testing; a blocking ShellCheck job checks sources, tests and bundle against a checked-in baseline. The shell and `awk` dimensions are not always independently selectable: this BusyBox build uses its own `awk` applet from `busybox sh` regardless of `PATH`, so **BusyBox `sh` + GNU `awk` was not reproducible** and is not claimed; the verified BusyBox `sh` configuration is BusyBox `sh` + BusyBox `awk` + BusyBox `od`/`wc`. `mawk` was also used for some of the performance figures in [Encoding](#4-encoding-encodingsh).
+>
+> **Portability extension (2026-11-23):** after G1–G3 the suite contains **634 tests**. Local validation on Ubuntu 24.04.5 ran sources and bundle with:
+>
+> - **mksh 59c** (2024/02/01 +Debian) with GNU awk 5.2.1 and mawk 1.3.4: **634/634** each.
+> - **BusyBox 1.35.0 static x86_64-linux-musl** (SHA-256 `6e123e7f3202a8c1e9b1f94d8941580a25135382b99e8d3e34fb858bba311348`), using its own `sh`, `awk`, `od` and `wc`: **634/634** each.
+> - **ksh93u+m 1.0.8** (package `ksh` 20240113) with GNU awk and mawk: **633/634** each. The single failure is the test `fs_is_plain_text: exact INVALID sentinel returns 1 silently`: ksh93 reports status `256` for a shell-function shim inside a pipeline/command substitution. An external `awk` shim confirms that the library itself returns `1` silently; the failure is in the test harness, not in `fs_is_plain_text`.
+>
+> **macOS `awk`, BSD `awk` and macOS/BSD `/bin/sh` remain unverified.** The ksh93 test-harness limitation is documented, not claimed as full ksh93 suite support.
 
 ---
 

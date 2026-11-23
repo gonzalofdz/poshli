@@ -79,8 +79,8 @@ encoding_base64_encode() {
 	#	byte-count mismatch. The Base64 that awk produces is
 	#	captured first and only printed on success, so a rejected
 	#	input never emits partial Base64 to stdout.
-	_poshli_b64_want=$(printf '%s' "$1" | LC_ALL=C wc -c) || {
-		unset _poshli_b64_want
+	_poshli_encoding_base64_encode_want=$(printf '%s' "$1" | LC_ALL=C wc -c) || {
+		unset _poshli_encoding_base64_encode_want
 		return 1
 	}
 
@@ -98,7 +98,7 @@ encoding_base64_encode() {
 	#	ASCII digits and prints ASCII Base64, so the result does
 	#	not depend on the locale; LC_ALL=C keeps od's numeric
 	#	output deterministic too.
-	_poshli_base64_out=$(printf '%s' "$1" | LC_ALL=C od -A n -v -t u1 | LC_ALL=C awk -v want="$_poshli_b64_want" '
+	_poshli_encoding_base64_encode_out=$(printf '%s' "$1" | LC_ALL=C od -A n -v -t u1 | LC_ALL=C awk -v want="$_poshli_encoding_base64_encode_want" '
 		BEGIN {
 			alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 			seen = 0
@@ -125,18 +125,18 @@ encoding_base64_encode() {
 			}
 		}
 	') || {
-		unset _poshli_b64_want _poshli_base64_out
+		unset _poshli_encoding_base64_encode_want _poshli_encoding_base64_encode_out
 		return 1
 	}
-	unset _poshli_b64_want
+	unset _poshli_encoding_base64_encode_want
 	#	A write error of printf must not be hidden by the cleanup
 	#	unset below: the status is tested before unsetting and
 	#	returned, and the temporaries are cleaned on both paths.
-	printf '%s' "$_poshli_base64_out" || {
-		unset _poshli_base64_out
+	printf '%s' "$_poshli_encoding_base64_encode_out" || {
+		unset _poshli_encoding_base64_encode_out
 		return 1
 	}
-	unset _poshli_base64_out
+	unset _poshli_encoding_base64_encode_out
 	return 0
 }
 
@@ -196,23 +196,23 @@ encoding_base64_decode() {
 	case $1 in
 		*[!AQgw]==) return 1 ;;
 		*==)
-			_poshli_b64_prefix=${1%??}
+			_poshli_encoding_base64_decode_prefix=${1%??}
 			;;
 		*[!AEIMQUYcgkosw048]=) return 1 ;;
 		*=)
-			_poshli_b64_prefix=${1%?}
+			_poshli_encoding_base64_decode_prefix=${1%?}
 			;;
 		*)
-			_poshli_b64_prefix=$1
+			_poshli_encoding_base64_decode_prefix=$1
 			;;
 	esac
-	case $_poshli_b64_prefix in
+	case $_poshli_encoding_base64_decode_prefix in
 		*=*)
-			unset _poshli_b64_prefix
+			unset _poshli_encoding_base64_decode_prefix
 			return 1
 			;;
 	esac
-	unset _poshli_b64_prefix
+	unset _poshli_encoding_base64_decode_prefix
 
 	#	The input is validated ASCII above, so awk sees one plain
 	#	record. Each 4-character group yields its 1-3 decoded bytes
@@ -221,7 +221,7 @@ encoding_base64_decode() {
 	#	into the exact bytes. The escape text contains no real line
 	#	breaks, so capturing it with $(...) cannot lose data. The
 	#	output bytes are raw: no trailing newline is appended.
-	_poshli_b64_esc=$(printf '%s' "$1" | LC_ALL=C awk '
+	_poshli_encoding_base64_decode_esc=$(printf '%s' "$1" | LC_ALL=C awk '
 		BEGIN {
 			alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 			for (i = 0; i < 256; i++)
@@ -248,17 +248,17 @@ encoding_base64_decode() {
 			}
 		}
 	') || {
-		unset _poshli_b64_esc
+		unset _poshli_encoding_base64_decode_esc
 		return 1
 	}
 	#	A write error of printf must not be hidden by the cleanup
 	#	unset below: the status is tested before unsetting and
 	#	returned, and the temporaries are cleaned on both paths.
-	printf '%b' "$_poshli_b64_esc" || {
-		unset _poshli_b64_esc
+	printf '%b' "$_poshli_encoding_base64_decode_esc" || {
+		unset _poshli_encoding_base64_decode_esc
 		return 1
 	}
-	unset _poshli_b64_esc
+	unset _poshli_encoding_base64_decode_esc
 	return 0
 }
 fi

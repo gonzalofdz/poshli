@@ -1,3 +1,9 @@
+poshli (0.5.0-2) unstable; urgency=medium
+
+  * Declare awk in Build-Depends and a real awk provider in Depends.
+
+ -- Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>  Tue, 24 Nov 2026 00:00:18 +0100
+
 poshli (0.5.0-1) unstable; urgency=medium
 
   * Initial release.

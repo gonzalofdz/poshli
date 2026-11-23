@@ -110,7 +110,7 @@ An optional improvement may speed up an implementation, but the same input must 
   - Avoid overly verbose or hierarchical names (e.g. use `fs_is_dir`, not `poshli_fs_is_directory`).
 - **Temporary Variables**:
   - The `local` keyword is **not** defined in POSIX IEEE 1003.1. Do not use `local`.
-  - Temporary variables must use a distinct private prefix (e.g., `_trim_str`, `_in_val`).
+  - Library temporaries must be named `_poshli_<function>_<name>` (for example, `_poshli_str_trim_value`). This rule applies to the library sources, not to short-lived variables inside test fixtures.
   - Every temporary variable **must** be explicitly unset before the function returns using standard `unset variable` (do not use `unset -v`).
   - Prefer zero-variable pattern matching when possible.
 - **Strict Quoting**:
@@ -123,6 +123,7 @@ An optional improvement may speed up an implementation, but the same input must 
 - **Indentation**: Tab characters (configured to 4 spaces equivalence).
 - **Line Endings**: LF (Unix-style).
 - **Line Length**: Wrap code and comments at approximately 100 characters.
+- **Build temporary files**: `make check-bundle` traps `EXIT`, `HUP`, `INT`, `QUIT`, `ABRT` and `TERM` to remove its `poshli.sh.check.*` file. `SIGKILL` and `SIGSTOP` cannot be trapped; if a stale file remains, `make clean` removes it.
 - **Function Declaration Syntax**:
   ```sh
   function_name() {

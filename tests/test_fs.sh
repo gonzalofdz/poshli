@@ -196,6 +196,136 @@ fi
 ( cd "$TMP_FIXTURE_DIR" && fs_is_plain_text -n ); assert_true $? "fs_is_plain_text: leading hyphen filename"
 fs_is_plain_text "$LINK_FILE"; assert_true $? "fs_is_plain_text: symlink to text file"
 
+# Failure injection: od and awk are replaced by shell functions inside a subshell.
+(
+	# shellcheck disable=SC2317  # od shim is invoked indirectly by fs_is_plain_text
+	od() { return 1; }
+	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
+	_st=$?
+	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ "$_err" = "poshli: fs_is_plain_text: could not read file" ]
+)
+assert_true $? "fs_is_plain_text: od failure returns 1 with read diagnostic and no stdout"
+
+(
+	# shellcheck disable=SC2317  # od shim is invoked indirectly by fs_is_plain_text
+	od() { return 127; }
+	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
+	_st=$?
+	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ "$_err" = "poshli: fs_is_plain_text: could not read file" ]
+)
+assert_true $? "fs_is_plain_text: missing od (127) returns 1 with read diagnostic and no stdout"
+
+(
+	# shellcheck disable=SC2317  # od shim is invoked indirectly by fs_is_plain_text
+	od() { printf '65 66'; return 1; }
+	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
+	_st=$?
+	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ "$_err" = "poshli: fs_is_plain_text: could not read file" ]
+)
+assert_true $? "fs_is_plain_text: failing od leaks no partial stdout and uses the read diagnostic"
+
+(
+	# shellcheck disable=SC2317  # od shim is invoked indirectly by fs_is_plain_text
+	od() { return 0; }
+	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
+	_st=$?
+	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ "$_err" = "poshli: fs_is_plain_text: could not read file" ]
+)
+assert_true $? "fs_is_plain_text: successful od with no output on a non-empty file fails closed"
+
+(
+	# shellcheck disable=SC2317  # od shim is invoked indirectly by fs_is_plain_text
+	od() { return 0; }
+	_out=$(fs_is_plain_text "$EMPTY_FILE" 2>/dev/null)
+	_st=$?
+	_err=$(fs_is_plain_text "$EMPTY_FILE" 2>&1 >/dev/null)
+	[ "$_st" -eq 0 ] && [ -z "$_out" ] && [ -z "$_err" ]
+)
+assert_true $? "fs_is_plain_text: successful od with no output on an empty file is plain text"
+
+(
+	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
+	awk() { return 1; }
+	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
+	_st=$?
+	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ "$_err" = "poshli: fs_is_plain_text: could not validate content" ]
+)
+assert_true $? "fs_is_plain_text: awk failure returns 1 with validation diagnostic and no stdout"
+
+(
+	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
+	awk() { return 127; }
+	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
+	_st=$?
+	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ "$_err" = "poshli: fs_is_plain_text: could not validate content" ]
+)
+assert_true $? "fs_is_plain_text: missing awk (127) returns 1 with validation diagnostic and no stdout"
+
+(
+	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
+	awk() { printf 'PARTIAL'; return 1; }
+	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
+	_st=$?
+	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ "$_err" = "poshli: fs_is_plain_text: could not validate content" ]
+)
+assert_true $? "fs_is_plain_text: failing awk leaks no partial stdout and uses the validation diagnostic"
+
+(
+	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
+	awk() { return 0; }
+	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
+	_st=$?
+	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ "$_err" = "poshli: fs_is_plain_text: could not validate content" ]
+)
+assert_true $? "fs_is_plain_text: awk without output fails validation"
+
+(
+	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
+	awk() { printf 'GARBAGE'; return 0; }
+	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
+	_st=$?
+	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ "$_err" = "poshli: fs_is_plain_text: could not validate content" ]
+)
+assert_true $? "fs_is_plain_text: unexpected awk output fails validation"
+
+(
+	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
+	awk() { printf 'VALID\nEXTRA'; return 0; }
+	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
+	_st=$?
+	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ "$_err" = "poshli: fs_is_plain_text: could not validate content" ]
+)
+assert_true $? "fs_is_plain_text: extra output after VALID fails validation"
+
+(
+	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
+	awk() { printf 'INVALID'; return 0; }
+	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
+	_st=$?
+	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
+	[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ -z "$_err" ]
+)
+assert_true $? "fs_is_plain_text: exact INVALID sentinel returns 1 silently"
+
+# Not plain text must stay silent and must not write anything to stdout.
+_out=$(fs_is_plain_text "$BIN_FILE" 2>/dev/null)
+_st=$?
+_err=$(fs_is_plain_text "$BIN_FILE" 2>&1 >/dev/null)
+[ "$_st" -eq 1 ] && [ -z "$_out" ] && [ -z "$_err" ]
+assert_true $? "fs_is_plain_text: not plain text returns 1 silently with empty stdout"
+
+unset _out _st _err
+
 # Cleanup fixtures
 rm -rf "$TMP_FIXTURE_DIR"
 
