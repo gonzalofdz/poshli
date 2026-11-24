@@ -14,40 +14,60 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-13
-          - macos-14
+          - macos-15
+          - macos-26
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install GNU make
-        run: brew install make
+      - name: Record environment
+        run: |
+          sw_vers
+          uname -a
+          /usr/bin/make --version
+          /bin/sh -c 'echo "$BASH_VERSION"'
+          awk --version || true
+          command -v awk od wc
+          locale
 
       - name: Verify bundle is synchronized with src/
-        run: gmake check-bundle
+        run: /usr/bin/make check-bundle
 
       - name: Run suite with /bin/sh and BWK awk
         run: |
-          gmake test POSHLI_TEST_SHELL=/bin/sh
-          gmake test-bundle POSHLI_TEST_SHELL=/bin/sh
+          set -e
+          /usr/bin/make test POSHLI_TEST_SHELL=/bin/sh
+          /usr/bin/make test-bundle POSHLI_TEST_SHELL=/bin/sh
 
       - name: Run suite with bash --posix
         run: |
-          gmake test POSHLI_TEST_SHELL="/bin/bash --posix"
-          gmake test-bundle POSHLI_TEST_SHELL="/bin/bash --posix"
+          set -e
+          /usr/bin/make test POSHLI_TEST_SHELL="/bin/bash --posix"
+          /usr/bin/make test-bundle POSHLI_TEST_SHELL="/bin/bash --posix"
 
   freebsd:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
       - name: Run FreeBSD validation
-        uses: vmactions/freebsd-vm@v1
+        uses: vmactions/freebsd-vm@v1.6.0
         with:
-          usesh: true
+          release: "15.1"
           prepare: |
-            pkg install -y gmake bash dash gawk mawk busybox
+            set -e
+            pkg install -y gmake bash
           run: |
+            set -e
+            uname -a
+            freebsd-version
+            gmake --version 2>&1 | sed -n '1p'
+            awk --version || true
+            bash --version 2>&1 | sed -n '1p'
+            id -u
+            locale
             gmake check-bundle
             gmake test POSHLI_TEST_SHELL=/bin/sh
             gmake test-bundle POSHLI_TEST_SHELL=/bin/sh

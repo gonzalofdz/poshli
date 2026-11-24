@@ -141,9 +141,9 @@ Every function added or modified must include unit tests in `tests/`:
 2. Edge cases (empty strings `""`, spaces, special characters, leading hyphens `-n`).
 3. Argument validation checks: predicates expect status `1` when a mandatory argument is missing; operational functions expect status `2` for invalid usage.
 4. Both `make test` (modular sources) and `make test-bundle` (bundled `poshli.sh`) must pass with 100% success.
-5. Failure-injection tests that need a successful external command through a pipeline must use an executable shim under `tests/shims/` when the shell honours `PATH`. Where the shell resolves the utility as an applet (BusyBox), use an equivalent function shim instead. ksh93 reports status `256` for shell functions used as the last command of a pipeline, so a function shim must not be used there.
+5. Failure-injection tests that need a successful external command through a pipeline must use the executable shim `tests/shims/awk` (controlled by `POSHLI_TEST_AWK_MODE`) when the shell honours `PATH`. Where the shell resolves the utility as an applet (BusyBox), use an equivalent function shim instead. ksh93 reports status `256` for shell functions used as the last command of a pipeline, so a function shim must not be used there.
 
-Portability CI: Linux `ksh93`/`mksh` runs with the regular tests. macOS and FreeBSD run through the scheduled/manual `.github/workflows/portability.yml`; external failures must be triaged before claiming platform support.
+Portability CI: Linux `ksh93`/`mksh` runs with GNU awk and `mawk` selected explicitly. macOS 15/26 and FreeBSD 15.1 run through the scheduled/manual `.github/workflows/portability.yml`; external failures must be triaged before claiming platform support.
 
 ---
 

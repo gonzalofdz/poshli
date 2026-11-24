@@ -202,7 +202,7 @@ fs_is_plain_text "$LINK_FILE"; assert_true $? "fs_is_plain_text: symlink to text
 _fs_shim_env() {
 	POSHLI_TEST_AWK_MODE="$1"
 	export POSHLI_TEST_AWK_MODE
-	case $(command -v awk) in
+	case "$(command -v awk)" in
 	*/*)
 		PATH="$TEST_DIR/shims:$PATH"
 		export PATH

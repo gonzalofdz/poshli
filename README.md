@@ -499,7 +499,7 @@ fi
 
 ## Testing
 
-POSHLI includes a self-contained automated test suite that runs under standard POSIX shells and uses only standard utilities. The number of tests adapts to the environment: locale-dependent tests run only when a UTF-8 locale is available. The case-mapping tests are environment-independent, because `str_lower`/`str_upper` never consult the locale or any Unicode behavior of the `awk` implementation and the expectations are fixed vectors:
+POSHLI includes a self-contained automated test suite that runs under standard POSIX shells and uses only standard utilities. The number of tests adapts to the environment: locale-dependent tests run only when a UTF-8 locale is available, and permission-sensitive tests are skipped when the suite runs as root. The reported total is therefore environment-dependent; the full local matrix reports 634 tests. The case-mapping tests are environment-independent, because `str_lower`/`str_upper` never consult the locale or any Unicode behavior of the `awk` implementation and the expectations are fixed vectors:
 
 ```sh
 # Run test suite against modular sources (src/):
@@ -528,7 +528,7 @@ make check-bundle
 > - **BusyBox 1.35.0 static x86_64-linux-musl** (SHA-256 `6e123e7f3202a8c1e9b1f94d8941580a25135382b99e8d3e34fb858bba311348`), using its own `sh`, `awk`, `od` and `wc`: **634/634** each.
 > - **ksh93u+m 1.0.8** (package `ksh` 20240113) with GNU awk and mawk: **634/634** each. ksh93 reports status `256` for a shell function used as the last command of a pipeline; the tests now use an executable `awk` shim under `tests/shims/` where `PATH` is honoured, with an equivalent function shim for BusyBox applet resolution. No library change was needed.
 >
-> **macOS `awk`, BSD `awk` and macOS/BSD `/bin/sh` remain unverified.** Linux `ksh93`/`mksh` validation is defined in CI, and `.github/workflows/portability.yml` prepares scheduled/manual macOS and FreeBSD runs; those external runs have not yet been executed.
+> **macOS `awk`, BSD `awk` and macOS/BSD `/bin/sh` remain unverified.** Linux CI defines a `ksh93`/`mksh` job that selects GNU awk and `mawk` explicitly and runs both sources and bundle; no run result is recorded here yet. `.github/workflows/portability.yml` prepares scheduled/manual runs on macOS 15 and macOS 26 (system `/bin/sh`, bash 3.2 `--posix` and BWK awk) and on FreeBSD 15.1 (system `/bin/sh`, `bash --posix` and BSD awk); those external runs are pending and have no recorded result yet.
 
 ---
 

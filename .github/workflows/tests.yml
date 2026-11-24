@@ -79,8 +79,8 @@ jobs:
         run: |
           command -v awk
           case "${{ matrix.awk }}" in
-            gawk) awk --version | head -n 1 | grep -q 'GNU Awk' ;;
-            mawk) awk -W version 2>&1 | head -n 1 | grep -q 'mawk' ;;
+            gawk) awk --version 2>&1 | sed -n '1p' | grep -q 'GNU Awk' ;;
+            mawk) awk -W version 2>&1 | sed -n '1p' | grep -q 'mawk' ;;
             busybox) test "$(readlink -f "$(command -v awk)")" = "$(readlink -f "$(command -v busybox)")" ;;
           esac
 
@@ -94,24 +94,48 @@ jobs:
         run: make test-bundle POSHLI_TEST_SHELL=dash
 
   ksh-mksh:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install ksh and mksh
+      - name: Install ksh, mksh and awk implementations
         run: sudo apt-get update && sudo apt-get install -y ksh mksh gawk mawk
 
-      - name: Verify shells
+      - name: Verify shells and awk implementations
         run: |
           command -v ksh93
           command -v mksh
+          ksh93 -c 'echo "$KSH_VERSION"'
+          mksh -c 'echo "$KSH_VERSION"'
+          gawk --version 2>&1 | sed -n '1p'
+          mawk -W version 2>&1 | sed -n '1p'
 
-      - name: Verify bundle is synchronized with src/
-        run: make check-bundle
-
-      - name: Run suite with ksh93 and mksh
+      - name: Run suite with ksh93 and mksh using GNU awk and mawk
         run: |
-          for shell in ksh93 mksh; do
-            make test POSHLI_TEST_SHELL="$shell"
-            make test-bundle POSHLI_TEST_SHELL="$shell"
+          set -e
+          for awk_impl in gawk mawk; do
+            awk_bin="$RUNNER_TEMP/awk-$awk_impl"
+            rm -rf "$awk_bin"
+            mkdir -p "$awk_bin"
+            ln -s "$(command -v "$awk_impl")" "$awk_bin/awk"
+            echo "== awk: $awk_impl =="
+            PATH="$awk_bin:$PATH" command -v awk
+            case "$awk_impl" in
+              gawk) awk_version=$(PATH="$awk_bin:$PATH" awk --version 2>&1) ;;
+              mawk) awk_version=$(PATH="$awk_bin:$PATH" awk -W version 2>&1) ;;
+              *) printf 'unknown awk implementation: %s\n' "$awk_impl" >&2; exit 1 ;;
+            esac
+            case "$awk_impl:$awk_version" in
+              gawk:*"GNU Awk"*) ;;
+              mawk:*mawk*) ;;
+              *) printf 'selected awk is not %s\n' "$awk_impl" >&2; exit 1 ;;
+            esac
+            printf '%s\n' "$awk_version" | sed -n '1p'
+            PATH="$awk_bin:$PATH" make check-bundle
+            for shell in ksh93 mksh; do
+              echo "== shell: $shell, awk: $awk_impl =="
+              PATH="$awk_bin:$PATH" make test POSHLI_TEST_SHELL="$shell"
+              PATH="$awk_bin:$PATH" make test-bundle POSHLI_TEST_SHELL="$shell"
+            done
           done
