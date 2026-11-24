@@ -3,7 +3,7 @@ poshli.sh:21:1: warning: POSHLI_VERSION appears unused. Verify use (or export if
 src/core.sh:14:1: warning: POSHLI_VERSION appears unused. Verify use (or export if used externally). [SC2034]
 tests/test_encoding.sh:11:3: note: Not following: ./test_runner.sh was not specified as input (see shellcheck -x). [SC1091]
 tests/test_encoding.sh:18:3: warning: ShellCheck can't follow non-constant source. Use a directive to specify location. [SC1090]
-tests/test_encoding.sh:331:2: note: Expressions don't expand in single quotes, use double quotes for that. [SC2016]
+tests/test_encoding.sh:330:2: note: Expressions don't expand in single quotes, use double quotes for that. [SC2016]
 tests/test_encoding.sh:42:4: warning: ShellCheck can't follow non-constant source. Use a directive to specify location. [SC1090]
 tests/test_encoding.sh:54:4: warning: ShellCheck can't follow non-constant source. Use a directive to specify location. [SC1090]
 tests/test_encoding.sh:91:30: note: Expressions don't expand in single quotes, use double quotes for that. [SC2016]

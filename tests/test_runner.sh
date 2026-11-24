@@ -195,10 +195,11 @@ trap '_test_cleanup_shims' 0 INT TERM HUP
 # The closed-stdout write-failure tests can only observe anything when the
 # shell's printf reports write errors. POSIX requires the printf utility to
 # exit non-zero on a write error, but some shells (notably FreeBSD /bin/sh)
-# silently ignore it and return 0. The probe redirects stdout to a read-only
-# descriptor inside a subshell (closing fd 1 is not honoured by every shell)
-# and reports the printf status through fd 3, so it never touches the caller's
-# stdout. The failing printf is guarded with "||" so the probe also works when
+# silently ignore it and return 0. The probe closes stdout inside a subshell
+# and carries the printf status in the subshell exit status. The exit status
+# is used instead of an fd-3/stdout capture on purpose: macOS bash buffers the
+# printf output, returns a failure and flushes the buffer into the next
+# stdout redirection, which contaminates an fd-3 capture. The failing printf is guarded with "||" so the probe also works when
 # a suite runs under "set -e": without that guard the subshell would exit
 # before reporting and the probe would misclassify the shell. A non-zero
 # printf status (not only 1) is enough, because the library maps any failure
@@ -209,20 +210,20 @@ _test_write_fail_probe() {
 	1) return 0 ;;
 	0) return 1 ;;
 	esac
-	_test_wfail_st=$( (
-		exec 1</dev/null
-		printf x 2>/dev/null || _test_wfail_printf_status=$?
-		printf '%s' "${_test_wfail_printf_status:-0}" >&3
-	) 3>&1 )
+	_test_wfail_st=0
+	( exec 1>&-
+		printf x 2>/dev/null || exit 1
+		exit 0
+	) || _test_wfail_st=$?
 	if [ -n "${GITHUB_ACTIONS:-}" ] && [ -z "${_test_wfail_announced:-}" ]; then
-		_test_ci_notice "write-failure probe capture: [$_test_wfail_st]"
+		_test_ci_notice "write-failure probe status: [$_test_wfail_st]"
 		_test_wfail_announced=1
 	fi
 	[ "$_test_wfail_st" != 0 ] || {
-		unset _test_wfail_st _test_wfail_printf_status
+		unset _test_wfail_st
 		return 1
 	}
-	unset _test_wfail_st _test_wfail_printf_status
+	unset _test_wfail_st
 	return 0
 }
 

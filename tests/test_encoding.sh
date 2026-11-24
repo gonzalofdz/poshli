@@ -264,26 +264,25 @@ unset _poshli_b64_scen_out _poshli_b64_scen_marker _poshli_b64_in100 _poshli_b64
 
 # Write failures of the final printf must not be hidden by the trailing
 # unset that cleans the temporaries: the function must return a non-zero
-# status and clean up anyway. stdout is redirected to a read-only descriptor at the start of each subshell;
-# the observed status is reported through fd 3. A leaked temporary turns the
-# reported status into a sentinel 9, so the assertions cover status and
-# cleanup at once.
-_poshli_b64_wfail_st=$( (
-	exec 1</dev/null
+# status and clean up anyway. stdout is closed at the start of each subshell
+# and the observed status is carried by the subshell exit status (an fd-3 or
+# stdout capture is contaminated by buffered printf output on macOS). A leaked
+# temporary turns the reported status into a sentinel 9, so the assertions
+# cover status and cleanup at once.
+_poshli_b64_wfail_st=0
+( exec 1>&-
 	encoding_base64_encode "abc" 2>/dev/null
 	_st=$?
 	[ -z "${_poshli_encoding_base64_encode_out+x}${_poshli_encoding_base64_encode_want+x}" ] || _st=9
-	printf '%s' "$_st" >&3
-) 3>&1 )
+	exit "$_st" ) || _poshli_b64_wfail_st=$?
 _test_assert_write_failure "$_poshli_b64_wfail_st" "encoding_base64_encode: printf write failure returns 1 (not hidden by unset) and cleans temporaries"
 
-_poshli_b64_wfail_st=$( (
-	exec 1</dev/null
+_poshli_b64_wfail_st=0
+( exec 1>&-
 	encoding_base64_decode "YWJj" 2>/dev/null
 	_st=$?
 	[ -z "${_poshli_encoding_base64_decode_esc+x}" ] || _st=9
-	printf '%s' "$_st" >&3
-) 3>&1 )
+	exit "$_st" ) || _poshli_b64_wfail_st=$?
 _test_assert_write_failure "$_poshli_b64_wfail_st" "encoding_base64_decode: printf write failure returns 1 (not hidden by unset) and cleans temporaries"
 
 # Temporaries are cleaned on the success path as well.
