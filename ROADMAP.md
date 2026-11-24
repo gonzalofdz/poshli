@@ -58,18 +58,18 @@ These are deliberate design choices to keep unless new evidence and tests justif
 - [x] H5: extend the `check-bundle` trap to `0 1 2 3 6 15` and make `make clean` remove `poshli.sh.check.*`; document the untrappable `SIGKILL`/`SIGSTOP` limitation.
 - [x] H6/SC2317: use inline ShellCheck suppressions in all four test files, remove the file-level suppression, and regenerate the baseline with 0 `SC2317` entries.
 - [x] H7: verify there are no current stale "pending push" claims; historical references in `PLAN.md` remain accurate.
-- [x] G4 local portability validation (2026-11-24): the 634-test suite passed under mksh 59c (GNU awk and mawk, 634/634), under BusyBox 1.35.0 static x86_64-linux-musl with its own `sh`/`awk`/`od`/`wc` (634/634), and under ksh93u+m 1.0.8 (GNU awk and mawk, 634/634) after moving shell-function pipeline shims to executable test shims. The consolidated harness (external `awk`/`od` shims, fd-3 closed-stdout checks and corrected cleanup assertions) was re-verified with **26 executions, 634/634, no failures**. Linux CI now defines four jobs for `ksh93`/`mksh` × GNU awk/`mawk`; `portability.yml` prepares macOS 15/26 and FreeBSD 15.1 runs with the system shells and awk. No CI run result is recorded yet for these jobs. macOS/BSD remain unverified.
+- [x] G4 local portability validation (2026-11-24): the suite grew to **635 tests** and passed under mksh 59c, BusyBox, ksh93u+m and the rest of the local matrix (**56 executions, 635/635, no failures**). Linux CI defines four jobs for `ksh93`/`mksh` × GNU awk/`mawk`; runs `45387973712`/`45388035234` exposed two platform defects (macOS `printf` buffering contaminating the fd-3 capture; FreeBSD `%b` stopping at the first NUL and leaking the platform write-error status in the no-argument paths). Both are fixed. Evidence: Linux `tests` run **45401168785** (11/11 jobs) and `portability` run **45401168968** (3/3 jobs: macOS 15/26 arm64 and FreeBSD 15.1) are green on commit `4cb9c14`. macOS is covered on arm64 only; FreeBSD runs as root (633/633, two documented permission skips); OpenBSD and NetBSD remain unverified.
 - [x] G5 distribution and dependency closure (2026-11-24): Debian revision `0.5.0-2` declares `Build-Depends: awk` and `Depends: mawk | gawk | original-awk`; binary build with tests passed 634/634, `dpkg-checkbuilddeps` and Lintian are clean. README documents the dependency, local Debian installation and `/usr/share/poshli/poshli.sh`. The local and remote `v1.0.0` tag and its draft release were removed; `v0.5.0` and its published release remain intact, and `uscan` no longer reports `v1.0.0`. The `0.5.0-2` binary was not published; `0.5.0-1` remains the release asset.
 
 ## Current
 
-- [ ] Recorded execution of the four prepared Linux `ksh93`/`mksh` × GNU awk/`mawk` CI jobs and external macOS/BSD portability validation. D-1, A1, M1, M2, M3, M4, M5, D-4 and H1–H7 are closed (2026-11-21/24); G4 is fully validated locally but has no CI or macOS/BSD evidence yet.
+- [x] Recorded execution of the four prepared Linux `ksh93`/`mksh` × GNU awk/`mawk` CI jobs and external macOS/BSD portability validation (2026-11-24): runs `45401168785` and `45401168968` are green on `4cb9c14`. D-1, A1, M1, M2, M3, M4, M5, D-4 and H1–H7 are closed (2026-11-21/24); G4 is closed with local and external evidence. OpenBSD and NetBSD remain unverified and are tracked below.
 
 ## Next
 
 Ordered by provisional priority; each item is an investigation and validation task, not an approved implementation.
 
-- [ ] Validate macOS/BSD: macOS 15/26 `/bin/sh` (bash 3.2) with BWK awk, and FreeBSD 15.1 `/bin/sh` with BSD awk, using the scheduled/manual portability workflow. OpenBSD and NetBSD still need a separate job or VM.
+- [ ] Validate OpenBSD and NetBSD with a separate job or VM; macOS 15/26 arm64 and FreeBSD 15.1 are validated by `45401168968`.
 - [ ] Audit `src/num.sh` for generic utilities needed by future modules.
 - [ ] Audit `src/str.sh` for generic utilities needed by future modules.
 - [ ] Implement only the approved new utilities for `num.sh` and `str.sh`.

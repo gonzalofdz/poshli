@@ -524,7 +524,7 @@ make check-bundle
 >
 > This is **manual evidence from 2026-11-21**, and CI now also covers the `awk` dimension: an independent job runs the full suite under `dash` with GNU awk, `mawk` and BusyBox `awk` (sources and bundle), verifying the selected implementation before testing; a blocking ShellCheck job checks sources, tests and bundle against a checked-in baseline. The shell and `awk` dimensions are not always independently selectable: this BusyBox build uses its own `awk` applet from `busybox sh` regardless of `PATH`, so **BusyBox `sh` + GNU `awk` was not reproducible** and is not claimed; the verified BusyBox `sh` configuration is BusyBox `sh` + BusyBox `awk` + BusyBox `od`/`wc`. `mawk` was also used for some of the performance figures in [Encoding](#4-encoding-encodingsh).
 >
-> **Portability extension (2026-11-24):** after G1–G3 the suite contains **634 tests**. Local validation on Ubuntu 24.04.5 ran sources and bundle with:
+> **Portability extension (2026-11-24):** after G1–G3 the suite contained **634 tests**. Local validation on Ubuntu 24.04.5 ran sources and bundle with:
 >
 > - **mksh 59c** (2024/02/01 +Debian) with GNU awk 5.2.1 and mawk 1.3.4: **634/634** each.
 > - **BusyBox 1.35.0 static x86_64-linux-musl** (SHA-256 `6e123e7f3202a8c1e9b1f94d8941580a25135382b99e8d3e34fb858bba311348`), using its own `sh`, `awk`, `od` and `wc`: **634/634** each.
@@ -532,7 +532,14 @@ make check-bundle
 >
 > The consolidated harness was re-verified on 2026-11-24: **26 executions, 634/634, no failures**.
 >
-> **macOS `awk`, BSD `awk` and macOS/BSD `/bin/sh` remain unverified.** Linux CI defines four jobs for `ksh93`/`mksh` × GNU awk/`mawk`, running both sources and bundle; no run result is recorded here yet. `.github/workflows/portability.yml` prepares scheduled/manual runs on macOS 15 and macOS 26 (system `/bin/sh`, bash 3.2 `--posix` and BWK awk) and on FreeBSD 15.1 (system `/bin/sh`, `bash --posix` and BSD awk); those external runs are pending and have no recorded result yet.
+> **G4 external validation (2026-11-24):** the prepared portability workflow was executed. After the fixes below, the suite contains **635 tests** and the local matrix was re-run on Ubuntu 24.04.5: **56 executions** (7 shells — `dash`, `/bin/sh`, `bash --posix` 5.2, bash 3.2.57, `ksh93u+m`, `mksh`, BusyBox `sh` — × 4 `awk` implementations — GNU awk, `mawk`, BWK `original-awk`, BusyBox `awk` — × sources and bundle): **635/635 each, no failures or skips**. Root simulation: 633/633 with the two documented permission skips; no UTF-8 locale: 628/628.
+>
+> The first external runs (`45387973712`, `45388035234`) exposed two platform-specific defects, both fixed:
+>
+> - **macOS `/bin/sh` (bash 3.2):** the shell buffers `printf` output, reports the write failure and then flushes the buffer into the next stdout redirection, so the closed-stdout write tests received the function output together with the status through the fd-3 capture. The tests now carry the observed status in the **subshell exit status**, which is immune to buffering. The original failures were triaged through GitHub test annotations (readable through the checks API, since job logs require authentication).
+> - **FreeBSD `/bin/sh`:** its `printf %b` stops at the first NUL byte, so the three decoder comparisons that decode NUL failed; `encoding_base64_decode` now writes through the `printf` **format operand** (three-digit octal escapes, `%` doubled), which is NUL-safe on the FreeBSD/macOS `printf(1)` implementation. Separately, the no-argument write-failure paths returned the platform `printf` status (`2` on FreeBSD) instead of the documented `1`; they are normalized now.
+>
+> The final runs on commit `4cb9c14` are green: Linux CI **11/11 jobs** (`45401168785`, including the four `ksh93`/`mksh` × GNU awk/`mawk` jobs) and portability **3/3 jobs** (`45401168968`): **macOS 15** and **macOS 26** (arm64) pass sources and bundle with the system `/bin/sh` (bash 3.2) and `/bin/bash --posix` using BWK awk (635/635 per configuration, non-root, UTF-8 locale), and **FreeBSD 15.1** passes the same four configurations as root (633/633 per configuration, with the two documented permission skips). macOS is covered on arm64 only; **OpenBSD and NetBSD remain unverified**.
 
 ---
 
