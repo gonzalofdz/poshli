@@ -11,6 +11,18 @@ TESTS_TOTAL=0
 TESTS_PASSED=0
 TESTS_FAILED=0
 
+# Under GitHub Actions, emit a workflow-command error annotation for each
+# failure. The check-runs annotations API is readable without the job log,
+# so a failing test can be identified on every platform. Local runs are
+# unchanged: GITHUB_ACTIONS is unset. Percent signs must be escaped in
+# workflow commands.
+_test_ci_error() {
+	[ -n "${GITHUB_ACTIONS:-}" ] || return 0
+	_test_ci_msg=$(printf '%s' "$1" | sed 's/%/%25/g')
+	printf '::error::%s\n' "$_test_ci_msg"
+	unset _test_ci_msg
+}
+
 assert_eq() {
 	_a_expected="$1"
 	_a_actual="$2"
@@ -25,6 +37,7 @@ assert_eq() {
 		printf '  [FAIL] %s\n' "$_a_desc"
 		printf '         Expected: "%s"\n' "$_a_expected"
 		printf '         Actual:   "%s"\n' "$_a_actual"
+		_test_ci_error "FAIL: $_a_desc | expected: [$_a_expected] | actual: [$_a_actual]"
 	fi
 	unset _a_expected _a_actual _a_desc
 }
@@ -43,6 +56,7 @@ assert_status() {
 		printf '  [FAIL] %s\n' "$_s_desc"
 		printf '         Expected status: %d\n' "$_s_expected"
 		printf '         Actual status:   %d\n' "$_s_actual"
+		_test_ci_error "FAIL: $_s_desc | expected status: [$_s_expected] | actual status: [$_s_actual]"
 	fi
 	unset _s_expected _s_actual _s_desc
 }
@@ -65,6 +79,7 @@ assert_false() {
 	else
 		TESTS_FAILED=$((TESTS_FAILED + 1))
 		printf '  [FAIL] %s (expected failure, got 0)\n' "$_f_desc"
+		_test_ci_error "FAIL: $_f_desc (expected non-zero, got 0)"
 	fi
 	unset _f_status _f_desc
 }

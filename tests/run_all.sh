@@ -32,6 +32,10 @@ run_suite() {
 	if ! grep -q 'Tests run:' "$SUITE_LOG"; then
 		printf 'SUITE ABORTED BEFORE SUMMARY: %s (exit %d)\n' \
 			"$_suite_name" "$_suite_status"
+		if [ -n "${GITHUB_ACTIONS:-}" ]; then
+			printf '::error::SUITE ABORTED BEFORE SUMMARY: %s (exit %d)\n' \
+				"$_suite_name" "$_suite_status"
+		fi
 		rm -f "$SUITE_LOG"
 		unset _suite_file _suite_name
 		return 1
