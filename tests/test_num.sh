@@ -280,8 +280,7 @@ unset _i _rand_one _r
 
 # Failure injection: awk is replaced by a shell function inside a subshell.
 (
-	# shellcheck disable=SC2317  # invoked indirectly by num_randomize
-	awk() { return 1; }
+	_test_shim_awk fail
 	_out=$(num_randomize 5 2>/dev/null)
 	_st=$?
 	[ "$_st" -eq 1 ] && [ -z "$_out" ]
@@ -289,8 +288,7 @@ unset _i _rand_one _r
 assert_true $? "num_randomize: failing awk returns 1 with empty stdout"
 
 (
-	# shellcheck disable=SC2317  # invoked indirectly by num_randomize
-	awk() { return 127; }
+	_test_shim_awk missing
 	_out=$(num_randomize 5 2>/dev/null)
 	_st=$?
 	[ "$_st" -eq 1 ] && [ -z "$_out" ]
@@ -298,8 +296,7 @@ assert_true $? "num_randomize: failing awk returns 1 with empty stdout"
 assert_true $? "num_randomize: missing awk (127) returns 1 with empty stdout"
 
 (
-	# shellcheck disable=SC2317  # invoked indirectly by num_randomize
-	awk() { printf 'PARTIAL'; return 1; }
+	_test_shim_awk partial
 	_out=$(num_randomize 5 2>/dev/null)
 	_st=$?
 	[ "$_st" -eq 1 ] && [ -z "$_out" ]
@@ -307,8 +304,7 @@ assert_true $? "num_randomize: missing awk (127) returns 1 with empty stdout"
 assert_true $? "num_randomize: failing awk leaks no partial stdout"
 
 (
-	# shellcheck disable=SC2317  # invoked indirectly by num_randomize
-	awk() { return 1; }
+	_test_shim_awk fail
 	_err=$(num_randomize 5 2>&1 >/dev/null)
 	case "$_err" in
 		*"could not generate a random number"*) exit 0 ;;

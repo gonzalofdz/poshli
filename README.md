@@ -526,9 +526,11 @@ make check-bundle
 >
 > - **mksh 59c** (2024/02/01 +Debian) with GNU awk 5.2.1 and mawk 1.3.4: **634/634** each.
 > - **BusyBox 1.35.0 static x86_64-linux-musl** (SHA-256 `6e123e7f3202a8c1e9b1f94d8941580a25135382b99e8d3e34fb858bba311348`), using its own `sh`, `awk`, `od` and `wc`: **634/634** each.
-> - **ksh93u+m 1.0.8** (package `ksh` 20240113) with GNU awk and mawk: **634/634** each. ksh93 reports status `256` for a shell function used as the last command of a pipeline; the tests now use an executable `awk` shim under `tests/shims/` where `PATH` is honoured, with an equivalent function shim for BusyBox applet resolution. No library change was needed.
+> - **ksh93u+m 1.0.8** (package `ksh` 20240113) with GNU awk and mawk: **634/634** each. ksh93 reports status `256` for a shell function used as the last command of a pipeline; the tests now use executable `awk`, `od` and `wc` shims under `tests/shims/` where `PATH` is honoured, with equivalent function shims for BusyBox applet resolution. Closed-stdout checks report through fd 3 so the test harness itself cannot hide the status. No library change was needed.
 >
-> **macOS `awk`, BSD `awk` and macOS/BSD `/bin/sh` remain unverified.** Linux CI defines a `ksh93`/`mksh` job that selects GNU awk and `mawk` explicitly and runs both sources and bundle; no run result is recorded here yet. `.github/workflows/portability.yml` prepares scheduled/manual runs on macOS 15 and macOS 26 (system `/bin/sh`, bash 3.2 `--posix` and BWK awk) and on FreeBSD 15.1 (system `/bin/sh`, `bash --posix` and BSD awk); those external runs are pending and have no recorded result yet.
+> The consolidated harness was re-verified on 2026-11-24: **26 executions, 634/634, no failures**.
+>
+> **macOS `awk`, BSD `awk` and macOS/BSD `/bin/sh` remain unverified.** Linux CI defines four jobs for `ksh93`/`mksh` × GNU awk/`mawk`, running both sources and bundle; no run result is recorded here yet. `.github/workflows/portability.yml` prepares scheduled/manual runs on macOS 15 and macOS 26 (system `/bin/sh`, bash 3.2 `--posix` and BWK awk) and on FreeBSD 15.1 (system `/bin/sh`, `bash --posix` and BSD awk); those external runs are pending and have no recorded result yet.
 
 ---
 

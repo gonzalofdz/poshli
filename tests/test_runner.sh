@@ -69,7 +69,102 @@ assert_false() {
 	unset _f_status _f_desc
 }
 
+# Install a controlled external shim for awk/od where the shell honours PATH.
+# BusyBox resolves these utilities as applets even when PATH is overridden, so
+# an equivalent function shim is defined in that case. Keeping the shims out of
+# pipelines on PATH-honouring shells avoids shell-specific function statuses
+# (ksh93 reports 256 for a function used as the last command of a pipeline).
+_test_shim_awk() {
+	POSHLI_TEST_AWK_MODE="$1"
+	export POSHLI_TEST_AWK_MODE
+	case "$(command -v awk)" in
+	*/*)
+		_test_shim_dir="${TMPDIR:-/tmp}/poshli_shim_awk_$$"
+		mkdir -p "$_test_shim_dir" || return 1
+		ln -sf "$TEST_DIR/shims/awk" "$_test_shim_dir/awk" || return 1
+		PATH="$_test_shim_dir:$PATH"
+		export PATH
+		;;
+	*)
+		# shellcheck disable=SC2317  # BusyBox applet shim, invoked indirectly
+		awk() {
+			case ${POSHLI_TEST_AWK_MODE:-} in
+			fail) return 1 ;;
+			missing) return 127 ;;
+			partial) printf '%s' 'PARTIAL'; return 1 ;;
+			invalid) printf '%s' 'INVALID'; return 0 ;;
+			garbage) printf '%s' 'GARBAGE'; return 0 ;;
+			valid-extra) printf '%s\n%s' 'VALID' 'EXTRA'; return 0 ;;
+			empty) return 0 ;;
+			*) return 1 ;;
+			esac
+		}
+		;;
+	esac
+}
+
+_test_shim_od() {
+	POSHLI_TEST_OD_MODE="$1"
+	export POSHLI_TEST_OD_MODE
+	case "$(command -v od)" in
+	*/*)
+		_test_shim_dir="${TMPDIR:-/tmp}/poshli_shim_od_$$"
+		mkdir -p "$_test_shim_dir" || return 1
+		ln -sf "$TEST_DIR/shims/od" "$_test_shim_dir/od" || return 1
+		PATH="$_test_shim_dir:$PATH"
+		export PATH
+		;;
+	*)
+		# shellcheck disable=SC2317  # BusyBox applet shim, invoked indirectly
+		od() {
+			case ${POSHLI_TEST_OD_MODE:-} in
+			fail) return 1 ;;
+			missing) return 127 ;;
+			partial) printf '%s' '97 98'; return 1 ;;
+			empty) return 0 ;;
+			truncated) printf '%s' '97 98'; return 0 ;;
+			outofrange) printf '%s\n' '97 98 300'; return 0 ;;
+			nonnumeric) printf '%s\n' '97 98 x'; return 0 ;;
+			extra) printf '%s\n' '97 98 99 100'; return 0 ;;
+			*) return 1 ;;
+			esac
+		}
+		;;
+	esac
+}
+
+_test_shim_wc() {
+	POSHLI_TEST_WC_MODE="$1"
+	export POSHLI_TEST_WC_MODE
+	case "$(command -v wc)" in
+	*/*)
+		_test_shim_dir="${TMPDIR:-/tmp}/poshli_shim_wc_$$"
+		mkdir -p "$_test_shim_dir" || return 1
+		ln -sf "$TEST_DIR/shims/wc" "$_test_shim_dir/wc" || return 1
+		PATH="$_test_shim_dir:$PATH"
+		export PATH
+		;;
+	*)
+		# shellcheck disable=SC2317  # BusyBox applet shim, invoked indirectly
+		wc() {
+			case ${POSHLI_TEST_WC_MODE:-} in
+			missing) return 127 ;;
+			wrong) printf '%s\n' '3'; return 0 ;;
+			*) return 1 ;;
+			esac
+		}
+		;;
+	esac
+}
+
+_test_cleanup_shims() {
+	rm -rf "${TMPDIR:-/tmp}/poshli_shim_awk_$$" "${TMPDIR:-/tmp}/poshli_shim_od_$$" "${TMPDIR:-/tmp}/poshli_shim_wc_$$"
+}
+
+trap '_test_cleanup_shims' 0 INT TERM HUP
+
 test_summary() {
+	_test_cleanup_shims
 	printf '\n========================================\n'
 	printf 'Tests run: %d | Passed: %d | Failed: %d\n' \
 		"$TESTS_TOTAL" "$TESTS_PASSED" "$TESTS_FAILED"

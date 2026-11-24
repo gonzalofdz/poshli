@@ -170,8 +170,7 @@ _poshli_b64_in100="0123456789012345678901234567890123456789012345678901234567890
 
 # 1) od fails producing no output at all.
 _poshli_b64_st=$( (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	od() { return 1; }
+	_test_shim_od fail
 	encoding_base64_encode "$_poshli_b64_in100" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
 ) )
@@ -180,8 +179,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: od failing with no ou
 
 # 2) od fails after emitting partial output.
 _poshli_b64_st=$( (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	od() { command od "$@" | head -n 2; return 1; }
+	_test_shim_od partial
 	encoding_base64_encode "$_poshli_b64_in100" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
 ) )
@@ -190,8 +188,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: od failing after part
 
 # 3) od emits truncated output but reports success.
 _poshli_b64_st=$( (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	od() { command od "$@" | head -n 2; return 0; }
+	_test_shim_od truncated
 	encoding_base64_encode "$_poshli_b64_in100" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
 ) )
@@ -215,8 +212,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: od ignoring -v (elide
 # 5a) od emits a value outside the byte range. The field count matches the 3
 # expected bytes on purpose: only the value check can catch this case.
 _poshli_b64_st=$( (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	od() { printf ' 97 98 300\n'; }
+	_test_shim_od outofrange
 	encoding_base64_encode "abc" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
 ) )
@@ -225,8 +221,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: od value above 255 re
 
 # 5b) od emits a non-numeric field. Again the count matches on purpose.
 _poshli_b64_st=$( (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	od() { printf ' 97 98 x\n'; }
+	_test_shim_od nonnumeric
 	encoding_base64_encode "abc" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
 ) )
@@ -235,8 +230,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: od non-numeric field 
 
 # 5c) od emits more bytes than the input has.
 _poshli_b64_st=$( (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	od() { printf ' 97 98 99 100\n'; }
+	_test_shim_od extra
 	encoding_base64_encode "abc" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
 ) )
@@ -245,8 +239,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: od extra bytes return
 
 # 6) wc is not available.
 _poshli_b64_st=$( (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	wc() { return 127; }
+	_test_shim_wc missing
 	encoding_base64_encode "$_poshli_b64_in100" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
 ) )
@@ -255,8 +248,7 @@ assert_status 1 "$_poshli_b64_st" "encoding_base64_encode: missing wc returns 1"
 
 # 7) wc reports a byte count that contradicts od.
 _poshli_b64_st=$( (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	wc() { printf '3\n'; }
+	_test_shim_wc wrong
 	encoding_base64_encode "$_poshli_b64_in100" > "$_poshli_b64_scen_out"
 	printf '%s' "$?"
 ) )
@@ -270,54 +262,54 @@ unset _poshli_b64_scen_out _poshli_b64_scen_marker _poshli_b64_in100 _poshli_b64
 
 # Write failures of the final printf must not be hidden by the trailing
 # unset that cleans the temporaries: the function must return a non-zero
-# status and clean up anyway. stdout is closed for the call so the write
-# cannot succeed; each simulation runs in its own subshell and reports the
-# observed status. A leaked temporary turns the reported status into a
-# sentinel 9, so the assertions cover return code and cleanup at once.
+# status and clean up anyway. stdout is closed at the start of each subshell;
+# the observed status is reported through fd 3. A leaked temporary turns the
+# reported status into a sentinel 9, so the assertions cover status and
+# cleanup at once.
 _poshli_b64_wfail_st=$( (
-	encoding_base64_encode "abc" >&- 2>/dev/null
+	exec 1>&-
+	encoding_base64_encode "abc" 2>/dev/null
 	_st=$?
-	[ -z "${_poshli_base64_out+x}${_poshli_b64_want+x}" ] || _st=9
-	printf '%s' "$_st"
-) )
+	[ -z "${_poshli_encoding_base64_encode_out+x}${_poshli_encoding_base64_encode_want+x}" ] || _st=9
+	printf '%s' "$_st" >&3
+) 3>&1 )
 assert_status 1 "$_poshli_b64_wfail_st" "encoding_base64_encode: printf write failure returns 1 (not hidden by unset) and cleans temporaries"
 
 _poshli_b64_wfail_st=$( (
-	encoding_base64_decode "YWJj" >&- 2>/dev/null
+	exec 1>&-
+	encoding_base64_decode "YWJj" 2>/dev/null
 	_st=$?
-	[ -z "${_poshli_b64_esc+x}" ] || _st=9
-	printf '%s' "$_st"
-) )
+	[ -z "${_poshli_encoding_base64_decode_esc+x}" ] || _st=9
+	printf '%s' "$_st" >&3
+) 3>&1 )
 assert_status 1 "$_poshli_b64_wfail_st" "encoding_base64_decode: printf write failure returns 1 (not hidden by unset) and cleans temporaries"
 
 # Temporaries are cleaned on the success path as well.
 (
 	encoding_base64_encode "abc" > /dev/null &&
 	encoding_base64_decode "YWJj" > /dev/null &&
-	[ -z "${_poshli_base64_out+x}" ] &&
-	[ -z "${_poshli_b64_want+x}" ] &&
-	[ -z "${_poshli_b64_esc+x}" ]
+	[ -z "${_poshli_encoding_base64_encode_out+x}" ] &&
+	[ -z "${_poshli_encoding_base64_encode_want+x}" ] &&
+	[ -z "${_poshli_encoding_base64_decode_esc+x}" ]
 )
 assert_true $? "encoding.sh: temporaries are cleaned on success"
 
 # Temporaries are also cleaned when the awk stage fails (invalid or
 # unavailable awk output paths), not only when the final printf fails.
 _poshli_b64_wfail_st=$( (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	awk() { return 1; }
+	_test_shim_awk fail
 	encoding_base64_encode "abc" > /dev/null 2>&1
 	_st=$?
-	[ -z "${_poshli_base64_out+x}${_poshli_b64_want+x}" ] || _st=9
+	[ -z "${_poshli_encoding_base64_encode_out+x}${_poshli_encoding_base64_encode_want+x}" ] || _st=9
 	printf '%s' "$_st"
 ) )
 assert_status 1 "$_poshli_b64_wfail_st" "encoding_base64_encode: awk failure returns 1 and cleans temporaries"
 
 _poshli_b64_wfail_st=$( (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	awk() { return 1; }
+	_test_shim_awk fail
 	encoding_base64_decode "YWJj" > /dev/null 2>&1
 	_st=$?
-	[ -z "${_poshli_b64_esc+x}" ] || _st=9
+	[ -z "${_poshli_encoding_base64_decode_esc+x}" ] || _st=9
 	printf '%s' "$_st"
 ) )
 assert_status 1 "$_poshli_b64_wfail_st" "encoding_base64_decode: awk failure returns 1 and cleans temporaries"

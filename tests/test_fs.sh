@@ -39,7 +39,7 @@ mkdir -p "$TMP_FIXTURE_DIR" || {
 	printf 'poshli test_fs: cannot create fixture directory %s\n' "$TMP_FIXTURE_DIR" >&2
 	exit 1
 }
-trap 'rm -rf "$TMP_FIXTURE_DIR"' 0 INT TERM HUP
+trap 'rm -rf "$TMP_FIXTURE_DIR"; _test_cleanup_shims' 0 INT TERM HUP
 
 REG_FILE="$TMP_FIXTURE_DIR/regular.txt"
 EMPTY_FILE="$TMP_FIXTURE_DIR/empty.txt"
@@ -197,39 +197,16 @@ fi
 fs_is_plain_text "$LINK_FILE"; assert_true $? "fs_is_plain_text: symlink to text file"
 
 # External awk shims avoid ksh93's function-in-pipeline status quirk.
-# BusyBox resolves awk as an applet even when PATH is overridden, so it
-# keeps a shell-function shim with the same modes.
+# BusyBox resolves awk as an applet even when PATH is overridden, so
+# test_runner.sh defines a function shim instead in that case.
 _fs_shim_env() {
-	POSHLI_TEST_AWK_MODE="$1"
-	export POSHLI_TEST_AWK_MODE
-	case "$(command -v awk)" in
-	*/*)
-		PATH="$TEST_DIR/shims:$PATH"
-		export PATH
-		;;
-	*)
-		# shellcheck disable=SC2317  # BusyBox applet shim, invoked indirectly
-		awk() {
-			case ${POSHLI_TEST_AWK_MODE:-} in
-			fail) return 1 ;;
-			missing) return 127 ;;
-			partial) printf '%s' 'PARTIAL'; return 1 ;;
-			invalid) printf '%s' 'INVALID'; return 0 ;;
-			garbage) printf '%s' 'GARBAGE'; return 0 ;;
-			valid-extra) printf '%s\n%s' 'VALID' 'EXTRA'; return 0 ;;
-			empty) return 0 ;;
-			*) return 1 ;;
-			esac
-		}
-		;;
-	esac
+	_test_shim_awk "$1"
 }
 
 # Failure injection: od is replaced by a shell function inside a subshell;
 # awk uses an external executable so its success status is portable.
 (
-	# shellcheck disable=SC2317  # od shim is invoked indirectly by fs_is_plain_text
-	od() { return 1; }
+	_test_shim_od fail
 	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
 	_st=$?
 	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
@@ -238,8 +215,7 @@ _fs_shim_env() {
 assert_true $? "fs_is_plain_text: od failure returns 1 with read diagnostic and no stdout"
 
 (
-	# shellcheck disable=SC2317  # od shim is invoked indirectly by fs_is_plain_text
-	od() { return 127; }
+	_test_shim_od missing
 	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
 	_st=$?
 	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
@@ -248,8 +224,7 @@ assert_true $? "fs_is_plain_text: od failure returns 1 with read diagnostic and 
 assert_true $? "fs_is_plain_text: missing od (127) returns 1 with read diagnostic and no stdout"
 
 (
-	# shellcheck disable=SC2317  # od shim is invoked indirectly by fs_is_plain_text
-	od() { printf '65 66'; return 1; }
+	_test_shim_od partial
 	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
 	_st=$?
 	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
@@ -258,8 +233,7 @@ assert_true $? "fs_is_plain_text: missing od (127) returns 1 with read diagnosti
 assert_true $? "fs_is_plain_text: failing od leaks no partial stdout and uses the read diagnostic"
 
 (
-	# shellcheck disable=SC2317  # od shim is invoked indirectly by fs_is_plain_text
-	od() { return 0; }
+	_test_shim_od empty
 	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
 	_st=$?
 	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
@@ -268,8 +242,7 @@ assert_true $? "fs_is_plain_text: failing od leaks no partial stdout and uses th
 assert_true $? "fs_is_plain_text: successful od with no output on a non-empty file fails closed"
 
 (
-	# shellcheck disable=SC2317  # od shim is invoked indirectly by fs_is_plain_text
-	od() { return 0; }
+	_test_shim_od empty
 	_out=$(fs_is_plain_text "$EMPTY_FILE" 2>/dev/null)
 	_st=$?
 	_err=$(fs_is_plain_text "$EMPTY_FILE" 2>&1 >/dev/null)

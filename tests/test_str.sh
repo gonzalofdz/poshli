@@ -180,8 +180,7 @@ assert_eq "poshli: str_upper: input is not valid UTF-8" "$err" "str_upper: diagn
 unset err
 
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	od() { return 127; }
+	_test_shim_od missing
 	_out=$(str_lower A 2>/dev/null)
 	_st=$?
 	_err=$(str_lower A 2>&1 >/dev/null)
@@ -351,112 +350,109 @@ res=$(str_replace "" "x" "hello"); assert_eq "hello" "$res" "str_replace: empty 
 # shims do not leak into the rest of the suite; each subshell exit status is
 # asserted in the parent so the suite counters are updated.
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	od() { return 127; }
+	_test_shim_od missing
 	res=$(str_len "hello" 2>/dev/null)
 	[ $? -eq 1 ]
 )
 assert_true $? "str_len fails closed when od is unavailable"
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	od() { return 127; }
+	_test_shim_od missing
 	res=$(str_len "hello" 2>/dev/null)
 	[ -z "$res" ]
 )
 assert_true $? "str_len prints nothing when od is unavailable"
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	od() { return 127; }
+	_test_shim_od missing
 	res=$(str_lower "HELLO" 2>/dev/null)
 	[ $? -eq 1 ]
 )
 assert_true $? "str_lower fails closed when od is unavailable"
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	od() { return 127; }
+	_test_shim_od missing
 	res=$(str_lower "HELLO" 2>/dev/null)
 	[ -z "$res" ]
 )
 assert_true $? "str_lower prints nothing when od is unavailable"
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	od() { return 127; }
+	_test_shim_od missing
 	res=$(str_upper "hello" 2>/dev/null)
 	[ $? -eq 1 ]
 )
 assert_true $? "str_upper fails closed when od is unavailable"
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	od() { return 127; }
+	_test_shim_od missing
 	res=$(str_upper "hello" 2>/dev/null)
 	[ -z "$res" ]
 )
 assert_true $? "str_upper prints nothing when od is unavailable"
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	wc() { return 127; }
+	_test_shim_wc missing
 	res=$(str_len_bytes "hello" 2>/dev/null)
 	[ $? -eq 1 ]
 )
 assert_true $? "str_len_bytes fails closed when wc is unavailable"
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	wc() { return 127; }
+	_test_shim_wc missing
 	res=$(str_len_bytes "hello" 2>/dev/null)
 	[ -z "$res" ]
 )
 assert_true $? "str_len_bytes prints nothing when wc is unavailable"
 
 # A1: failures while writing the final result to stdout must not be hidden by
-# the cleanup unset. stdout is closed for the call; the status and the
-# temporary-variable cleanup are checked in the same subshell, so a leaked
-# temporary turns the reported status into the sentinel 9.
+# the cleanup unset. stdout is closed at the start of each subshell; the status
+# and cleanup are checked in that subshell. The observed status is reported
+# through fd 3 so closing stdout cannot hide it. A leaked temporary turns the
+# reported status into the sentinel 9.
 _str_wfail=$( (
-	str_trim "  a  " >&- 2>/dev/null
+	exec 1>&-
+	str_trim "  a  " 2>/dev/null
 	_st=$?
-	[ -z "${_trim_str+x}" ] || _st=9
-	printf '%s' "$_st"
-) )
+	[ -z "${_poshli_str_trim_value+x}" ] || _st=9
+	printf '%s' "$_st" >&3
+) 3>&1 )
 assert_status 1 "$_str_wfail" "str_trim: write failure returns 1 and cleans temporaries"
 
 _str_wfail=$( (
-	str_lower A >&- 2>/dev/null
+	exec 1>&-
+	str_lower A 2>/dev/null
 	_st=$?
-	[ -z "${_poshli_case_out+x}${_poshli_case_table+x}${_poshli_case_od+x}" ] || _st=9
-	printf '%s' "$_st"
-) )
+	[ -z "${_poshli_case_map_table+x}${_poshli_case_map_out+x}${_poshli_case_map_od+x}" ] || _st=9
+	printf '%s' "$_st" >&3
+) 3>&1 )
 assert_status 1 "$_str_wfail" "str_lower: write failure returns 1 and cleans temporaries"
 
 _str_wfail=$( (
-	str_len abc >&- 2>/dev/null
+	exec 1>&-
+	str_len abc 2>/dev/null
 	_st=$?
 	[ -z "${_poshli_str_len_od+x}${_poshli_str_len_out+x}" ] || _st=9
-	printf '%s' "$_st"
-) )
+	printf '%s' "$_st" >&3
+) 3>&1 )
 assert_status 1 "$_str_wfail" "str_len: write failure returns 1 and cleans temporaries"
 
 _str_wfail=$( (
-	str_len_bytes abc >&- 2>/dev/null
+	exec 1>&-
+	str_len_bytes abc 2>/dev/null
 	_st=$?
 	[ -z "${_poshli_str_len_bytes_count+x}${_poshli_str_len_bytes_result+x}" ] || _st=9
-	printf '%s' "$_st"
-) )
+	printf '%s' "$_st" >&3
+) 3>&1 )
 assert_status 1 "$_str_wfail" "str_len_bytes: write failure returns 1 and cleans temporaries"
 
 _str_wfail=$( (
-	str_replace a b a >&- 2>/dev/null
+	exec 1>&-
+	str_replace a b a 2>/dev/null
 	_st=$?
-	[ -z "${_sr_search+x}${_sr_replace+x}${_sr_str+x}${_sr_out+x}${_sr_prefix+x}${_sr_rest+x}" ] || _st=9
-	printf '%s' "$_st"
-) )
+	[ -z "${_poshli_str_replace_search+x}${_poshli_str_replace_replacement+x}${_poshli_str_replace_str+x}${_poshli_str_replace_out+x}${_poshli_str_replace_prefix+x}${_poshli_str_replace_rest+x}" ] || _st=9
+	printf '%s' "$_st" >&3
+) 3>&1 )
 assert_status 1 "$_str_wfail" "str_replace: write failure returns 1 and cleans temporaries"
 
 # A failing awk that writes to stdout before exiting must not leak that
 # partial result: str_len buffers the awk output and publishes it only on
 # success.
 _str_wfail=$( (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	awk() { printf 'PARTIAL'; return 1; }
+	_test_shim_awk partial
 	_out=$(str_len hello 2>/dev/null)
 	_st=$?
 	[ -z "$_out" ] || _st=9
@@ -465,16 +461,14 @@ _str_wfail=$( (
 assert_status 1 "$_str_wfail" "str_len: failing awk leaks no partial stdout and returns 1"
 
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	awk() { return 1; }
+	_test_shim_awk fail
 	_out=$(str_len hello 2>/dev/null)
 	[ "$?" -eq 1 ] && [ -z "$_out" ]
 )
 assert_true $? "str_len: failing awk returns 1 with empty stdout"
 
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	awk() { return 1; }
+	_test_shim_awk fail
 	_out=$(str_len_bytes hello 2>/dev/null)
 	[ "$?" -eq 1 ] && [ -z "$_out" ]
 )
@@ -508,23 +502,24 @@ assert_true $? "_poshli_case_map: invalid selector returns 2 silently"
 assert_true $? "str_replace: two arguments returns 2 silently"
 
 _str_wfail=$( (
-	str_replace "" x hello >&- 2>/dev/null
+	exec 1>&-
+	str_replace "" x hello 2>/dev/null
 	_st=$?
-	printf '%s' "$_st"
-) )
+	printf '%s' "$_st" >&3
+) 3>&1 )
 assert_status 1 "$_str_wfail" "str_replace: empty-search write failure returns 1"
 
 # The no-argument paths already propagate the final printf status through
 # return; keep that behavior covered.
-_str_wfail=$( ( str_trim >&- 2>/dev/null; printf '%s' "$?" ) )
+_str_wfail=$( ( exec 1>&-; str_trim 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
 assert_status 1 "$_str_wfail" "str_trim: no-argument write failure returns 1"
-_str_wfail=$( ( str_lower >&- 2>/dev/null; printf '%s' "$?" ) )
+_str_wfail=$( ( exec 1>&-; str_lower 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
 assert_status 1 "$_str_wfail" "str_lower: no-argument write failure returns 1"
-_str_wfail=$( ( str_upper >&- 2>/dev/null; printf '%s' "$?" ) )
+_str_wfail=$( ( exec 1>&-; str_upper 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
 assert_status 1 "$_str_wfail" "str_upper: no-argument write failure returns 1"
-_str_wfail=$( ( str_len >&- 2>/dev/null; printf '%s' "$?" ) )
+_str_wfail=$( ( exec 1>&-; str_len 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
 assert_status 1 "$_str_wfail" "str_len: no-argument write failure returns 1"
-_str_wfail=$( ( str_len_bytes >&- 2>/dev/null; printf '%s' "$?" ) )
+_str_wfail=$( ( exec 1>&-; str_len_bytes 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
 assert_status 1 "$_str_wfail" "str_len_bytes: no-argument write failure returns 1"
 
 # Successful calls keep stderr empty.
@@ -559,8 +554,7 @@ assert_true $? "str_len: valid UTF-8 returns the count with empty stderr"
 assert_true $? "str_len: invalid UTF-8 uses the UTF-8 diagnostic"
 
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	awk() { return 1; }
+	_test_shim_awk fail
 	_out=$(str_len hello 2>/dev/null)
 	_st=$?
 	_err=$(str_len hello 2>&1 >/dev/null)
@@ -569,8 +563,7 @@ assert_true $? "str_len: invalid UTF-8 uses the UTF-8 diagnostic"
 assert_true $? "str_len: awk failure uses the awk diagnostic"
 
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	awk() { return 1; }
+	_test_shim_awk fail
 	_err=$(str_len hello 2>&1 >/dev/null)
 	case "$_err" in
 		*"input is not valid UTF-8"*) exit 1 ;;
@@ -580,8 +573,7 @@ assert_true $? "str_len: awk failure uses the awk diagnostic"
 assert_true $? "str_len: awk failure does not use the UTF-8 diagnostic"
 
 (
-	# shellcheck disable=SC2317  # shim is invoked indirectly
-	awk() { printf 'PARTIAL'; return 1; }
+	_test_shim_awk partial
 	_err=$(str_len hello 2>&1 >/dev/null)
 	[ "$_err" = "poshli: str_len: could not count code points" ]
 )

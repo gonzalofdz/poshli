@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+# POSHLI - external od shim for failure-injection tests
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+# This file is part of POSHLI. See LICENSE for the full license text.
+#
+# Shell functions used as pipeline elements have shell-specific status
+# semantics. This executable keeps the failure-injection tests independent
+# of the shell that runs them.
+
+case ${POSHLI_TEST_OD_MODE:-} in
+	fail) exit 1 ;;
+	missing) exit 127 ;;
+	partial) printf '%s' '97 98'; exit 1 ;;
+	empty) exit 0 ;;
+	truncated) printf '%s' '97 98'; exit 0 ;;
+	outofrange) printf '%s\n' '97 98 300'; exit 0 ;;
+	nonnumeric) printf '%s\n' '97 98 x'; exit 0 ;;
+	extra) printf '%s\n' '97 98 99 100'; exit 0 ;;
+	*) exit 1 ;;
+esac

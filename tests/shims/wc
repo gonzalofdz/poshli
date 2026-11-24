@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# POSHLI - external wc shim for failure-injection tests
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+# This file is part of POSHLI. See LICENSE for the full license text.
+#
+# A shell function as the last command of a pipeline reports status 256 under
+# ksh93, which would hide the byte-count mismatch path. This executable keeps
+# the wc simulations independent of the shell that runs them.
+
+case ${POSHLI_TEST_WC_MODE:-} in
+	missing) exit 127 ;;
+	wrong) printf '%s\n' '3'; exit 0 ;;
+	*) exit 1 ;;
+esac
