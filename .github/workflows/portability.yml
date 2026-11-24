@@ -1,0 +1,55 @@
+name: portability
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-13
+          - macos-14
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install GNU make
+        run: brew install make
+
+      - name: Verify bundle is synchronized with src/
+        run: gmake check-bundle
+
+      - name: Run suite with /bin/sh and BWK awk
+        run: |
+          gmake test POSHLI_TEST_SHELL=/bin/sh
+          gmake test-bundle POSHLI_TEST_SHELL=/bin/sh
+
+      - name: Run suite with bash --posix
+        run: |
+          gmake test POSHLI_TEST_SHELL="/bin/bash --posix"
+          gmake test-bundle POSHLI_TEST_SHELL="/bin/bash --posix"
+
+  freebsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Run FreeBSD validation
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg install -y gmake bash dash gawk mawk busybox
+          run: |
+            gmake check-bundle
+            gmake test POSHLI_TEST_SHELL=/bin/sh
+            gmake test-bundle POSHLI_TEST_SHELL=/bin/sh
+            gmake test POSHLI_TEST_SHELL="bash --posix"
+            gmake test-bundle POSHLI_TEST_SHELL="bash --posix"

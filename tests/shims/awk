@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# POSHLI - external awk shim for failure-injection tests
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
+# This file is part of POSHLI. See LICENSE for the full license text.
+#
+# ksh93 reports status 256 for a shell function used as the last command
+# of a pipeline captured with $(...). Using an external executable keeps
+# these tests meaningful across shells.
+
+case ${POSHLI_TEST_AWK_MODE:-} in
+	fail) exit 1 ;;
+	missing) exit 127 ;;
+	partial) printf '%s' 'PARTIAL'; exit 1 ;;
+	invalid) printf '%s' 'INVALID'; exit 0 ;;
+	garbage) printf '%s' 'GARBAGE'; exit 0 ;;
+	valid-extra) printf '%s\n%s' 'VALID' 'EXTRA'; exit 0 ;;
+	empty) exit 0 ;;
+	*) exit 1 ;;
+esac

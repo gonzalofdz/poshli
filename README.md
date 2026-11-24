@@ -522,13 +522,13 @@ make check-bundle
 >
 > This is **manual evidence from 2026-11-21**, and CI now also covers the `awk` dimension: an independent job runs the full suite under `dash` with GNU awk, `mawk` and BusyBox `awk` (sources and bundle), verifying the selected implementation before testing; a blocking ShellCheck job checks sources, tests and bundle against a checked-in baseline. The shell and `awk` dimensions are not always independently selectable: this BusyBox build uses its own `awk` applet from `busybox sh` regardless of `PATH`, so **BusyBox `sh` + GNU `awk` was not reproducible** and is not claimed; the verified BusyBox `sh` configuration is BusyBox `sh` + BusyBox `awk` + BusyBox `od`/`wc`. `mawk` was also used for some of the performance figures in [Encoding](#4-encoding-encodingsh).
 >
-> **Portability extension (2026-11-23):** after G1–G3 the suite contains **634 tests**. Local validation on Ubuntu 24.04.5 ran sources and bundle with:
+> **Portability extension (2026-11-24):** after G1–G3 the suite contains **634 tests**. Local validation on Ubuntu 24.04.5 ran sources and bundle with:
 >
 > - **mksh 59c** (2024/02/01 +Debian) with GNU awk 5.2.1 and mawk 1.3.4: **634/634** each.
 > - **BusyBox 1.35.0 static x86_64-linux-musl** (SHA-256 `6e123e7f3202a8c1e9b1f94d8941580a25135382b99e8d3e34fb858bba311348`), using its own `sh`, `awk`, `od` and `wc`: **634/634** each.
-> - **ksh93u+m 1.0.8** (package `ksh` 20240113) with GNU awk and mawk: **633/634** each. The single failure is the test `fs_is_plain_text: exact INVALID sentinel returns 1 silently`: ksh93 reports status `256` for a shell-function shim inside a pipeline/command substitution. An external `awk` shim confirms that the library itself returns `1` silently; the failure is in the test harness, not in `fs_is_plain_text`.
+> - **ksh93u+m 1.0.8** (package `ksh` 20240113) with GNU awk and mawk: **634/634** each. ksh93 reports status `256` for a shell function used as the last command of a pipeline; the tests now use an executable `awk` shim under `tests/shims/` where `PATH` is honoured, with an equivalent function shim for BusyBox applet resolution. No library change was needed.
 >
-> **macOS `awk`, BSD `awk` and macOS/BSD `/bin/sh` remain unverified.** The ksh93 test-harness limitation is documented, not claimed as full ksh93 suite support.
+> **macOS `awk`, BSD `awk` and macOS/BSD `/bin/sh` remain unverified.** Linux `ksh93`/`mksh` validation is defined in CI, and `.github/workflows/portability.yml` prepares scheduled/manual macOS and FreeBSD runs; those external runs have not yet been executed.
 
 ---
 

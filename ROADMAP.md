@@ -58,19 +58,18 @@ These are deliberate design choices to keep unless new evidence and tests justif
 - [x] H5: extend the `check-bundle` trap to `0 1 2 3 6 15` and make `make clean` remove `poshli.sh.check.*`; document the untrappable `SIGKILL`/`SIGSTOP` limitation.
 - [x] H6/SC2317: use inline ShellCheck suppressions in all four test files, remove the file-level suppression, and regenerate the baseline with 0 `SC2317` entries.
 - [x] H7: verify there are no current stale "pending push" claims; historical references in `PLAN.md` remain accurate.
-- [x] G4 local portability validation (2026-11-23): the 634-test suite passed under mksh 59c (GNU awk and mawk, 634/634), and under BusyBox 1.35.0 static x86_64-linux-musl with its own `sh`/`awk`/`od`/`wc` (634/634). ksh93u+m 1.0.8 passed 633/634 in both sources and bundle with GNU awk and mawk; the single failure is the test harness's function-in-pipeline status under ksh93, not a library defect (an external `awk` shim returns the expected silent `1`). macOS/BSD validation remains external.
+- [x] G4 local portability validation (2026-11-24): the 634-test suite passed under mksh 59c (GNU awk and mawk, 634/634), under BusyBox 1.35.0 static x86_64-linux-musl with its own `sh`/`awk`/`od`/`wc` (634/634), and under ksh93u+m 1.0.8 (GNU awk and mawk, 634/634) after moving the pipeline-success awk shims to an executable test shim. Linux ksh93/mksh validation was added to `tests.yml`; macOS/FreeBSD jobs were added to `portability.yml` for scheduled/manual external runs. macOS/BSD remain unverified.
 - [x] G5 distribution and dependency closure (2026-11-24): Debian revision `0.5.0-2` declares `Build-Depends: awk` and `Depends: mawk | gawk | original-awk`; binary build with tests passed 634/634, `dpkg-checkbuilddeps` and Lintian are clean. README documents the dependency, local Debian installation and `/usr/share/poshli/poshli.sh`. The local and remote `v1.0.0` tag and its draft release were removed; `v0.5.0` and its published release remain intact, and `uscan` no longer reports `v1.0.0`. The `0.5.0-2` binary was not published; `0.5.0-1` remains the release asset.
 
 ## Current
 
-- [ ] External macOS/BSD portability validation and the ksh93 test-harness decision. D-1, A1, M1, M2, M3, M4, M5, D-4 and H1–H7 are closed (2026-11-21/23); G4 is partially validated locally.
+- [ ] External macOS/BSD portability validation. D-1, A1, M1, M2, M3, M4, M5, D-4 and H1–H7 are closed (2026-11-21/24); G4 is fully validated locally but not on macOS/BSD.
 
 ## Next
 
 Ordered by provisional priority; each item is an investigation and validation task, not an approved implementation.
 
-- [ ] Validate macOS/BSD: macOS `/bin/sh` (bash 3.2) with BWK awk, and FreeBSD/OpenBSD/NetBSD `/bin/sh` with BSD awk, using external CI or VMs.
-- [ ] Decide whether to make the ksh93 shim tests portable (external `awk` shim or equivalent) or document ksh93 as outside the test-suite support; do not change library behavior.
+- [ ] Validate macOS/BSD: macOS `/bin/sh` (bash 3.2) with BWK awk, and FreeBSD/OpenBSD/NetBSD `/bin/sh` with BSD awk, using the scheduled/manual portability workflow or VMs.
 - [ ] Audit `src/num.sh` for generic utilities needed by future modules.
 - [ ] Audit `src/str.sh` for generic utilities needed by future modules.
 - [ ] Implement only the approved new utilities for `num.sh` and `str.sh`.

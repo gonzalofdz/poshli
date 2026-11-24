@@ -49,7 +49,7 @@ baseline=tools/ci/shellcheck-baseline.txt
 
 # The positional parameters carry the file list, so no word-splitting
 # suppression is needed.
-set -- poshli.sh src/*.sh tests/*.sh
+set -- poshli.sh src/*.sh tests/*.sh tests/shims/awk
 
 shellcheck -s sh --format=gcc "$@" > "$raw" 2> "$tmpdir/err"
 status=$?

@@ -196,7 +196,37 @@ fi
 ( cd "$TMP_FIXTURE_DIR" && fs_is_plain_text -n ); assert_true $? "fs_is_plain_text: leading hyphen filename"
 fs_is_plain_text "$LINK_FILE"; assert_true $? "fs_is_plain_text: symlink to text file"
 
-# Failure injection: od and awk are replaced by shell functions inside a subshell.
+# External awk shims avoid ksh93's function-in-pipeline status quirk.
+# BusyBox resolves awk as an applet even when PATH is overridden, so it
+# keeps a shell-function shim with the same modes.
+_fs_shim_env() {
+	POSHLI_TEST_AWK_MODE="$1"
+	export POSHLI_TEST_AWK_MODE
+	case $(command -v awk) in
+	*/*)
+		PATH="$TEST_DIR/shims:$PATH"
+		export PATH
+		;;
+	*)
+		# shellcheck disable=SC2317  # BusyBox applet shim, invoked indirectly
+		awk() {
+			case ${POSHLI_TEST_AWK_MODE:-} in
+			fail) return 1 ;;
+			missing) return 127 ;;
+			partial) printf '%s' 'PARTIAL'; return 1 ;;
+			invalid) printf '%s' 'INVALID'; return 0 ;;
+			garbage) printf '%s' 'GARBAGE'; return 0 ;;
+			valid-extra) printf '%s\n%s' 'VALID' 'EXTRA'; return 0 ;;
+			empty) return 0 ;;
+			*) return 1 ;;
+			esac
+		}
+		;;
+	esac
+}
+
+# Failure injection: od is replaced by a shell function inside a subshell;
+# awk uses an external executable so its success status is portable.
 (
 	# shellcheck disable=SC2317  # od shim is invoked indirectly by fs_is_plain_text
 	od() { return 1; }
@@ -248,8 +278,7 @@ assert_true $? "fs_is_plain_text: successful od with no output on a non-empty fi
 assert_true $? "fs_is_plain_text: successful od with no output on an empty file is plain text"
 
 (
-	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
-	awk() { return 1; }
+	_fs_shim_env fail
 	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
 	_st=$?
 	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
@@ -258,8 +287,7 @@ assert_true $? "fs_is_plain_text: successful od with no output on an empty file 
 assert_true $? "fs_is_plain_text: awk failure returns 1 with validation diagnostic and no stdout"
 
 (
-	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
-	awk() { return 127; }
+	_fs_shim_env missing
 	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
 	_st=$?
 	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
@@ -268,8 +296,7 @@ assert_true $? "fs_is_plain_text: awk failure returns 1 with validation diagnost
 assert_true $? "fs_is_plain_text: missing awk (127) returns 1 with validation diagnostic and no stdout"
 
 (
-	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
-	awk() { printf 'PARTIAL'; return 1; }
+	_fs_shim_env partial
 	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
 	_st=$?
 	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
@@ -278,8 +305,7 @@ assert_true $? "fs_is_plain_text: missing awk (127) returns 1 with validation di
 assert_true $? "fs_is_plain_text: failing awk leaks no partial stdout and uses the validation diagnostic"
 
 (
-	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
-	awk() { return 0; }
+	_fs_shim_env empty
 	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
 	_st=$?
 	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
@@ -288,8 +314,7 @@ assert_true $? "fs_is_plain_text: failing awk leaks no partial stdout and uses t
 assert_true $? "fs_is_plain_text: awk without output fails validation"
 
 (
-	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
-	awk() { printf 'GARBAGE'; return 0; }
+	_fs_shim_env garbage
 	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
 	_st=$?
 	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
@@ -298,8 +323,7 @@ assert_true $? "fs_is_plain_text: awk without output fails validation"
 assert_true $? "fs_is_plain_text: unexpected awk output fails validation"
 
 (
-	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
-	awk() { printf 'VALID\nEXTRA'; return 0; }
+	_fs_shim_env valid-extra
 	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
 	_st=$?
 	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)
@@ -308,8 +332,7 @@ assert_true $? "fs_is_plain_text: unexpected awk output fails validation"
 assert_true $? "fs_is_plain_text: extra output after VALID fails validation"
 
 (
-	# shellcheck disable=SC2317  # awk shim is invoked indirectly by fs_is_plain_text
-	awk() { printf 'INVALID'; return 0; }
+	_fs_shim_env invalid
 	_out=$(fs_is_plain_text "$REG_FILE" 2>/dev/null)
 	_st=$?
 	_err=$(fs_is_plain_text "$REG_FILE" 2>&1 >/dev/null)

@@ -43,7 +43,7 @@ check-bundle:
 
 check-bashisms:
 	@if command -v checkbashisms >/dev/null 2>&1; then \
-		checkbashisms -f -p src/*.sh poshli.sh tests/*.sh; \
+		checkbashisms -f -p src/*.sh poshli.sh tests/*.sh tests/shims/awk; \
 	else \
 		printf 'checkbashisms is not installed (devscripts package); skipping check.\n'; \
 	fi

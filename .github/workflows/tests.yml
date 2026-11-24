@@ -92,3 +92,26 @@ jobs:
 
       - name: Run test suite (bundle)
         run: make test-bundle POSHLI_TEST_SHELL=dash
+
+  ksh-mksh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install ksh and mksh
+        run: sudo apt-get update && sudo apt-get install -y ksh mksh gawk mawk
+
+      - name: Verify shells
+        run: |
+          command -v ksh93
+          command -v mksh
+
+      - name: Verify bundle is synchronized with src/
+        run: make check-bundle
+
+      - name: Run suite with ksh93 and mksh
+        run: |
+          for shell in ksh93 mksh; do
+            make test POSHLI_TEST_SHELL="$shell"
+            make test-bundle POSHLI_TEST_SHELL="$shell"
+          done
