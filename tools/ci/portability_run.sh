@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  POSHLI - CI helper for the macOS/FreeBSD portability workflow
+#  POSHLI - CI helper for the macOS/BSD portability workflow
 #
 #  Usage: portability_run.sh <label> <command> [arguments...]
 #
@@ -8,7 +8,9 @@
 #  suite printed its final "Tests run:" summary. A configuration that
 #  aborts before the summary is a hard failure: an abort must never look
 #  like a skip or a clean run. When GITHUB_STEP_SUMMARY is set, the
-#  configuration totals and skips are appended to the job summary.
+#  configuration totals and skips are appended to the job summary. Under
+#  GitHub Actions the same data is emitted as a notice annotation, so the
+#  evidence is readable without authenticated access to the job log.
 #
 #  SPDX-License-Identifier: LGPL-3.0-only
 #  Copyright (C) 2017-2018, 2026 Luis Gonzalo Fernández-Díez <humanogonzalo@gmail.com>
@@ -38,6 +40,22 @@ if ! grep -q 'Tests run:' "$_log"; then
 	printf 'ABORTED CONFIGURATION: %s (exit %d) produced no "Tests run:" summary\n' \
 		"$_label" "$_status" >&2
 	_aborted=1
+fi
+
+# The job log is not readable without authentication on some repositories.
+# Emit the same summary as a notice annotation, which the public checks API
+# exposes, so the per-configuration totals remain verifiable.
+if [ -n "${GITHUB_ACTIONS:-}" ]; then
+	if [ "$_aborted" -eq 1 ]; then
+		printf '::error title=%s::ABORTED BEFORE SUMMARY (exit %d)\n' \
+			"$_label" "$_status"
+	else
+		_summary=$(grep 'Tests run:' "$_log" | tail -n 1)
+		_skips=$(grep -c '\[SKIP\]' "$_log" 2>/dev/null || true)
+		printf '::notice title=%s::%s; skips: %s\n' \
+			"$_label" "$_summary" "$_skips"
+		unset _summary _skips
+	fi
 fi
 
 if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then

@@ -3,7 +3,7 @@ name: portability
 on:
   workflow_dispatch:
   push:
-    branches: [master]
+    branches: [master, ci/openbsd-netbsd]
     paths:
       - 'src/**'
       - 'tests/**'
@@ -119,4 +119,116 @@ jobs:
             sh tools/ci/portability_run.sh "sources, bash --posix, one true awk" \
               gmake test POSHLI_TEST_SHELL="bash --posix"
             sh tools/ci/portability_run.sh "bundle, bash --posix, one true awk" \
+              gmake test-bundle POSHLI_TEST_SHELL="bash --posix"
+
+  openbsd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Run OpenBSD 8.0 validation
+        uses: vmactions/openbsd-vm@v1.4.9
+        with:
+          release: "8.0"
+          cache-after-prepare: true
+          prepare: |
+            set -e
+            pkg_add -I gmake bash
+          run: |
+            set -e
+            export PATH="/usr/local/bin:$PATH"
+            uname -a
+            sysctl kern.version
+            id -u
+            locale
+            locale -a | grep -i 'utf' || true
+
+            _env="release=$(uname -r) arch=$(uname -m) uid=$(id -u) sh=$(/bin/sh -c 'printf "%s" "${KSH_VERSION:-none}"') awk=$(awk -V 2>&1 | sed -n '1p') bash=$(bash --version | sed -n '1p') make=$(gmake --version | sed -n '1p') locales=$(locale -a | tr '\n' ',')"
+            printf '::notice title=OpenBSD toolchain::%s\n' "$_env"
+
+            uname -s | grep -qx OpenBSD
+            /bin/sh -c 'case "${KSH_VERSION:-}" in *KSH*) ;; *) echo "expected OpenBSD ksh for /bin/sh" >&2; exit 1 ;; esac'
+            /bin/sh -c 'test -z "${BASH_VERSION:-}"' || {
+              echo 'expected a non-bash /bin/sh' >&2
+              exit 1
+            }
+            awk -V 2>&1 | grep -qi 'awk version' || {
+              echo 'expected BWK awk (one true awk)' >&2
+              exit 1
+            }
+            bash --version 2>&1 | grep -q 'GNU bash' || {
+              echo 'expected GNU bash' >&2
+              exit 1
+            }
+            gmake --version | grep -q 'GNU Make' || {
+              echo 'expected GNU make' >&2
+              exit 1
+            }
+
+            gmake check-bundle
+            sh tools/ci/portability_run.sh "sources, /bin/sh, BWK awk" \
+              gmake test POSHLI_TEST_SHELL=/bin/sh
+            sh tools/ci/portability_run.sh "bundle, /bin/sh, BWK awk" \
+              gmake test-bundle POSHLI_TEST_SHELL=/bin/sh
+            sh tools/ci/portability_run.sh "sources, bash --posix, BWK awk" \
+              gmake test POSHLI_TEST_SHELL="bash --posix"
+            sh tools/ci/portability_run.sh "bundle, bash --posix, BWK awk" \
+              gmake test-bundle POSHLI_TEST_SHELL="bash --posix"
+
+  netbsd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Run NetBSD 11.1 validation
+        uses: vmactions/netbsd-vm@v1.5.3
+        with:
+          release: "11.1"
+          cache-after-prepare: true
+          prepare: |
+            set -e
+            /usr/sbin/pkg_add -u gmake bash
+          run: |
+            set -e
+            export PATH="/usr/pkg/bin:$PATH"
+            uname -a
+            id -u
+            locale
+            locale -a | grep -i 'utf' || true
+
+            _env="release=$(uname -r) arch=$(uname -m) uid=$(id -u) sh=ash awk=$(awk -version 2>&1 | sed -n '1p') bash=$(bash --version | sed -n '1p') make=$(gmake --version | sed -n '1p') locales=$(locale -a | tr '\n' ',')"
+            printf '::notice title=NetBSD toolchain::%s\n' "$_env"
+
+            uname -s | grep -qx NetBSD
+            /bin/sh -c 'test -z "${BASH_VERSION:-}"' || {
+              echo 'expected a non-bash /bin/sh' >&2
+              exit 1
+            }
+            /bin/sh -c 'test -z "${KSH_VERSION:-}"' || {
+              echo 'expected NetBSD ash for /bin/sh' >&2
+              exit 1
+            }
+            awk -version 2>&1 | grep -qi 'awk version' || {
+              echo 'expected BWK awk (one true awk)' >&2
+              exit 1
+            }
+            bash --version 2>&1 | grep -q 'GNU bash' || {
+              echo 'expected GNU bash' >&2
+              exit 1
+            }
+            gmake --version | grep -q 'GNU Make' || {
+              echo 'expected GNU make' >&2
+              exit 1
+            }
+
+            gmake check-bundle
+            sh tools/ci/portability_run.sh "sources, /bin/sh, BWK awk" \
+              gmake test POSHLI_TEST_SHELL=/bin/sh
+            sh tools/ci/portability_run.sh "bundle, /bin/sh, BWK awk" \
+              gmake test-bundle POSHLI_TEST_SHELL=/bin/sh
+            sh tools/ci/portability_run.sh "sources, bash --posix, BWK awk" \
+              gmake test POSHLI_TEST_SHELL="bash --posix"
+            sh tools/ci/portability_run.sh "bundle, bash --posix, BWK awk" \
               gmake test-bundle POSHLI_TEST_SHELL="bash --posix"
