@@ -33,7 +33,11 @@ trap 'rm -f "$_log"' 0 1 2 3 15
 # still shows every suite and assertion.
 "$@" > "$_log" 2>&1
 _status=$?
-cat "$_log"
+# Replay the log without notice workflow commands. The suite emits one
+# write-failure probe notice per test file; replaying them would exhaust the
+# per-check annotation limit before this helper's aggregate totals appear.
+# Error annotations are kept: they identify the failing assertion.
+sed '/^::notice/d' "$_log"
 
 _aborted=0
 if ! grep -q 'Tests run:' "$_log"; then
@@ -50,11 +54,13 @@ if [ -n "${GITHUB_ACTIONS:-}" ]; then
 		printf '::error title=%s::ABORTED BEFORE SUMMARY (exit %d)\n' \
 			"$_label" "$_status"
 	else
-		_summary=$(grep 'Tests run:' "$_log" | tail -n 1)
+		_totals=$(grep 'Tests run:' "$_log" | LC_ALL=C awk '
+			{ tests += $3; passed += $6; failed += $9; suites++ }
+			END { printf "%d tests, %d passed, %d failed, %d suites", tests, passed, failed, suites }')
 		_skips=$(grep -c '\[SKIP\]' "$_log" 2>/dev/null || true)
 		printf '::notice title=%s::%s; skips: %s\n' \
-			"$_label" "$_summary" "$_skips"
-		unset _summary _skips
+			"$_label" "$_totals" "$_skips"
+		unset _totals _skips
 	fi
 fi
 
