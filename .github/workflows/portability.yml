@@ -2,6 +2,15 @@ name: portability
 
 on:
   workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'tools/ci/**'
+      - 'poshli.sh'
+      - 'Makefile'
+      - '.github/workflows/portability.yml'
   schedule:
     - cron: '0 3 * * 1'
 
@@ -23,28 +32,44 @@ jobs:
 
       - name: Record environment
         run: |
+          set -e
           sw_vers
           uname -a
-          /usr/bin/make --version
-          /bin/sh -c 'echo "$BASH_VERSION"'
-          awk --version || true
+          /usr/bin/make --version | sed -n '1p'
+          /bin/sh -c 'echo "sh BASH_VERSION=${BASH_VERSION:-none}"'
+          awk --version 2>&1 || true
           command -v awk od wc
+          id -u
           locale
+          locale -a | grep -i 'utf' || true
+
+      - name: Verify toolchain
+        run: |
+          set -e
+          /bin/sh -c 'case "${BASH_VERSION:-none}" in 3.2.*) ;; *) echo "expected bash 3.2 for /bin/sh, got ${BASH_VERSION:-none}" >&2; exit 1 ;; esac'
+          awk --version 2>&1 | grep -q 'awk version' || {
+            echo 'expected BWK awk (one true awk)' >&2
+            exit 1
+          }
+          /usr/bin/make --version | grep -q 'GNU Make' || {
+            echo 'expected GNU make' >&2
+            exit 1
+          }
 
       - name: Verify bundle is synchronized with src/
         run: /usr/bin/make check-bundle
 
-      - name: Run suite with /bin/sh and BWK awk
-        run: |
-          set -e
-          /usr/bin/make test POSHLI_TEST_SHELL=/bin/sh
-          /usr/bin/make test-bundle POSHLI_TEST_SHELL=/bin/sh
+      - name: Sources with /bin/sh and BWK awk
+        run: sh tools/ci/portability_run.sh "sources, /bin/sh, BWK awk" /usr/bin/make test POSHLI_TEST_SHELL=/bin/sh
 
-      - name: Run suite with bash --posix
-        run: |
-          set -e
-          /usr/bin/make test POSHLI_TEST_SHELL="/bin/bash --posix"
-          /usr/bin/make test-bundle POSHLI_TEST_SHELL="/bin/bash --posix"
+      - name: Bundle with /bin/sh and BWK awk
+        run: sh tools/ci/portability_run.sh "bundle, /bin/sh, BWK awk" /usr/bin/make test-bundle POSHLI_TEST_SHELL=/bin/sh
+
+      - name: Sources with bash --posix and BWK awk
+        run: sh tools/ci/portability_run.sh "sources, bash --posix, BWK awk" /usr/bin/make test POSHLI_TEST_SHELL="/bin/bash --posix"
+
+      - name: Bundle with bash --posix and BWK awk
+        run: sh tools/ci/portability_run.sh "bundle, bash --posix, BWK awk" /usr/bin/make test-bundle POSHLI_TEST_SHELL="/bin/bash --posix"
 
   freebsd:
     runs-on: ubuntu-latest
@@ -64,12 +89,34 @@ jobs:
             uname -a
             freebsd-version
             gmake --version 2>&1 | sed -n '1p'
-            awk --version || true
+            awk --version 2>&1 || true
             bash --version 2>&1 | sed -n '1p'
             id -u
             locale
+            locale -a | grep -i 'utf' || true
+            uname -s | grep -qx FreeBSD
+            /bin/sh -c 'test -z "${BASH_VERSION:-}"' || {
+              echo 'expected FreeBSD sh for /bin/sh' >&2
+              exit 1
+            }
+            awk --version 2>&1 | grep -q 'awk version' || {
+              echo 'expected one true awk' >&2
+              exit 1
+            }
+            bash --version 2>&1 | grep -q 'GNU bash' || {
+              echo 'expected GNU bash' >&2
+              exit 1
+            }
+            gmake --version 2>&1 | grep -q 'GNU Make' || {
+              echo 'expected GNU make' >&2
+              exit 1
+            }
             gmake check-bundle
-            gmake test POSHLI_TEST_SHELL=/bin/sh
-            gmake test-bundle POSHLI_TEST_SHELL=/bin/sh
-            gmake test POSHLI_TEST_SHELL="bash --posix"
-            gmake test-bundle POSHLI_TEST_SHELL="bash --posix"
+            sh tools/ci/portability_run.sh "sources, /bin/sh, one true awk" \
+              gmake test POSHLI_TEST_SHELL=/bin/sh
+            sh tools/ci/portability_run.sh "bundle, /bin/sh, one true awk" \
+              gmake test-bundle POSHLI_TEST_SHELL=/bin/sh
+            sh tools/ci/portability_run.sh "sources, bash --posix, one true awk" \
+              gmake test POSHLI_TEST_SHELL="bash --posix"
+            sh tools/ci/portability_run.sh "bundle, bash --posix, one true awk" \
+              gmake test-bundle POSHLI_TEST_SHELL="bash --posix"

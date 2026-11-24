@@ -129,6 +129,8 @@ _hx=$(encoding_base64_decode "AAAA" | _b64_hex)
 assert_eq "000000" "$_hx" "encoding_base64_decode: NUL bytes are written unchanged (od compare)"
 _hx=$(encoding_base64_decode "AAA=" | _b64_hex)
 assert_eq "0000" "$_hx" "encoding_base64_decode: NUL bytes with one = (od compare)"
+_hx=$(encoding_base64_decode "CQAAcw==" | _b64_hex)
+assert_eq "09000073" "$_hx" "encoding_base64_decode: consecutive NUL bytes in the middle are written unchanged (od compare)"
 _hx=$(encoding_base64_decode "Cg==" | _b64_hex)
 assert_eq "0a" "$_hx" "encoding_base64_decode: newline byte is written unchanged (od compare)"
 _hx=$(encoding_base64_decode "/4B4" | _b64_hex)
@@ -273,7 +275,7 @@ _poshli_b64_wfail_st=$( (
 	[ -z "${_poshli_encoding_base64_encode_out+x}${_poshli_encoding_base64_encode_want+x}" ] || _st=9
 	printf '%s' "$_st" >&3
 ) 3>&1 )
-assert_status 1 "$_poshli_b64_wfail_st" "encoding_base64_encode: printf write failure returns 1 (not hidden by unset) and cleans temporaries"
+_test_assert_write_failure "$_poshli_b64_wfail_st" "encoding_base64_encode: printf write failure returns 1 (not hidden by unset) and cleans temporaries"
 
 _poshli_b64_wfail_st=$( (
 	exec 1>&-
@@ -282,7 +284,7 @@ _poshli_b64_wfail_st=$( (
 	[ -z "${_poshli_encoding_base64_decode_esc+x}" ] || _st=9
 	printf '%s' "$_st" >&3
 ) 3>&1 )
-assert_status 1 "$_poshli_b64_wfail_st" "encoding_base64_decode: printf write failure returns 1 (not hidden by unset) and cleans temporaries"
+_test_assert_write_failure "$_poshli_b64_wfail_st" "encoding_base64_decode: printf write failure returns 1 (not hidden by unset) and cleans temporaries"
 
 # Temporaries are cleaned on the success path as well.
 (

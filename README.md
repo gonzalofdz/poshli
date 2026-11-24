@@ -404,6 +404,8 @@ The external `base64` command is **not** used: it is not specified by POSIX and 
 >
 > Capturing output with `$(...)` is not suitable for binary/NUL data and removes trailing newlines. Redirect decoded binary output to a file instead.
 >
+> The decoded bytes are written with `printf` using the escape text as the **format operand** (three-digit octal escapes, with `%` doubled). This is deliberate: the `%b` conversion of the `printf` implementation shared by FreeBSD and macOS renders its argument with `%s` and stops at the first NUL byte, so NUL could not be written through `%b`. The format-operand path writes the converted bytes with a length-aware `fwrite`, so `encoding_base64_decode` writes all 256 byte values, NUL included, on every shell whose `printf` supports the format operand escapes (verified across the supported shells and with FreeBSD's own `printf` implementation).
+>
 > **Performance and size scope (indicative figures only)**: the measurements behind this contract cover inputs up to **5 MB**; larger inputs are neither excluded nor guaranteed. Times and peak memory were taken in the environment used for development (dash 0.5.12 with GNU awk 5.2.1): `encoding_base64_encode` took about 0.5 s for 1 MB and about 2.8 s for 5 MB, with an observed peak memory of about 10 MB and about 44 MB; with mawk 1.3.4 the 5 MB run took about 1.9 s and about 44 MB. `encoding_base64_decode` took about 2.4 s for 5 MB with an observed peak of about 109 MB. These are measurements of specific runs in one environment, **not** performance guarantees and **not** maximum input limits.
 >
 > **Memory**: the encoder's `awk` stage streams the input and uses constant memory; the peak is a small multiple of the input size because the result is captured before printing to keep the "no partial Base64 output is emitted on error" guarantee (the decoder's captured escape text is the same kind of buffer). As a reference for the improvement, the previous implementation buffered the whole input inside `awk` and reached about 127 MB for 1 MB and about 626 MB for 5 MB with GNU awk (about 332 MB for 5 MB with mawk 1.3.4).
@@ -499,7 +501,7 @@ fi
 
 ## Testing
 
-POSHLI includes a self-contained automated test suite that runs under standard POSIX shells and uses only standard utilities. The number of tests adapts to the environment: locale-dependent tests run only when a UTF-8 locale is available, and permission-sensitive tests are skipped when the suite runs as root. The reported total is therefore environment-dependent; the full local matrix reports 634 tests. The case-mapping tests are environment-independent, because `str_lower`/`str_upper` never consult the locale or any Unicode behavior of the `awk` implementation and the expectations are fixed vectors:
+POSHLI includes a self-contained automated test suite that runs under standard POSIX shells and uses only standard utilities. The number of tests adapts to the environment: locale-dependent tests run only when a UTF-8 locale is available, and permission-sensitive tests are skipped when the suite runs as root. The reported total is therefore environment-dependent; the full local matrix reports 635 tests. The case-mapping tests are environment-independent, because `str_lower`/`str_upper` never consult the locale or any Unicode behavior of the `awk` implementation and the expectations are fixed vectors:
 
 ```sh
 # Run test suite against modular sources (src/):

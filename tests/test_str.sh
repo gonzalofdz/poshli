@@ -410,7 +410,7 @@ _str_wfail=$( (
 	[ -z "${_poshli_str_trim_value+x}" ] || _st=9
 	printf '%s' "$_st" >&3
 ) 3>&1 )
-assert_status 1 "$_str_wfail" "str_trim: write failure returns 1 and cleans temporaries"
+_test_assert_write_failure "$_str_wfail" "str_trim: write failure returns 1 and cleans temporaries"
 
 _str_wfail=$( (
 	exec 1>&-
@@ -419,7 +419,7 @@ _str_wfail=$( (
 	[ -z "${_poshli_case_map_table+x}${_poshli_case_map_out+x}${_poshli_case_map_od+x}" ] || _st=9
 	printf '%s' "$_st" >&3
 ) 3>&1 )
-assert_status 1 "$_str_wfail" "str_lower: write failure returns 1 and cleans temporaries"
+_test_assert_write_failure "$_str_wfail" "str_lower: write failure returns 1 and cleans temporaries"
 
 _str_wfail=$( (
 	exec 1>&-
@@ -428,7 +428,7 @@ _str_wfail=$( (
 	[ -z "${_poshli_str_len_od+x}${_poshli_str_len_out+x}" ] || _st=9
 	printf '%s' "$_st" >&3
 ) 3>&1 )
-assert_status 1 "$_str_wfail" "str_len: write failure returns 1 and cleans temporaries"
+_test_assert_write_failure "$_str_wfail" "str_len: write failure returns 1 and cleans temporaries"
 
 _str_wfail=$( (
 	exec 1>&-
@@ -437,7 +437,7 @@ _str_wfail=$( (
 	[ -z "${_poshli_str_len_bytes_count+x}${_poshli_str_len_bytes_result+x}" ] || _st=9
 	printf '%s' "$_st" >&3
 ) 3>&1 )
-assert_status 1 "$_str_wfail" "str_len_bytes: write failure returns 1 and cleans temporaries"
+_test_assert_write_failure "$_str_wfail" "str_len_bytes: write failure returns 1 and cleans temporaries"
 
 _str_wfail=$( (
 	exec 1>&-
@@ -446,7 +446,7 @@ _str_wfail=$( (
 	[ -z "${_poshli_str_replace_search+x}${_poshli_str_replace_replacement+x}${_poshli_str_replace_str+x}${_poshli_str_replace_out+x}${_poshli_str_replace_prefix+x}${_poshli_str_replace_rest+x}" ] || _st=9
 	printf '%s' "$_st" >&3
 ) 3>&1 )
-assert_status 1 "$_str_wfail" "str_replace: write failure returns 1 and cleans temporaries"
+_test_assert_write_failure "$_str_wfail" "str_replace: write failure returns 1 and cleans temporaries"
 
 # A failing awk that writes to stdout before exiting must not leak that
 # partial result: str_len buffers the awk output and publishes it only on
@@ -507,20 +507,20 @@ _str_wfail=$( (
 	_st=$?
 	printf '%s' "$_st" >&3
 ) 3>&1 )
-assert_status 1 "$_str_wfail" "str_replace: empty-search write failure returns 1"
+_test_assert_write_failure "$_str_wfail" "str_replace: empty-search write failure returns 1"
 
 # The no-argument paths already propagate the final printf status through
 # return; keep that behavior covered.
 _str_wfail=$( ( exec 1>&-; str_trim 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
-assert_status 1 "$_str_wfail" "str_trim: no-argument write failure returns 1"
+_test_assert_write_failure "$_str_wfail" "str_trim: no-argument write failure returns 1"
 _str_wfail=$( ( exec 1>&-; str_lower 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
-assert_status 1 "$_str_wfail" "str_lower: no-argument write failure returns 1"
+_test_assert_write_failure "$_str_wfail" "str_lower: no-argument write failure returns 1"
 _str_wfail=$( ( exec 1>&-; str_upper 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
-assert_status 1 "$_str_wfail" "str_upper: no-argument write failure returns 1"
+_test_assert_write_failure "$_str_wfail" "str_upper: no-argument write failure returns 1"
 _str_wfail=$( ( exec 1>&-; str_len 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
-assert_status 1 "$_str_wfail" "str_len: no-argument write failure returns 1"
+_test_assert_write_failure "$_str_wfail" "str_len: no-argument write failure returns 1"
 _str_wfail=$( ( exec 1>&-; str_len_bytes 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
-assert_status 1 "$_str_wfail" "str_len_bytes: no-argument write failure returns 1"
+_test_assert_write_failure "$_str_wfail" "str_len_bytes: no-argument write failure returns 1"
 
 # Successful calls keep stderr empty.
 _err=$(str_trim "  a  " 2>&1 >/dev/null)

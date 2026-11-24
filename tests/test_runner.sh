@@ -163,6 +163,50 @@ _test_cleanup_shims() {
 
 trap '_test_cleanup_shims' 0 INT TERM HUP
 
+# The closed-stdout write-failure tests can only observe anything when the
+# shell's printf reports write errors. POSIX requires the printf utility to
+# exit non-zero on a write error, but some shells (notably FreeBSD /bin/sh)
+# silently ignore it and return 0. The probe closes stdout inside a subshell
+# and reports the printf status through fd 3, so it never touches the caller's
+# stdout. The failing printf is guarded with "||" so the probe also works when
+# a suite runs under "set -e": without that guard the subshell would exit
+# before reporting and the probe would misclassify the shell. A non-zero
+# printf status (not only 1) is enough, because the library maps any failure
+# to its documented status 1. POSHLI_TEST_PRINTF_WERR=1/0 forces the result;
+# the harness self-check uses it to exercise the skip branch.
+_test_write_fail_probe() {
+	case ${POSHLI_TEST_PRINTF_WERR:-} in
+	1) return 0 ;;
+	0) return 1 ;;
+	esac
+	_test_wfail_st=$( (
+		exec 1>&-
+		printf x 2>/dev/null || _test_wfail_printf_status=$?
+		printf '%s' "${_test_wfail_printf_status:-0}" >&3
+	) 3>&1 )
+	[ "$_test_wfail_st" != 0 ] || {
+		unset _test_wfail_st _test_wfail_printf_status
+		return 1
+	}
+	unset _test_wfail_st _test_wfail_printf_status
+	return 0
+}
+
+# Assert a closed-stdout write failure, or record a documented skip when the
+# shell's printf cannot report write errors (see _test_write_fail_probe).
+# A skip prints one line and does not count as a test, like the existing root
+# and locale skips.
+_test_assert_write_failure() {
+	_test_wfail_actual=$1
+	_test_wfail_desc=$2
+	if _test_write_fail_probe; then
+		assert_status 1 "$_test_wfail_actual" "$_test_wfail_desc"
+	else
+		printf '  [SKIP] %s [shell printf does not report write errors]\n' "$_test_wfail_desc"
+	fi
+	unset _test_wfail_actual _test_wfail_desc
+}
+
 test_summary() {
 	_test_cleanup_shims
 	printf '\n========================================\n'

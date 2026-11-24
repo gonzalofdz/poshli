@@ -2148,8 +2148,6 @@ encoding_base64_decode() {
 	_poshli_encoding_base64_decode_esc=$(printf '%s' "$1" | LC_ALL=C awk '
 		BEGIN {
 			alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-			for (i = 0; i < 256; i++)
-				oct[i] = sprintf("\\0%d%d%d", int(i / 64), int(i / 8) % 8, i % 8)
 		}
 		{ s = s $0 }
 		END {
@@ -2160,22 +2158,28 @@ encoding_base64_decode() {
 				v1 = index(alph, substr(s, i, 1)) - 1
 				v2 = index(alph, substr(s, i + 1, 1)) - 1
 				v3 = 0
-				printf "%s", oct[v1 * 4 + int(v2 / 16)]
+				emit(v1 * 4 + int(v2 / 16))
 				if (c3 != "=") {
 					v3 = index(alph, c3) - 1
-					printf "%s", oct[(v2 % 16) * 16 + int(v3 / 4)]
+					emit((v2 % 16) * 16 + int(v3 / 4))
 				}
 				if (c4 != "=") {
 					v4 = index(alph, c4) - 1
-					printf "%s", oct[(v3 % 4) * 64 + v4]
+					emit((v3 % 4) * 64 + v4)
 				}
 			}
+		}
+		function emit(b) {
+			if (b == 37)
+				printf "%%%%"
+			else
+				printf "\\%03o", b
 		}
 	') || {
 		unset _poshli_encoding_base64_decode_esc
 		return 1
 	}
-	printf '%b' "$_poshli_encoding_base64_decode_esc" || {
+	printf "$_poshli_encoding_base64_decode_esc" || {
 		unset _poshli_encoding_base64_decode_esc
 		return 1
 	}

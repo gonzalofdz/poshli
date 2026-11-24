@@ -158,15 +158,24 @@ encoding_base64_decode() {
 #
 #	Implemented with POSIX shell and POSIX awk only (no external base64
 #	command): awk maps every 4-character group to its 1-3 decoded bytes
-#	as octal escapes, and the shell printf %b writes the exact bytes.
-#	The escape text is captured before anything is printed, so a
-#	failing awk never emits partial output; that capture (about three
-#	times the input text) is the buffer that grows with the input. It
-#	cannot be avoided portably: POSIX awk cannot write raw bytes
-#	(the numeric argument of %c is not portable), so the bytes must
-#	travel as escapes through a shell printf. Capturing output with
-#	$(...) is not suitable for binary or NUL data and removes
-#	trailing newlines; redirect stdout to a file for binary output.
+#	as three-digit octal escapes, and the escape text is used as the
+#	FORMAT operand of printf, which writes the exact bytes. The format
+#	operand is used instead of %b on purpose: the %b output path of the
+#	printf(1) implementation shared by FreeBSD and macOS renders its
+#	argument with %s and stops at the first NUL byte, so a decoded NUL
+#	could not be written. The format-operand path writes the converted
+#	bytes with a length-aware fwrite, so NUL survives. A literal percent
+#	sign (byte 0x25) is doubled in the format text; the input is
+#	validated Base64, so the generated format never contains a
+#	conversion specification. The escape text is captured before
+#	anything is printed, so a failing awk never emits partial output;
+#	that capture (about three times the input text) is the buffer that
+#	grows with the input. It cannot be avoided portably: POSIX awk
+#	cannot write raw bytes (the numeric argument of %c is not
+#	portable), so the bytes must travel as escapes through a shell
+#	printf. Capturing output with $(...) is not suitable for binary or
+#	NUL data and removes trailing newlines; redirect stdout to a file
+#	for binary output.
 #
 #	Example of use:
 #
@@ -216,16 +225,16 @@ encoding_base64_decode() {
 
 	#	The input is validated ASCII above, so awk sees one plain
 	#	record. Each 4-character group yields its 1-3 decoded bytes
-	#	as "\0nnn" octal escapes (arithmetic only: POSIX awk has no
-	#	bitwise operators), and printf %b turns the escapes back
-	#	into the exact bytes. The escape text contains no real line
-	#	breaks, so capturing it with $(...) cannot lose data. The
-	#	output bytes are raw: no trailing newline is appended.
+	#	as three-digit octal escapes (arithmetic only: POSIX awk has
+	#	no bitwise operators). The escape text becomes the printf
+	#	FORMAT operand below; a literal percent byte is emitted as
+	#	"%%" and everything else as "\nnn". The escape text contains
+	#	no real line breaks, so capturing it with $(...) cannot lose
+	#	data. The output bytes are raw: no trailing newline is
+	#	appended.
 	_poshli_encoding_base64_decode_esc=$(printf '%s' "$1" | LC_ALL=C awk '
 		BEGIN {
 			alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-			for (i = 0; i < 256; i++)
-				oct[i] = sprintf("\\0%d%d%d", int(i / 64), int(i / 8) % 8, i % 8)
 		}
 		{ s = s $0 }
 		END {
@@ -236,16 +245,25 @@ encoding_base64_decode() {
 				v1 = index(alph, substr(s, i, 1)) - 1
 				v2 = index(alph, substr(s, i + 1, 1)) - 1
 				v3 = 0
-				printf "%s", oct[v1 * 4 + int(v2 / 16)]
+				emit(v1 * 4 + int(v2 / 16))
 				if (c3 != "=") {
 					v3 = index(alph, c3) - 1
-					printf "%s", oct[(v2 % 16) * 16 + int(v3 / 4)]
+					emit((v2 % 16) * 16 + int(v3 / 4))
 				}
 				if (c4 != "=") {
 					v4 = index(alph, c4) - 1
-					printf "%s", oct[(v3 % 4) * 64 + v4]
+					emit((v3 % 4) * 64 + v4)
 				}
 			}
+		}
+		function emit(b) {
+			#	Three octal digits always: no leading zero, so the
+			#	format operand cannot swallow a following escape.
+			#	A literal percent must be doubled for printf.
+			if (b == 37)
+				printf "%%%%"
+			else
+				printf "\\%03o", b
 		}
 	') || {
 		unset _poshli_encoding_base64_decode_esc
@@ -254,7 +272,12 @@ encoding_base64_decode() {
 	#	A write error of printf must not be hidden by the cleanup
 	#	unset below: the status is tested before unsetting and
 	#	returned, and the temporaries are cleaned on both paths.
-	printf '%b' "$_poshli_encoding_base64_decode_esc" || {
+	#	The escape text is the FORMAT operand: it only contains
+	#	three-digit octal escapes and doubled percent signs generated
+	#	from validated Base64 input, so it carries no user-controlled
+	#	conversion specification.
+	# shellcheck disable=SC2059  # machine-generated format, see above
+	printf "$_poshli_encoding_base64_decode_esc" || {
 		unset _poshli_encoding_base64_decode_esc
 		return 1
 	}
