@@ -399,12 +399,12 @@ assert_true $? "str_len_bytes fails closed when wc is unavailable"
 assert_true $? "str_len_bytes prints nothing when wc is unavailable"
 
 # A1: failures while writing the final result to stdout must not be hidden by
-# the cleanup unset. stdout is closed at the start of each subshell; the status
+# the cleanup unset. stdout is redirected to a read-only descriptor at the start of each subshell; the status
 # and cleanup are checked in that subshell. The observed status is reported
 # through fd 3 so closing stdout cannot hide it. A leaked temporary turns the
 # reported status into the sentinel 9.
 _str_wfail=$( (
-	exec 1>&-
+	exec 1</dev/null
 	str_trim "  a  " 2>/dev/null
 	_st=$?
 	[ -z "${_poshli_str_trim_value+x}" ] || _st=9
@@ -413,7 +413,7 @@ _str_wfail=$( (
 _test_assert_write_failure "$_str_wfail" "str_trim: write failure returns 1 and cleans temporaries"
 
 _str_wfail=$( (
-	exec 1>&-
+	exec 1</dev/null
 	str_lower A 2>/dev/null
 	_st=$?
 	[ -z "${_poshli_case_map_table+x}${_poshli_case_map_out+x}${_poshli_case_map_od+x}" ] || _st=9
@@ -422,7 +422,7 @@ _str_wfail=$( (
 _test_assert_write_failure "$_str_wfail" "str_lower: write failure returns 1 and cleans temporaries"
 
 _str_wfail=$( (
-	exec 1>&-
+	exec 1</dev/null
 	str_len abc 2>/dev/null
 	_st=$?
 	[ -z "${_poshli_str_len_od+x}${_poshli_str_len_out+x}" ] || _st=9
@@ -431,7 +431,7 @@ _str_wfail=$( (
 _test_assert_write_failure "$_str_wfail" "str_len: write failure returns 1 and cleans temporaries"
 
 _str_wfail=$( (
-	exec 1>&-
+	exec 1</dev/null
 	str_len_bytes abc 2>/dev/null
 	_st=$?
 	[ -z "${_poshli_str_len_bytes_count+x}${_poshli_str_len_bytes_result+x}" ] || _st=9
@@ -440,7 +440,7 @@ _str_wfail=$( (
 _test_assert_write_failure "$_str_wfail" "str_len_bytes: write failure returns 1 and cleans temporaries"
 
 _str_wfail=$( (
-	exec 1>&-
+	exec 1</dev/null
 	str_replace a b a 2>/dev/null
 	_st=$?
 	[ -z "${_poshli_str_replace_search+x}${_poshli_str_replace_replacement+x}${_poshli_str_replace_str+x}${_poshli_str_replace_out+x}${_poshli_str_replace_prefix+x}${_poshli_str_replace_rest+x}" ] || _st=9
@@ -502,7 +502,7 @@ assert_true $? "_poshli_case_map: invalid selector returns 2 silently"
 assert_true $? "str_replace: two arguments returns 2 silently"
 
 _str_wfail=$( (
-	exec 1>&-
+	exec 1</dev/null
 	str_replace "" x hello 2>/dev/null
 	_st=$?
 	printf '%s' "$_st" >&3
@@ -511,15 +511,15 @@ _test_assert_write_failure "$_str_wfail" "str_replace: empty-search write failur
 
 # The no-argument paths already propagate the final printf status through
 # return; keep that behavior covered.
-_str_wfail=$( ( exec 1>&-; str_trim 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
+_str_wfail=$( ( exec 1</dev/null; str_trim 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
 _test_assert_write_failure "$_str_wfail" "str_trim: no-argument write failure returns 1"
-_str_wfail=$( ( exec 1>&-; str_lower 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
+_str_wfail=$( ( exec 1</dev/null; str_lower 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
 _test_assert_write_failure "$_str_wfail" "str_lower: no-argument write failure returns 1"
-_str_wfail=$( ( exec 1>&-; str_upper 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
+_str_wfail=$( ( exec 1</dev/null; str_upper 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
 _test_assert_write_failure "$_str_wfail" "str_upper: no-argument write failure returns 1"
-_str_wfail=$( ( exec 1>&-; str_len 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
+_str_wfail=$( ( exec 1</dev/null; str_len 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
 _test_assert_write_failure "$_str_wfail" "str_len: no-argument write failure returns 1"
-_str_wfail=$( ( exec 1>&-; str_len_bytes 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
+_str_wfail=$( ( exec 1</dev/null; str_len_bytes 2>/dev/null; printf '%s' "$?" >&3 ) 3>&1 )
 _test_assert_write_failure "$_str_wfail" "str_len_bytes: no-argument write failure returns 1"
 
 # Successful calls keep stderr empty.

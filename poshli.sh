@@ -1703,8 +1703,8 @@ str_empty() {
 
 str_trim() {
 	if [ $# -eq 0 ]; then
-		printf '%s\n' ""
-		return
+		printf '%s\n' "" || return 1
+		return 0
 	fi
 	_poshli_str_trim_value=$1
 	_poshli_str_trim_value=${_poshli_str_trim_value#"${_poshli_str_trim_value%%[! 	]*}"}
@@ -1858,16 +1858,16 @@ _poshli_case_map() {
 
 str_lower() {
 	if [ $# -eq 0 ]; then
-		printf '%s\n' ""
-		return
+		printf '%s\n' "" || return 1
+		return 0
 	fi
 	_poshli_case_map lower "$1"
 }
 
 str_upper() {
 	if [ $# -eq 0 ]; then
-		printf '%s\n' ""
-		return
+		printf '%s\n' "" || return 1
+		return 0
 	fi
 	_poshli_case_map upper "$1"
 }
@@ -1898,8 +1898,8 @@ str_contains() {
 
 str_len() {
 	if [ $# -eq 0 ]; then
-		printf '0\n'
-		return
+		printf '0\n' || return 1
+		return 0
 	fi
 	_poshli_str_len_od=$(printf '%s' "$1" | LC_ALL=C od -A n -v -t u1) || {
 		unset _poshli_str_len_od
@@ -2011,8 +2011,8 @@ str_len() {
 
 str_len_bytes() {
 	if [ $# -eq 0 ]; then
-		printf '0\n'
-		return
+		printf '0\n' || return 1
+		return 0
 	fi
 	_poshli_str_len_bytes_count=$(printf '%s' "$1" | LC_ALL=C wc -c) || {
 		unset _poshli_str_len_bytes_count

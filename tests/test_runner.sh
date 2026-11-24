@@ -11,16 +11,30 @@ TESTS_TOTAL=0
 TESTS_PASSED=0
 TESTS_FAILED=0
 
-# Under GitHub Actions, emit a workflow-command error annotation for each
-# failure. The check-runs annotations API is readable without the job log,
-# so a failing test can be identified on every platform. Local runs are
-# unchanged: GITHUB_ACTIONS is unset. Percent signs must be escaped in
-# workflow commands.
-_test_ci_error() {
+# Under GitHub Actions, emit workflow-command annotations. The check-runs
+# annotations API is readable without the job log, so a failing test can be
+# identified on every platform. Local runs are unchanged: GITHUB_ACTIONS is
+# unset. Newlines, carriage returns and percent signs must be escaped in
+# workflow commands, otherwise the message is cut at the first line break.
+_test_ci_emit() {
 	[ -n "${GITHUB_ACTIONS:-}" ] || return 0
-	_test_ci_msg=$(printf '%s' "$1" | sed 's/%/%25/g')
-	printf '::error::%s\n' "$_test_ci_msg"
+	_test_ci_msg=$(printf '%s' "$2" | awk '
+		NR > 1 { printf "%%0A" }
+		{
+			gsub(/%/, "%25")
+			gsub(/\r/, "%0D")
+			printf "%s", $0
+		}')
+	printf '::%s::%s\n' "$1" "$_test_ci_msg"
 	unset _test_ci_msg
+}
+
+_test_ci_error() {
+	_test_ci_emit error "$1"
+}
+
+_test_ci_notice() {
+	_test_ci_emit notice "$1"
 }
 
 assert_eq() {
@@ -181,7 +195,8 @@ trap '_test_cleanup_shims' 0 INT TERM HUP
 # The closed-stdout write-failure tests can only observe anything when the
 # shell's printf reports write errors. POSIX requires the printf utility to
 # exit non-zero on a write error, but some shells (notably FreeBSD /bin/sh)
-# silently ignore it and return 0. The probe closes stdout inside a subshell
+# silently ignore it and return 0. The probe redirects stdout to a read-only
+# descriptor inside a subshell (closing fd 1 is not honoured by every shell)
 # and reports the printf status through fd 3, so it never touches the caller's
 # stdout. The failing printf is guarded with "||" so the probe also works when
 # a suite runs under "set -e": without that guard the subshell would exit
@@ -195,10 +210,14 @@ _test_write_fail_probe() {
 	0) return 1 ;;
 	esac
 	_test_wfail_st=$( (
-		exec 1>&-
+		exec 1</dev/null
 		printf x 2>/dev/null || _test_wfail_printf_status=$?
 		printf '%s' "${_test_wfail_printf_status:-0}" >&3
 	) 3>&1 )
+	if [ -n "${GITHUB_ACTIONS:-}" ] && [ -z "${_test_wfail_announced:-}" ]; then
+		_test_ci_notice "write-failure probe capture: [$_test_wfail_st]"
+		_test_wfail_announced=1
+	fi
 	[ "$_test_wfail_st" != 0 ] || {
 		unset _test_wfail_st _test_wfail_printf_status
 		return 1
