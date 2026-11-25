@@ -3,7 +3,7 @@ name: portability
 on:
   workflow_dispatch:
   push:
-    branches: [master, ci/openbsd-netbsd]
+    branches: [master]
     paths:
       - 'src/**'
       - 'tests/**'
