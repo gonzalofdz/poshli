@@ -545,7 +545,7 @@ make check-bundle
 >
 > - **OpenBSD 8.0**: system `/bin/sh` (OpenBSD ksh; this build does not export `KSH_VERSION` to a non-interactive `sh -c`), BWK awk 20250116, GNU bash 5.3.20 `--posix`. `/bin/sh`: **633/633** per artifact (two permission skips). `bash --posix`: **620/620** per artifact (two permission skips plus the 13 write-failure tests recorded as documented `[SKIP]`, because this bash `printf` does not report a closed-stdout write error). Write-failure coverage on OpenBSD is therefore provided by the `/bin/sh` configuration.
 > - **NetBSD 11.1**: system `/bin/sh` (NetBSD ash), BWK awk 20240728, GNU bash 5.3.20 `--posix`. `/bin/sh` and `bash --posix`: **633/633** per artifact, with the two documented permission skips. The write-failure probe reports errors in both shells.
-> - `make check-bundle` passes on both systems. Workflow run **`45514497915`** completed with **5/5 portability jobs green** (OpenBSD, NetBSD, FreeBSD 15.1, macOS 15 and macOS 26).
+> - `make check-bundle` passes on both systems. Final workflow run **`45515463251`** completed with **5/5 portability jobs green** (OpenBSD, NetBSD, FreeBSD 15.1, macOS 15 and macOS 26); the discovery run **`45514497915`** produced the same OpenBSD/NetBSD totals.
 >
 > Limits: OpenBSD and NetBSD are validated on **amd64 only**, with the releases pinned above and the VM running as root. The OpenBSD `bash --posix` configuration does not exercise the 13 closed-stdout write-failure tests; that dimension is covered by OpenBSD `/bin/sh`. The VM images are third-party `vmactions` images, not official distribution images.
 
